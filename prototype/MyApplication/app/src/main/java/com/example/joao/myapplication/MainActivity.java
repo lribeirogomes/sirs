@@ -20,15 +20,26 @@ import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
 
+import org.spongycastle.jce.spec.IESParameterSpec;
+
+
+import java.security.SecureRandom;
+import java.security.Security;
 import java.security.Signature;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.util.Arrays;
+
+import javax.crypto.Cipher;
 
 public class MainActivity extends AppCompatActivity {
 
 
+    static {
+        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +81,57 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void doEC(View view) {
+    public void doECEncryption(View view){
         try {
             //Generate EC Keys
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-            keyGen.initialize(224);
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+            keyGen.initialize(224, new SecureRandom());
+            KeyPair keys = keyGen.generateKeyPair();
+
+            PrivateKey privKey = keys.getPrivate();
+            //byte[] privKeyEncoded = privKey.getEncoded();
+            PublicKey pubKey = keys.getPublic();
+            //byte[] pubKeyEncoded = pubKey.getEncoded();
+
+
+            Cipher cipher = Cipher.getInstance("ECIES"); //, "SC"); works this way but I have no idea what it means ("Spongy castle"??? why does it accept BC everywhere else?)
+
+            byte[]  derivation = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }; //From what I understand these are pre-shared secrets...
+            byte[]  encoding = new byte[] { 8, 7, 6, 5, 4, 3, 2, 1 };  //But then again I have no idea what is really happening here!
+
+            IESParameterSpec iesParams = new IESParameterSpec(derivation, encoding, 0, 128);
+
+            cipher.init(Cipher.ENCRYPT_MODE, pubKey, iesParams);
+
+
+
+            byte[] message = { 3, 2 ,5, 6, 3, 12, 3, 4, 5, 2, 4, 5, 6, 32, 45, 2}; //128bits long This is where we place the session key
+
+            byte[] encrypted = cipher.doFinal(message);
+
+            cipher.init(Cipher.DECRYPT_MODE, privKey, iesParams);
+
+            byte[] decrypted = cipher.doFinal(encrypted);
+
+            TextView text = (TextView) findViewById(R.id.textView);
+            if( Arrays.equals(message, decrypted))
+                text.setText("Encryption successfull! output length: " + encrypted.length + " bytes");
+            else
+                text.setText("Failed! Decryption output not equal to original message!");
+
+
+        } catch (Exception e) {   //Pokemon exception handling!!
+            TextView text = (TextView) findViewById(R.id.textView);
+            text.setText(e.getMessage());
+        }
+
+    }
+
+    public void doECSignature(View view) {
+        try {
+            //Generate EC Keys
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+            keyGen.initialize(224, new SecureRandom());
             KeyPair keys = keyGen.generateKeyPair();
 
             PrivateKey privKey = keys.getPrivate();
