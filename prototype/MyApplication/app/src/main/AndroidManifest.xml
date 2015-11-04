@@ -5,17 +5,6 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.BROADCAST_SMS" />
-
-    <receiver android:name="com.example.joao.myapplication.SMSReceiver"  android:permission="android.permission.BROADCAST_SMS" >
-        <intent-filter>
-        <action android:name="android.intent.action.DATA_SMS_RECEIVED" />
-            <!--            <action android:name="android.provider.Telephony.SMS_RECEIVED" />-->
-            <data android:scheme="sms" />
-            <!--<data android:host="*" />
-            <data android:port="8998" />-->
-        </intent-filter>
-    </receiver>
 
     <application
         android:allowBackup="true"
@@ -38,6 +27,16 @@
             android:label="@string/title_activity_receive_sms"
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
+
+        <receiver android:name=".SMSReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.DATA_SMS_RECEIVED" />
+                <!--            <action android:name="android.provider.Telephony.SMS_RECEIVED" />-->
+                <data android:scheme="sms" />
+                <data android:port="8998" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

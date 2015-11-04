@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +30,7 @@ public class SMSReceiver extends BroadcastReceiver {
             Object[] pdus = (Object[]) bundle.get("pdus");
             for (int i = 0; i < pdus.length; i++)
             {
-                recMsg = SmsMessage.createFromPdu((byte[]) pdus[i], "3gpp");
+                recMsg = SmsMessage.createFromPdu((byte[]) pdus[i]); //, "3gpp"); //Deprecated in API 23 unfortunately the replacement is only available in API 23
 
                 try
                 {
@@ -38,7 +39,7 @@ public class SMSReceiver extends BroadcastReceiver {
                 catch (Exception e)
                 {
                     Intent result = new Intent(context, ReceiveSMSActivity.class);
-                    result.putExtra(ReceiveSMSActivity.MESSAGE, "FAILED!!!");
+                    result.putExtra(ReceiveSMSActivity.MESSAGE, "FAILED to get data from the sms!!!");
                     result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(result);
                 }

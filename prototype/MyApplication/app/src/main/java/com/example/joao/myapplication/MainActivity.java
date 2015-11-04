@@ -1,8 +1,5 @@
 package com.example.joao.myapplication;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -11,18 +8,19 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.TextView;
 
 
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.telephony.SmsManager;
-import android.telephony.SmsMessage;
 import android.widget.Toast;
 
 import org.spongycastle.jce.spec.IESParameterSpec;
-
-
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.Signature;
@@ -33,6 +31,7 @@ import java.security.KeyPairGenerator;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -81,12 +80,17 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void doECEncryption(View view){
+    private KeyPair generateECKeys() throws NoSuchAlgorithmException, NoSuchProviderException {
+        //Generate EC Keys
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+        keyGen.initialize(224, new SecureRandom());
+        return keyGen.generateKeyPair();
+    }
+
+    private void doECEncryption(byte[] message){ //TODO: Study ECIES, this is a real mess!
         try {
             //Generate EC Keys
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
-            keyGen.initialize(224, new SecureRandom());
-            KeyPair keys = keyGen.generateKeyPair();
+            KeyPair keys = generateECKeys();
 
             PrivateKey privKey = keys.getPrivate();
             //byte[] privKeyEncoded = privKey.getEncoded();
@@ -96,16 +100,9 @@ public class MainActivity extends AppCompatActivity {
 
             Cipher cipher = Cipher.getInstance("ECIES"); //, "SC"); works this way but I have no idea what it means ("Spongy castle"??? why does it accept BC everywhere else?)
 
-            byte[]  derivation = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }; //From what I understand these are pre-shared secrets...
-            byte[]  encoding = new byte[] { 8, 7, 6, 5, 4, 3, 2, 1 };  //But then again I have no idea what is really happening here!
-
-            IESParameterSpec iesParams = new IESParameterSpec(derivation, encoding, 0, 128);
+            IESParameterSpec iesParams = new IESParameterSpec(null, null, 0, 0); //MAC key size 0 works, wonder whats happening under the hood...
 
             cipher.init(Cipher.ENCRYPT_MODE, pubKey, iesParams);
-
-
-
-            byte[] message = { 3, 2 ,5, 6, 3, 12, 3, 4, 5, 2, 4, 5, 6, 32, 45, 2}; //128bits long This is where we place the session key
 
             byte[] encrypted = cipher.doFinal(message);
 
@@ -127,12 +124,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void clickECIES(View view){
+        byte[] message = { 3, 2 ,5, 6, 3, 12, 3, 4, 5, 2, 4, 5, 6, 32, 45, 2}; //128bits long This is where we place the session key
+        doECEncryption(message);
+    }
+
     public void doECSignature(View view) {
         try {
-            //Generate EC Keys
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
-            keyGen.initialize(224, new SecureRandom());
-            KeyPair keys = keyGen.generateKeyPair();
+            KeyPair keys = generateECKeys();
+
 
             PrivateKey privKey = keys.getPrivate();
             //byte[] privKeyEncoded = privKey.getEncoded();
@@ -165,10 +165,34 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private byte[] generateAESKey() throws NoSuchAlgorithmException{
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(128);
+        Key key = keyGen.generateKey();
+        return key.getEncoded();
+    }
+
+
+    public void clickKek(View view){
+        try{
+            byte[] aesKey = generateAESKey();
+            doECEncryption(aesKey);
+        }catch (Exception e){
+            TextView text = (TextView) findViewById(R.id.textView);
+            text.setText("Something went REALLY wrong!");
+        }
+    }
+
     public void sendSMS(View view) {
         final int SENT = 1;
         final short SMS_PORT = 8998;
-        final String phoneNumber = "5556";       //Other emulator phone number
+        String phoneNumber = "5556";       //Other emulator phone number
+
+        EditText phoneNumberEditText = (EditText)findViewById(R.id.phoneEditText);
+        phoneNumber = phoneNumberEditText.getText().toString();
+        if (phoneNumber.isEmpty())
+            phoneNumber = "5556";
+
 
         String str = "This is a long sms text that we want to send in a data sms along with a 64 bytes signature";   //91 characters
         byte[] message = str.getBytes();

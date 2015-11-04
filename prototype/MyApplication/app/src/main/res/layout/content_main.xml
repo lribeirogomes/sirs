@@ -28,10 +28,10 @@
         android:layout_height="wrap_content"
         android:text="Send Data SMS"
         android:id="@+id/SendSMSbutton"
-        android:layout_below="@+id/ECbutton"
+        android:onClick="sendSMS"
+        android:layout_below="@+id/phoneEditText"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:onClick="sendSMS" />
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
@@ -41,5 +41,28 @@
         android:layout_alignTop="@+id/ECbutton"
         android:layout_toRightOf="@+id/ECbutton"
         android:layout_toEndOf="@+id/ECbutton"
-        android:onClick="doECEncryption" />
+        android:onClick="clickECIES" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:ems="10"
+        android:id="@+id/phoneEditText"
+        android:layout_below="@+id/ECbutton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:hint="Phone number"
+        android:editable="true"
+        android:phoneNumber="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Generate KEK"
+        android:id="@+id/button"
+        android:layout_alignTop="@+id/buttonECIES"
+        android:layout_toRightOf="@+id/buttonECIES"
+        android:layout_toEndOf="@+id/buttonECIES"
+        android:onClick="clickKek" />
 </RelativeLayout>
