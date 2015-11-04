@@ -18,6 +18,8 @@ import android.telephony.SmsManager;
 import android.widget.Toast;
 
 import org.spongycastle.jce.spec.IESParameterSpec;
+import org.spongycastle.util.encoders.Hex;
+
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -39,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     static {
         Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
     }
+
+    private KeyPair ECKeyPair = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,18 +84,47 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private KeyPair generateECKeys() throws NoSuchAlgorithmException, NoSuchProviderException {
+    private KeyPair getECKeys() throws NoSuchAlgorithmException, NoSuchProviderException {
         //Generate EC Keys
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
-        keyGen.initialize(224, new SecureRandom());
-        return keyGen.generateKeyPair();
+
+        if (ECKeyPair == null){
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+            keyGen.initialize(224, new SecureRandom());
+            ECKeyPair = keyGen.generateKeyPair();
+        }
+        return ECKeyPair;
+
+    }
+
+    private void doRSAEncryption(byte[] message){
+        try{
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048, new SecureRandom());
+
+            KeyPair keys = keyGen.generateKeyPair();
+
+            PrivateKey privKey = keys.getPrivate();
+            PublicKey pubKey = keys.getPublic();
+
+            Cipher cipher = Cipher.getInstance("RSA");
+
+            cipher.init(Cipher.ENCRYPT_MODE, pubKey);
+
+            byte[] encrypted = cipher.doFinal(message);
+
+            TextView text = (TextView) findViewById(R.id.textView);
+            text.setText("output length: " + encrypted.length + " bytes");
+
+        }catch (Exception e){
+            TextView text = (TextView) findViewById(R.id.textView);
+            text.setText(e.getMessage());
+        }
     }
 
     private void doECEncryption(byte[] message){ //TODO: Study ECIES, this is a real mess!
         try {
-            //Generate EC Keys
-            KeyPair keys = generateECKeys();
-
+            //Get EC Keys
+            KeyPair keys = getECKeys();
             PrivateKey privKey = keys.getPrivate();
             //byte[] privKeyEncoded = privKey.getEncoded();
             PublicKey pubKey = keys.getPublic();
@@ -99,20 +132,19 @@ public class MainActivity extends AppCompatActivity {
 
 
             Cipher cipher = Cipher.getInstance("ECIES"); //, "SC"); works this way but I have no idea what it means ("Spongy castle"??? why does it accept BC everywhere else?)
-
             IESParameterSpec iesParams = new IESParameterSpec(null, null, 0, 0); //MAC key size 0 works, wonder whats happening under the hood...
-
             cipher.init(Cipher.ENCRYPT_MODE, pubKey, iesParams);
-
             byte[] encrypted = cipher.doFinal(message);
 
-            cipher.init(Cipher.DECRYPT_MODE, privKey, iesParams);
 
-            byte[] decrypted = cipher.doFinal(encrypted);
+            Cipher dcipher = Cipher.getInstance("ECIES");
+            IESParameterSpec dIesParams = new IESParameterSpec(null, null, 0, 0); //MAC key size 0 works, wonder whats happening under the hood...
+            dcipher.init(Cipher.DECRYPT_MODE, privKey, dIesParams);
+            byte[] decrypted = dcipher.doFinal(encrypted);
 
             TextView text = (TextView) findViewById(R.id.textView);
             if( Arrays.equals(message, decrypted))
-                text.setText("Encryption successfull! output length: " + encrypted.length + " bytes");
+                text.setText("Encryption successfull! output length: " + encrypted.length + " bytes Encrypted message: " + Hex.toHexString(encrypted));
             else
                 text.setText("Failed! Decryption output not equal to original message!");
 
@@ -131,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void doECSignature(View view) {
         try {
-            KeyPair keys = generateECKeys();
+            KeyPair keys = getECKeys();
 
 
             PrivateKey privKey = keys.getPrivate();
@@ -177,6 +209,16 @@ public class MainActivity extends AppCompatActivity {
         try{
             byte[] aesKey = generateAESKey();
             doECEncryption(aesKey);
+        }catch (Exception e){
+            TextView text = (TextView) findViewById(R.id.textView);
+            text.setText("Something went REALLY wrong!");
+        }
+    }
+
+    public void clickKekRSA(View view){
+        try{
+            byte[] aesKey = generateAESKey();
+            doRSAEncryption(aesKey);
         }catch (Exception e){
             TextView text = (TextView) findViewById(R.id.textView);
             text.setText("Something went REALLY wrong!");
