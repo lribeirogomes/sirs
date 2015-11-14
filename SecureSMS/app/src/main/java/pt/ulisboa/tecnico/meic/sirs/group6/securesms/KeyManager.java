@@ -1,11 +1,23 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms;
 
 import android.os.Environment;
+import android.util.Base64InputStream;
+import android.util.Log;
+
+import org.spongycastle.asn1.pkcs.PrivateKeyInfo;
+import org.spongycastle.openssl.PEMDecryptorProvider;
+import org.spongycastle.openssl.PEMEncryptedKeyPair;
+import org.spongycastle.openssl.PEMKeyPair;
+import org.spongycastle.openssl.PEMParser;
+import org.spongycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.spongycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+import org.spongycastle.util.encoders.Base64;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -23,11 +35,13 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.crypto.EncryptedPrivateKeyInfo;
 import javax.crypto.KeyGenerator;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToLoadKeyStoreException;
@@ -135,7 +149,7 @@ public class KeyManager {
         }
     }
 
-    private PrivateKey importPrivateKey(String filename, String algorithm)throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
+    private PrivateKey importDERPrivateKey(String filename, String algorithm)throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
         FileInputStream fis = new FileInputStream(filename);
         DataInputStream dis = new DataInputStream(fis);
         byte[] bytes = new byte[dis.available()];
@@ -151,12 +165,52 @@ public class KeyManager {
         return kf.generatePrivate(keysp);
     }
 
-    public void importPrivateKeys(String signingKeyFilename, String encryptionKeyFilename)throws ImportKeyException, FailedToStoreException{
+    private PrivateKey importEncryptedPEMPrivateKey(String filename, String password)throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
+        FileReader fileReader = new FileReader(filename);
+        PEMParser keyReader = new PEMParser(fileReader);
+
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+        PEMDecryptorProvider decryptionProv = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+
+        Object keyPair = keyReader.readObject();
+        PrivateKeyInfo keyInfo;
+
+        if (keyPair instanceof PEMEncryptedKeyPair) {
+            PEMKeyPair decryptedKeyPair = ((PEMEncryptedKeyPair) keyPair).decryptKeyPair(decryptionProv);
+            keyInfo = decryptedKeyPair.getPrivateKeyInfo();
+        } else {
+            keyInfo = ((PEMKeyPair) keyPair).getPrivateKeyInfo();
+        }
+
+        fileReader.close();
+        keyReader.close();
+
+        PrivateKey privateKey = converter.getPrivateKey(keyInfo);
+
+        /*OK so now we have the private key, and for RSA that's enough we can just return it
+          Unfortunately for ECDSA we have to perform a little Hack to get it working...
+          What happens is that openssl generates the private key saying its algorithm is "ECDSA"
+          but when it generates the corresponding certificate it says that the public key algorithm is "EC"
+          That causes a problem, because the keystore.PrivateKeyEntry constructor compares the two strings
+          and says they are not the same algorithm so we have to regenerate the PrivateKey with algorithm set to "EC"
+         */
+        if(privateKey.getAlgorithm().equals("ECDSA")){
+            byte[] encodedPrivKey = privateKey.getEncoded();
+            PKCS8EncodedKeySpec keysp = new PKCS8EncodedKeySpec(encodedPrivKey);
+            KeyFactory kf = KeyFactory.getInstance("EC");
+            return kf.generatePrivate(keysp);
+        }else
+            return privateKey;
+
+
+    }
+
+    public void importPrivateKeys(String signingKeyFilename, String encryptionKeyFilename, String password)throws ImportKeyException, FailedToStoreException{
         KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
 
         //Import the EC private key
         try {
-            PrivateKey signingPrivateKey = importPrivateKey(signingKeyFilename, "EC");
+            PrivateKey signingPrivateKey = importEncryptedPEMPrivateKey(signingKeyFilename, password);
             Certificate signingCert = ks.getCertificate(OWN + SIGNING_CERT);
             Certificate[] certificate_chain = {signingCert};//WARNING! HACK!! This should be the cert chain!
             KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(signingPrivateKey, certificate_chain);
@@ -169,7 +223,7 @@ public class KeyManager {
 
         //Import the RSA private key
         try {
-            PrivateKey encryptionPrivateKey = importPrivateKey(encryptionKeyFilename, "RSA");
+            PrivateKey encryptionPrivateKey = importEncryptedPEMPrivateKey(encryptionKeyFilename, password);
             Certificate encryptionCert = ks.getCertificate(OWN + ENCRYPTION_CERT);
             Certificate[] certificate_chain = {encryptionCert};//WARNING! HACK!! This should be the cert chain!
             KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(encryptionPrivateKey, certificate_chain);
@@ -241,7 +295,7 @@ public class KeyManager {
             KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
             KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry)ks.getEntry(OWN+SIGNING_KEY, protParam);
             if(null == privKeyEntry || !(privKeyEntry instanceof KeyStore.PrivateKeyEntry)) {
-                importPrivateKeys(sdcard + "/privateECkey.der", sdcard + "/privateRSAkey.der");
+                importPrivateKeys(sdcard + "/privateECkey.pem", sdcard + "/privateRSAkey.pem", "password12345");
                 privKeyEntry = (KeyStore.PrivateKeyEntry)ks.getEntry(OWN+SIGNING_KEY, protParam);
             }
             PrivateKey privKey = privKeyEntry.getPrivateKey();
@@ -263,8 +317,7 @@ public class KeyManager {
             else
                 return "Something went wrong!";
         }catch (Exception e){
-            //return e.getClass().toString();
-            return e.getMessage();
+            return e.getClass().toString() + e.getMessage();
         }
    }
 
