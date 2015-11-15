@@ -58,6 +58,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToLoadKeyStoreException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRemoveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.ImportKeyException;
@@ -111,7 +112,7 @@ public class KeyManager {
         KeyStore ks = KeyStore.getInstance("UBER", "SC");
         java.io.FileInputStream fis = null;
         try {
-            fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);
+            fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Think! should we realy be getting the sdcard path here?
             ks.load(fis, keyStorePassword);
         }catch(FileNotFoundException e){
             ks.load(null);
@@ -395,8 +396,18 @@ public class KeyManager {
             KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
             KeyStore.SecretKeyEntry secretKeyEntry = new KeyStore.SecretKeyEntry(sessionKey);
             ks.setEntry(sessionId + SECRET_KEY, secretKeyEntry, protParam);
-        }catch(KeyStoreException e){
+            saveKeyStore();
+        }catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e){
             throw new FailedToStoreException("Failed to store the session key");
+        }
+    }
+
+    public void removeSessionKey(String sessionId)throws FailedToRemoveKeyException {
+        try{
+            ks.deleteEntry(sessionId + SECRET_KEY);
+            saveKeyStore();
+        }catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e){
+            throw new FailedToRemoveKeyException("Failed to remove session key");
         }
     }
 
@@ -435,9 +446,17 @@ public class KeyManager {
             if(!decipheredText.equals(textToEncrypt))
                 return "Something went wrong with AES";
 
+            removeSessionKey("912356789");
+            try{
+                getSessionKey("912356789");
+                return "Key was not properly deleted";
+            }catch (FailedToRetrieveKeyException e){
+                //Everything is fine
+            }
+
 
             //Test EC keys
-            
+
             //Make sure the CA certificate is imported
             Certificate CACert = ks.getCertificate(CACERT);
             if(null == CACert){
