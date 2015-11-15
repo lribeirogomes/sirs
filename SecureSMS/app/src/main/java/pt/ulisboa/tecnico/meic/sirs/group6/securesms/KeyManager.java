@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -31,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertPath;
@@ -53,7 +53,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToLoadKeyStoreException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRetrieveKeyException;
@@ -68,8 +70,6 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.InvalidCertifica
  */
 public class KeyManager {
 
-    private final int EC_KEY_SIZE = 224;
-    private final int RSA_KEY_SIZE = 2048;
     private final int AES_KEY_SIZE = 128;
 
     private static final String KEYSTORE_FILE = "/SecureSMS.ks";
@@ -79,6 +79,7 @@ public class KeyManager {
     private static final String ENCRYPTION_CERT = "_Encryption_Certificate";
     private static final String SIGNING_KEY = "_Signing_Key";
     private static final String ENCRYPTION_KEY = "_Encryption_Key";
+    private static final String SECRET_KEY = "_Secret_Key";
     private static final String CACERT = "CA_Certificate";
 
     private static KeyStore ks = null;
@@ -207,7 +208,7 @@ public class KeyManager {
             if(null == caCert)
                 throw new FailedToRetrieveKeyException("Missing the CA Certificate");
             TrustAnchor trustAnchor = new TrustAnchor(caCert, null);
-            Set trustAnchorSet = new HashSet<TrustAnchor>();    //This can only be a HashSet (ArraySet is only available in API23 and the other sets require Comparable)
+            Set<TrustAnchor> trustAnchorSet = new HashSet<TrustAnchor>();    //This can only be a HashSet (ArraySet is only available in API23 and the other sets require Comparable)
             trustAnchorSet.add(trustAnchor);
 
             //Setup the the certificate validator
@@ -383,19 +384,60 @@ public class KeyManager {
         }
     }
 
-    public Key generateNewAESKey() throws NoSuchAlgorithmException{
+    public SecretKey generateNewSessionKey() throws NoSuchAlgorithmException{
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(AES_KEY_SIZE);
+        keyGen.init(AES_KEY_SIZE, new SecureRandom());
         return keyGen.generateKey();
     }
 
+    public void storeSessionKey(String sessionId, SecretKey sessionKey)throws FailedToStoreException{
+        try {
+            KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
+            KeyStore.SecretKeyEntry secretKeyEntry = new KeyStore.SecretKeyEntry(sessionKey);
+            ks.setEntry(sessionId + SECRET_KEY, secretKeyEntry, protParam);
+        }catch(KeyStoreException e){
+            throw new FailedToStoreException("Failed to store the session key");
+        }
+    }
+
+    public SecretKey getSessionKey(String sessionId)throws FailedToRetrieveKeyException{
+        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
+        try {
+            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) ks.getEntry(sessionId + SECRET_KEY, protParam);
+            if (null == secretKeyEntry)
+                throw new FailedToRetrieveKeyException("No session key with that id.");
+            if (!(secretKeyEntry instanceof KeyStore.SecretKeyEntry))
+                throw new FailedToRetrieveKeyException("Session key is invalid.");
+            return secretKeyEntry.getSecretKey();
+
+        }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
+            throw new FailedToRetrieveKeyException("Key storage error.");
+        }
+    }
+
     //THIS IS A TESTING METHOD, TO BE REMOVED
-    public String testECSignature(){
+    public String test(){
         try{
 
             String sdcard = Environment.getExternalStorageDirectory().getAbsolutePath();
 
+            //Test Session Keys
+            String textToEncrypt = "This is a message we want to encrypt";
+            SecretKey sessionKey = generateNewSessionKey();
+            storeSessionKey("912356789", sessionKey);
+            Cipher aesCipher = Cipher.getInstance("AES/ECB/withCTS", "BC");
+            aesCipher.init(Cipher.ENCRYPT_MODE, sessionKey);
+            byte[] encryptedText = aesCipher.doFinal(textToEncrypt.getBytes("UTF-8"));
 
+            SecretKey retrievedSessionKey = getSessionKey("912356789");
+            aesCipher.init(Cipher.DECRYPT_MODE, retrievedSessionKey);
+            String decipheredText = new String(aesCipher.doFinal(encryptedText), "UTF-8");
+            if(!decipheredText.equals(textToEncrypt))
+                return "Something went wrong with AES";
+
+
+            //Test EC keys
+            
             //Make sure the CA certificate is imported
             Certificate CACert = ks.getCertificate(CACERT);
             if(null == CACert){
@@ -442,6 +484,7 @@ public class KeyManager {
                 return "Signature verified successfully! Signature length: " + realSig.length + " bytes";
             else
                 return "Something went wrong!";
+
         }catch (Exception e){
             return e.getClass().toString() + e.getMessage();
         }
