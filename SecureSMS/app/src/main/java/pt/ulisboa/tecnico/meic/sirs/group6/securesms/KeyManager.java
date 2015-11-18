@@ -1,25 +1,25 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms;
 
 import android.os.Environment;
-import android.util.Base64InputStream;
-import android.util.Log;
 
 import org.spongycastle.asn1.pkcs.PrivateKeyInfo;
+import org.spongycastle.asn1.x500.RDN;
+import org.spongycastle.asn1.x500.X500Name;
+import org.spongycastle.asn1.x500.style.BCStyle;
+import org.spongycastle.asn1.x500.style.IETFUtils;
+import org.spongycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.spongycastle.openssl.PEMDecryptorProvider;
 import org.spongycastle.openssl.PEMEncryptedKeyPair;
 import org.spongycastle.openssl.PEMKeyPair;
 import org.spongycastle.openssl.PEMParser;
 import org.spongycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.spongycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
-import org.spongycastle.util.encoders.Base64;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.Key;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -27,28 +27,39 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Signature;
+import java.security.SecureRandom;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.CertPath;
+import java.security.cert.CertPathValidator;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.PKIXParameters;
+import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import javax.crypto.EncryptedPrivateKeyInfo;
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToGenerateKeyException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToLoadKeyStoreException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRemoveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.ImportKeyException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.InvalidCertificateException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.UntrustedCertificateException;
 
 /**
  * Created by joao on 11/11/15.
@@ -57,8 +68,6 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.InvalidCertifica
  */
 public class KeyManager {
 
-    private final int EC_KEY_SIZE = 224;
-    private final int RSA_KEY_SIZE = 2048;
     private final int AES_KEY_SIZE = 128;
 
     private static final String KEYSTORE_FILE = "/SecureSMS.ks";
@@ -68,9 +77,11 @@ public class KeyManager {
     private static final String ENCRYPTION_CERT = "_Encryption_Certificate";
     private static final String SIGNING_KEY = "_Signing_Key";
     private static final String ENCRYPTION_KEY = "_Encryption_Key";
+    private static final String SECRET_KEY = "_Secret_Key";
+    private static final String CACERT = "CA_Certificate";
 
-    private static KeyStore ks = null;
-    private static char[] keyStorePassword;
+    private static KeyStore _ks = null;
+    private static char[] _keyStorePassword;
 
     private static KeyManager ourInstance = new KeyManager();
 
@@ -84,37 +95,32 @@ public class KeyManager {
     }
 
     private static void init(char[] password)throws FailedToLoadKeyStoreException{
-        if(null == ks){
-            keyStorePassword = password;
+        if(null == _ks){
+            _keyStorePassword = password;
             try {
-                ks = getKeyStore();
+                _ks = KeyStore.getInstance("UBER", "SC");
+                java.io.FileInputStream fis = null;
+                try {
+                    fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Think! should we realy be getting the sdcard path here?
+                    _ks.load(fis, _keyStorePassword);
+                }catch(FileNotFoundException e){
+                    _ks.load(null);
+                } finally {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                }
             }catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | NoSuchProviderException e){
                 throw new FailedToLoadKeyStoreException(e.getMessage());
             }
         }
     }
 
-    private static KeyStore getKeyStore()throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException{
-        KeyStore ks = KeyStore.getInstance("UBER", "SC");
-        java.io.FileInputStream fis = null;
-        try {
-            fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);
-            ks.load(fis, keyStorePassword);
-        }catch(FileNotFoundException e){
-            ks.load(null);
-        } finally {
-            if (fis != null) {
-                fis.close();
-            }
-        }
-        return ks;
-    }
-
     private void saveKeyStore()throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException{
         java.io.FileOutputStream fos = null;
         try {
             fos = new java.io.FileOutputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);
-            ks.store(fos, keyStorePassword);
+            _ks.store(fos, _keyStorePassword);
         } finally {
             if (fos != null) {
                 fos.close();
@@ -122,18 +128,145 @@ public class KeyManager {
         }
     }
 
-    public void importCertificates(String filename) throws FailedToStoreException, InvalidCertificateException{
+    public PrivateKey getMySigningPrivateKey()throws FailedToRetrieveKeyException{
+        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
+        try {
+            KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry) _ks.getEntry(OWN + SIGNING_KEY, protParam);
+            if (null == privKeyEntry)
+                throw new FailedToRetrieveKeyException("Private signing key not yet imported.");
+            if (!(privKeyEntry instanceof KeyStore.PrivateKeyEntry))
+                throw new FailedToRetrieveKeyException("Private key is invalid.");
+            return privKeyEntry.getPrivateKey();
+
+        }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
+            throw new FailedToRetrieveKeyException("Key storage error.");
+        }
+    }
+
+    public PrivateKey getMyEncryptionPrivateKey()throws FailedToRetrieveKeyException{
+        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
+        try {
+            KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry) _ks.getEntry(OWN + ENCRYPTION_KEY, protParam);
+            if (null == privKeyEntry)
+                throw new FailedToRetrieveKeyException("Private encryption key not yet imported.");
+            if (!(privKeyEntry instanceof KeyStore.PrivateKeyEntry))
+                throw new FailedToRetrieveKeyException("Private key is invalid.");
+            return privKeyEntry.getPrivateKey();
+
+        }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
+            throw new FailedToRetrieveKeyException("Key storage error.");
+        }
+    }
+
+    public PublicKey getContactSigningPublicKey(String phonenumber)throws FailedToRetrieveKeyException{
+        try{
+            Certificate signCert = _ks.getCertificate(phonenumber + SIGNING_CERT);
+            if(null == signCert)
+                throw new FailedToRetrieveKeyException("Don't have a certificate for this phonenumber");
+            return signCert.getPublicKey();
+        }catch (KeyStoreException e){
+            throw new FailedToRetrieveKeyException("KeyStore failed");
+        }
+    }
+
+    public PublicKey getContactEncryptionPublicKey(String phonenumber)throws FailedToRetrieveKeyException{
+        try{
+            Certificate signCert = _ks.getCertificate(phonenumber + ENCRYPTION_CERT);
+            if(null == signCert)
+                throw new FailedToRetrieveKeyException("Don't have a certificate for this phonenumber");
+            return signCert.getPublicKey();
+        }catch (KeyStoreException e){
+            throw new FailedToRetrieveKeyException("KeyStore failed");
+        }
+    }
+
+    public SecretKey generateNewSessionKey(String sessionId) throws FailedToGenerateKeyException, FailedToStoreException{
+        try {
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(AES_KEY_SIZE, new SecureRandom());
+            SecretKey sessionKey = keyGen.generateKey();
+
+            KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
+            KeyStore.SecretKeyEntry secretKeyEntry = new KeyStore.SecretKeyEntry(sessionKey);
+            _ks.setEntry(sessionId + SECRET_KEY, secretKeyEntry, protParam);
+            saveKeyStore();
+
+            return sessionKey;
+        }catch(KeyStoreException | IOException | CertificateException e){
+            throw new FailedToStoreException("Failed to store the session key");
+        }catch (NoSuchAlgorithmException e){
+            throw new FailedToGenerateKeyException("AES cipher is not available");
+        }
+    }
+
+    public SecretKey getSessionKey(String sessionId)throws FailedToRetrieveKeyException{
+        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
+        try {
+            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) _ks.getEntry(sessionId + SECRET_KEY, protParam);
+            if (null == secretKeyEntry)
+                throw new FailedToRetrieveKeyException("No session key with that id.");
+            if (!(secretKeyEntry instanceof KeyStore.SecretKeyEntry))
+                throw new FailedToRetrieveKeyException("Session key is invalid.");
+            return secretKeyEntry.getSecretKey();
+
+        }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
+            throw new FailedToRetrieveKeyException("Key storage error.");
+        }
+    }
+
+    public void removeSessionKey(String sessionId)throws FailedToRemoveKeyException {
+        try{
+            _ks.deleteEntry(sessionId + SECRET_KEY);
+            saveKeyStore();
+        }catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e){
+            throw new FailedToRemoveKeyException("Failed to remove session key");
+        }
+    }
+
+    public void importCACertificate(String filename)throws FailedToStoreException, InvalidCertificateException{
+        //TODO: For now we are limited to only one CA certificate
+        try{
+            X509Certificate cacert = (X509Certificate)CertificateFactory.getInstance("X509").generateCertificate(new FileInputStream(filename));
+            cacert.checkValidity();
+            _ks.setCertificateEntry(CACERT, cacert);
+            saveKeyStore();
+        }catch(CertificateExpiredException e){
+            throw new InvalidCertificateException("Certificate has expired.");
+        }catch (CertificateNotYetValidException e){
+            throw new InvalidCertificateException("Certificate is not yet valid.");
+        }catch(CertificateException e){
+            throw new InvalidCertificateException("Not a valid X509 Certificate.");
+        }catch(FileNotFoundException e){
+            throw new InvalidCertificateException("File not found");
+        }catch(KeyStoreException | IOException | NoSuchAlgorithmException e){
+            throw new FailedToStoreException("Failed to store Certificates");
+        }
+    }
+
+    public void importUserCertificates(String filename, boolean own, boolean validate) throws FailedToStoreException, InvalidCertificateException, FailedToRetrieveKeyException, UntrustedCertificateException{
         try{
             Collection col_crt = CertificateFactory.getInstance("X509").generateCertificates(new FileInputStream(filename));
             Iterator<X509Certificate> iter = col_crt.iterator();
             while(iter.hasNext()){
                 X509Certificate cert = iter.next();
                 cert.checkValidity();
-                //TODO: use CertificateFactory.generateCertPath(cert) to verify the authenticity of the certificate with a CertPathValidator
+                //We might want to import a self-signed certificate that would otherwise fail validity checks
+                if(validate)
+                    checkCertificateValidity(cert);
+                String name;
+                if(own)
+                     name = OWN;
+                else {
+                    //Get the CN of the subject
+                    X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+                    RDN cnRdn = x500name.getRDNs(BCStyle.CN)[0];
+                    name = IETFUtils.valueToString(cnRdn.getFirst().getValue());
+                }
+
                 if(cert.getPublicKey().getAlgorithm().equals("EC"))
-                    ks.setCertificateEntry(OWN + SIGNING_CERT, cert);
+                    _ks.setCertificateEntry(name + SIGNING_CERT, cert);
                 if(cert.getPublicKey().getAlgorithm().equals("RSA"))
-                    ks.setCertificateEntry(OWN + ENCRYPTION_CERT, cert);
+                    _ks.setCertificateEntry(name + ENCRYPTION_CERT, cert);
             }
             saveKeyStore();
         }catch(CertificateExpiredException e){
@@ -149,20 +282,41 @@ public class KeyManager {
         }
     }
 
-    private PrivateKey importDERPrivateKey(String filename, String algorithm)throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
-        FileInputStream fis = new FileInputStream(filename);
-        DataInputStream dis = new DataInputStream(fis);
-        byte[] bytes = new byte[dis.available()];
-        dis.readFully(bytes);
-        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+    public void importPrivateKeys(String signingKeyFilename, String encryptionKeyFilename, String password)throws ImportKeyException, FailedToStoreException{
+        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
 
-        byte[] key = new byte[bais.available()];
-        KeyFactory kf = KeyFactory.getInstance(algorithm);
-        bais.read(key, 0, bais.available());
-        bais.close();
+        //Import the EC private key
+        try {
+            PrivateKey signingPrivateKey = importEncryptedPEMPrivateKey(signingKeyFilename, password);
+            Certificate signingCert = _ks.getCertificate(OWN + SIGNING_CERT);
+            Certificate[] certificate_chain = {signingCert};//WARNING! HACK!! This should be the cert chain!
+            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(signingPrivateKey, certificate_chain);
+            _ks.setEntry(OWN + SIGNING_KEY, privKeyEntry, protParam);
+        }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
+            throw new ImportKeyException("Failed to import the signing private key");
+        }catch(KeyStoreException e){
+            throw new ImportKeyException("Missing the signing certificate for the private key");
+        }
 
-        PKCS8EncodedKeySpec keysp = new PKCS8EncodedKeySpec(key);
-        return kf.generatePrivate(keysp);
+        //Import the RSA private key
+        try {
+            PrivateKey encryptionPrivateKey = importEncryptedPEMPrivateKey(encryptionKeyFilename, password);
+            Certificate encryptionCert = _ks.getCertificate(OWN + ENCRYPTION_CERT);
+            Certificate[] certificate_chain = {encryptionCert};//WARNING! HACK!! This should be the cert chain!
+            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(encryptionPrivateKey, certificate_chain);
+            _ks.setEntry(OWN + ENCRYPTION_KEY, privKeyEntry, protParam);
+        }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
+            throw new ImportKeyException("Failed to import the encryption private key");
+        }catch(KeyStoreException e){
+            throw new ImportKeyException("Missing the encryption certificate for the private key");
+        }
+
+        //Store both keys
+        try {
+            saveKeyStore();
+        }catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e){
+            throw new FailedToStoreException("Failed to store the private keys");
+        }
     }
 
     private PrivateKey importEncryptedPEMPrivateKey(String filename, String password)throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
@@ -205,120 +359,39 @@ public class KeyManager {
 
     }
 
-    public void importPrivateKeys(String signingKeyFilename, String encryptionKeyFilename, String password)throws ImportKeyException, FailedToStoreException{
-        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
-
-        //Import the EC private key
-        try {
-            PrivateKey signingPrivateKey = importEncryptedPEMPrivateKey(signingKeyFilename, password);
-            Certificate signingCert = ks.getCertificate(OWN + SIGNING_CERT);
-            Certificate[] certificate_chain = {signingCert};//WARNING! HACK!! This should be the cert chain!
-            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(signingPrivateKey, certificate_chain);
-            ks.setEntry(OWN + SIGNING_KEY, privKeyEntry, protParam);
-        }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
-            throw new ImportKeyException("Failed to import the signing private key");
-        }catch(KeyStoreException e){
-            throw new ImportKeyException("Missing the signing certificate for the private key");
-        }
-
-        //Import the RSA private key
-        try {
-            PrivateKey encryptionPrivateKey = importEncryptedPEMPrivateKey(encryptionKeyFilename, password);
-            Certificate encryptionCert = ks.getCertificate(OWN + ENCRYPTION_CERT);
-            Certificate[] certificate_chain = {encryptionCert};//WARNING! HACK!! This should be the cert chain!
-            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(encryptionPrivateKey, certificate_chain);
-            ks.setEntry(OWN + ENCRYPTION_KEY, privKeyEntry, protParam);
-        }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
-            throw new ImportKeyException("Failed to import the encryption private key");
-        }catch(KeyStoreException e){
-            throw new ImportKeyException("Missing the encryption certificate for the private key");
-        }
-
-        //Store both keys
-        try {
-            saveKeyStore();
-        }catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e){
-            throw new FailedToStoreException("Failed to store the private keys");
-        }
-    }
-
-    public PrivateKey getMySigningPrivateKey()throws FailedToRetrieveKeyException{
-        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
-        try {
-            KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(OWN + SIGNING_KEY, protParam);
-            if (null == privKeyEntry)
-                throw new FailedToRetrieveKeyException("Private signing key not yet imported.");
-            if (!(privKeyEntry instanceof KeyStore.PrivateKeyEntry))
-                throw new FailedToRetrieveKeyException("Private key is invalid.");
-            return privKeyEntry.getPrivateKey();
-
-        }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
-            throw new FailedToRetrieveKeyException("Key storage error.");
-        }
-    }
-
-    public PrivateKey getMyEncryptionPrivateKey()throws FailedToRetrieveKeyException{
-        KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
-        try {
-            KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(OWN + ENCRYPTION_KEY, protParam);
-            if (null == privKeyEntry)
-                throw new FailedToRetrieveKeyException("Private encryption key not yet imported.");
-            if (!(privKeyEntry instanceof KeyStore.PrivateKeyEntry))
-                throw new FailedToRetrieveKeyException("Private key is invalid.");
-            return privKeyEntry.getPrivateKey();
-
-        }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
-            throw new FailedToRetrieveKeyException("Key storage error.");
-        }
-    }
-
-    public Key generateNewAESKey() throws NoSuchAlgorithmException{
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(AES_KEY_SIZE);
-        return keyGen.generateKey();
-    }
-
-    //THIS IS A TESTING METHOD, TO BE REMOVED
-    public String testECSignature(){
+    private void checkCertificateValidity(X509Certificate certificate)throws FailedToRetrieveKeyException, InvalidCertificateException, UntrustedCertificateException{
+        /* Certificate validity checking only validates certificates that were signed directly by the CA Certificate.
+           (no chains and remember that we only support having only ONE CA certificate)
+        */
         try{
+            //Get the CA certificate and set up a TrustAnchor
+            X509Certificate caCert = (X509Certificate) _ks.getCertificate(CACERT);
+            if(null == caCert)
+                throw new FailedToRetrieveKeyException("Missing the CA Certificate");
+            TrustAnchor trustAnchor = new TrustAnchor(caCert, null);
+            Set<TrustAnchor> trustAnchorSet = new HashSet<TrustAnchor>();    //This can only be a HashSet (ArraySet is only available in API23 and the other sets require Comparable)
+            trustAnchorSet.add(trustAnchor);
 
-            String sdcard = Environment.getExternalStorageDirectory().getAbsolutePath();
+            //Setup the the certificate validator
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            PKIXParameters params = new PKIXParameters(trustAnchorSet);
+            CertPathValidator cpv = CertPathValidator.getInstance(CertPathValidator.getDefaultType());
+            params.setRevocationEnabled(false);
 
-            Certificate ECSignCert = ks.getCertificate(OWN + SIGNING_CERT);
-            if(null == ECSignCert){
-                    importCertificates(sdcard + "/certificates.pem");
-                    ECSignCert = ks.getCertificate(OWN + SIGNING_CERT);
-            }
-            PublicKey pubKey = ECSignCert.getPublicKey(); //Get the public key from the signing certificate
+            List<X509Certificate> certList = new ArrayList<X509Certificate>();
 
+            //Validate the signing certificate
+            certList.add(certificate);
+            CertPath cp = cf.generateCertPath(certList);
+            cpv.validate(cp, params);
 
-            KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(keyStorePassword);
-            KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry)ks.getEntry(OWN+SIGNING_KEY, protParam);
-            if(null == privKeyEntry || !(privKeyEntry instanceof KeyStore.PrivateKeyEntry)) {
-                importPrivateKeys(sdcard + "/privateECkey.pem", sdcard + "/privateRSAkey.pem", "password12345");
-                privKeyEntry = (KeyStore.PrivateKeyEntry)ks.getEntry(OWN+SIGNING_KEY, protParam);
-            }
-            PrivateKey privKey = privKeyEntry.getPrivateKey();
-
-            //Sign some text
-            Signature dsa = Signature.getInstance("SHA224withECDSA");
-            dsa.initSign(privKey);
-            String str = "This is a string to sign";
-
-            byte[] strByte = str.getBytes("UTF-8");
-            dsa.update(strByte);
-            byte[] realSig = dsa.sign();
-
-            //Verify the signature
-            dsa.initVerify(pubKey);
-            dsa.update(strByte);
-            if (dsa.verify(realSig))
-                return "Signature verified successfully! Signature length: " + realSig.length + " bytes";
-            else
-                return "Something went wrong!";
-        }catch (Exception e){
-            return e.getClass().toString() + e.getMessage();
+        }catch (KeyStoreException e){
+            throw new FailedToRetrieveKeyException("KeyStore failed");
+        }catch(CertificateException | NoSuchAlgorithmException | InvalidAlgorithmParameterException e){
+            throw new InvalidCertificateException("Cannot check validity of certificate");
+        }catch(CertPathValidatorException e){
+            throw new UntrustedCertificateException("Certificate is not valid!");
         }
-   }
+    }
 
 }
