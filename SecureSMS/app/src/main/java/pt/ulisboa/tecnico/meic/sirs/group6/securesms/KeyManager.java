@@ -101,7 +101,7 @@ public class KeyManager {
                 _ks = KeyStore.getInstance("UBER", "SC");
                 java.io.FileInputStream fis = null;
                 try {
-                    fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Think! should we realy be getting the sdcard path here?
+                    fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Store on internal memory
                     _ks.load(fis, _keyStorePassword);
                 }catch(FileNotFoundException e){
                     _ks.load(null);
@@ -119,7 +119,7 @@ public class KeyManager {
     private void saveKeyStore()throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException{
         java.io.FileOutputStream fos = null;
         try {
-            fos = new java.io.FileOutputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);
+            fos = new java.io.FileOutputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Store on internal memory
             _ks.store(fos, _keyStorePassword);
         } finally {
             if (fos != null) {
@@ -282,41 +282,38 @@ public class KeyManager {
         }
     }
 
-    public void importPrivateKeys(String signingKeyFilename, String encryptionKeyFilename, String password)throws ImportKeyException, FailedToStoreException{
+    public void importPrivateKey(String keyFilename, String password)throws  ImportKeyException, FailedToStoreException{
         KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
-
-        //Import the EC private key
         try {
-            PrivateKey signingPrivateKey = importEncryptedPEMPrivateKey(signingKeyFilename, password);
-            Certificate signingCert = _ks.getCertificate(OWN + SIGNING_CERT);
-            Certificate[] certificate_chain = {signingCert};//WARNING! HACK!! This should be the cert chain!
-            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(signingPrivateKey, certificate_chain);
-            _ks.setEntry(OWN + SIGNING_KEY, privKeyEntry, protParam);
+            PrivateKey privateKey = importEncryptedPEMPrivateKey(keyFilename, password);
+            Certificate cert;
+            if(privateKey.getAlgorithm().equals("EC"))
+                cert = _ks.getCertificate(OWN + SIGNING_CERT);
+            else if(privateKey.getAlgorithm().equals("RSA"))
+                cert = _ks.getCertificate(OWN + ENCRYPTION_CERT);
+            else
+                throw new ImportKeyException("Private key uses an unsupported algorithm");
+
+            Certificate[] certificate_chain = {cert};
+            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(privateKey, certificate_chain);
+
+            if(privateKey.getAlgorithm().equals("EC"))
+                _ks.setEntry(OWN + SIGNING_KEY, privKeyEntry, protParam);
+            else if(privateKey.getAlgorithm().equals("RSA"))
+                _ks.setEntry(OWN + ENCRYPTION_KEY, privKeyEntry, protParam);
+
         }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
-            throw new ImportKeyException("Failed to import the signing private key");
+            throw new ImportKeyException("Failed to import the private key");
         }catch(KeyStoreException e){
-            throw new ImportKeyException("Missing the signing certificate for the private key");
+            throw new ImportKeyException("Missing the certificate for the private key");
         }
 
-        //Import the RSA private key
-        try {
-            PrivateKey encryptionPrivateKey = importEncryptedPEMPrivateKey(encryptionKeyFilename, password);
-            Certificate encryptionCert = _ks.getCertificate(OWN + ENCRYPTION_CERT);
-            Certificate[] certificate_chain = {encryptionCert};//WARNING! HACK!! This should be the cert chain!
-            KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(encryptionPrivateKey, certificate_chain);
-            _ks.setEntry(OWN + ENCRYPTION_KEY, privKeyEntry, protParam);
-        }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
-            throw new ImportKeyException("Failed to import the encryption private key");
-        }catch(KeyStoreException e){
-            throw new ImportKeyException("Missing the encryption certificate for the private key");
-        }
-
-        //Store both keys
         try {
             saveKeyStore();
         }catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e){
-            throw new FailedToStoreException("Failed to store the private keys");
+            throw new FailedToStoreException("Failed to store the private key");
         }
+
     }
 
     private PrivateKey importEncryptedPEMPrivateKey(String filename, String password)throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
@@ -393,5 +390,4 @@ public class KeyManager {
             throw new UntrustedCertificateException("Certificate is not valid!");
         }
     }
-
 }
