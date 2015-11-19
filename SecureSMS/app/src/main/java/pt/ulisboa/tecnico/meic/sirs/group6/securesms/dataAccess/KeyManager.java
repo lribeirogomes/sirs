@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sirs.group6.securesms;
+package pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess;
 
 import android.os.Environment;
 
@@ -43,6 +43,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,14 +53,13 @@ import java.util.Set;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToGenerateKeyException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToLoadKeyStoreException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRemoveKeyException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToRetrieveKeyException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.FailedToStoreException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.ImportKeyException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.InvalidCertificateException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.exceptions.UntrustedCertificateException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToGenerateKeyException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToRemoveKeyException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToStoreException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.ImportKeyException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.InvalidCertificateException;
 
 /**
  * Created by joao on 11/11/15.
@@ -75,13 +75,13 @@ public class KeyManager {
     private static final String OWN = "Own";
     private static final String SIGNING_CERT = "_Signing_Certificate";
     private static final String ENCRYPTION_CERT = "_Encryption_Certificate";
+    private static final String CACERT = "CA_Certificate";
     private static final String SIGNING_KEY = "_Signing_Key";
     private static final String ENCRYPTION_KEY = "_Encryption_Key";
     private static final String SECRET_KEY = "_Secret_Key";
-    private static final String CACERT = "CA_Certificate";
 
     private static KeyStore _ks = null;
-    private static char[] _keyStorePassword;
+    private static char[] _keyStorePassword = null;
 
     private static KeyManager ourInstance = new KeyManager();
 
@@ -111,9 +111,10 @@ public class KeyManager {
                     }
                 }
             }catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | NoSuchProviderException e){
-                throw new FailedToLoadKeyStoreException(e.getMessage());
+                throw new FailedToLoadKeyStoreException("Failed to load the keystore");
             }
-        }
+        }else if(!Arrays.equals(_keyStorePassword, password))
+            throw new FailedToLoadKeyStoreException("Wrong password");
     }
 
     private void saveKeyStore()throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException{
@@ -243,7 +244,7 @@ public class KeyManager {
         }
     }
 
-    public void importUserCertificates(String filename, boolean own, boolean validate) throws FailedToStoreException, InvalidCertificateException, FailedToRetrieveKeyException, UntrustedCertificateException{
+    public void importUserCertificates(String filename, boolean own, boolean validate) throws FailedToStoreException, InvalidCertificateException, FailedToRetrieveKeyException, CertPathValidatorException{
         try{
             Collection col_crt = CertificateFactory.getInstance("X509").generateCertificates(new FileInputStream(filename));
             Iterator<X509Certificate> iter = col_crt.iterator();
@@ -356,7 +357,7 @@ public class KeyManager {
 
     }
 
-    private void checkCertificateValidity(X509Certificate certificate)throws FailedToRetrieveKeyException, InvalidCertificateException, UntrustedCertificateException{
+    private void checkCertificateValidity(X509Certificate certificate)throws FailedToRetrieveKeyException, InvalidCertificateException, CertPathValidatorException{
         /* Certificate validity checking only validates certificates that were signed directly by the CA Certificate.
            (no chains and remember that we only support having only ONE CA certificate)
         */
@@ -386,8 +387,6 @@ public class KeyManager {
             throw new FailedToRetrieveKeyException("KeyStore failed");
         }catch(CertificateException | NoSuchAlgorithmException | InvalidAlgorithmParameterException e){
             throw new InvalidCertificateException("Cannot check validity of certificate");
-        }catch(CertPathValidatorException e){
-            throw new UntrustedCertificateException("Certificate is not valid!");
         }
     }
 }
