@@ -28,12 +28,11 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.Faile
 /**
  * Created by lribeirogomes on 17/11/15.
  */
-public class EncryptSMSDataWithPasswordService implements EncryptionService {
+public class EncryptDBDataService implements EncryptionService {
     private String _password, _data;
     private byte[] _result;
-    private Charset _charset = StandardCharsets.UTF_8;
 
-    public EncryptSMSDataWithPasswordService(String password, String data) {
+    public EncryptDBDataService(String password, String data) {
         _password = password;
         _data = data;
         _result = null;
@@ -48,31 +47,32 @@ public class EncryptSMSDataWithPasswordService implements EncryptionService {
 
     public void Execute () throws FailedToEncryptSMSException {
         try {
-            int saltLen = 32, ivLen = 32;
+            Charset _charset = StandardCharsets.UTF_8;
+            String algoritm = "PBKDF2WithHmacSHA1";
+            int saltLen = 32, ivLen = 16;
             byte[] seed = _password.getBytes(_charset);
             SecureRandom random = new SecureRandom(seed);
 
-            byte[] salt = new byte[saltLen];
-            byte[] iv = new byte[ivLen];
-            byte[] data = _data.getBytes(_charset);
+            byte[] salt = new byte[saltLen],
+                   iv = new byte[ivLen],
+                   data = _data.getBytes(_charset);
             char[] password = _password.toCharArray();
 
             random.nextBytes(salt);
             random.nextBytes(iv);
 
-            // Define encryption key
+            // Define secret key
             PBEKeySpec pbeKeySpec = new PBEKeySpec(
                     password,
                     salt,
-                    100,
-                    256);
-            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBEWithSHA256And256BitAES-CBC-BC");
+                    1000,
+                    128);
+            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(algoritm);
             SecretKey secretKey = keyFactory.generateSecret(pbeKeySpec);
             SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
-            byte[] key = secretKeySpec.getEncoded();
 
             // Define cipher parameters with key and IV
-            KeyParameter keyParam = new KeyParameter(key);
+            KeyParameter keyParam = new KeyParameter(secretKeySpec.getEncoded());
             CipherParameters params = new ParametersWithIV(keyParam, iv);
 
             // Define AES cipher in CBC mode with PKCS7 padding
@@ -90,8 +90,8 @@ public class EncryptSMSDataWithPasswordService implements EncryptionService {
             // Add salt and IV
             byte[] result = new byte[saltLen + ivLen + encryptedData.length];
             System.arraycopy(salt, 0, result, 0, saltLen);
-            System.arraycopy(iv, 0, result, saltLen, saltLen + ivLen);
-            System.arraycopy(encryptedData, 0, result, saltLen + ivLen, result.length);
+            System.arraycopy(iv, 0, result, saltLen, ivLen);
+            System.arraycopy(encryptedData, 0, result, saltLen + ivLen, encryptedData.length);
 
             _result = result;
         } catch (

@@ -1,10 +1,12 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain;
 
+import org.spongycastle.util.Store;
+
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.EncryptSMSDataWithPasswordService;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.EncryptDBDataService;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.EncryptionService;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.StoreSMSService;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToEncryptSMSException;
@@ -17,7 +19,6 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.MethodNot
  * Created by lribeirogomes on 17/11/15.
  */
 public class StoredSMSFactory {
-
 
     public StoredSMS getStoredSMS(String password, String destinationAddress, String data)
             throws FailedToGetStoredSMSException {
@@ -37,7 +38,7 @@ public class StoredSMSFactory {
                 throw new IllegalArgumentException("Invalid data.");
             }
             // Encrypt SMS Body using password
-            EncryptionService encryptionService = new EncryptSMSDataWithPasswordService(password, data);
+            EncryptionService encryptionService = new EncryptDBDataService(password, data);
             encryptionService.Execute();
             result = encryptionService.getResult();
 
