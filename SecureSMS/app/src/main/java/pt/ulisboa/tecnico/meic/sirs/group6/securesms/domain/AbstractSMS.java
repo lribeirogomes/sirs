@@ -6,12 +6,12 @@ package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain;
 public abstract class AbstractSMS {
     private int _date;
     private String _destinationAddress;
-    private byte[] _encryptedData;
+    private byte[] _Data;
 
     public AbstractSMS(int date, String destinationAddress, byte[] data) {
         _date = date;
         _destinationAddress = destinationAddress;
-        _encryptedData = data;
+        _Data = data;
     }
 
     public int getDate() {
@@ -20,7 +20,7 @@ public abstract class AbstractSMS {
     public String getDestinationAddress() {
         return _destinationAddress;
     }
-    public byte[] getEncryptedData() {
-        return _encryptedData;
+    public byte[] getData() {
+        return _Data;
     }
 }

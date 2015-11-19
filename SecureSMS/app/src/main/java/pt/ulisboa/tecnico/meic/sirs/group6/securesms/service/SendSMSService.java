@@ -27,21 +27,22 @@ public class SendSMSService {
 
     public void Execute() throws FailedToSendSMSException {
         try {
-            StoredSMSFactory storedSMSFactory = new StoredSMSFactory();
-            StoredSMS storedSMS = storedSMSFactory.getStoredSMS(_password, _destinationAddress, _data);
-            EncryptedSMSFactory encryptedSMSFactory = new EncryptedSMSFactory();
-            EncryptedSMS encryptedSMS = encryptedSMSFactory.getEncryptedSMS(storedSMS);
+            //StoredSMSFactory storedSMSFactory = new StoredSMSFactory();
+            //StoredSMS storedSMS = storedSMSFactory.getStoredSMS(_password, _destinationAddress, _data);
+            //EncryptedSMSFactory encryptedSMSFactory = new EncryptedSMSFactory();
+            //EncryptedSMS encryptedSMS = encryptedSMSFactory.getEncryptedSMS(storedSMS);
             SmsManager manager = SmsManager.getDefault();
-            manager.sendDataMessage(encryptedSMS.getDestinationAddress(),
+            manager.sendDataMessage(_destinationAddress,
                     null, // TODO: define scAddress if needed
                     SMS_PORT,
-                    encryptedSMS.getEncryptedData(),
+                    _data.getBytes("UTF-8"),
                     null,  // TODO: define sentIntent if needed
                     null); // TODO: define deliveryIntent if needed
-        } catch (
+        } /*catch (
                 IllegalArgumentException |
                 FailedToGetStoredSMSException |
-                FailedToGetEncryptedSMSException exception) {
+                FailedToGetEncryptedSMSException exception) {*/
+        catch (Exception exception) {
             throw new FailedToSendSMSException(exception);
         }
     }

@@ -1,7 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -24,7 +23,6 @@ public class DecryptSMSDataService {
     private SecretKeySpec _key;
     private byte[] _data;
     private String _result;
-    private Charset _charset = StandardCharsets.UTF_8;
 
     public DecryptSMSDataService(SecretKeySpec key, byte[] data) {
         _key = key;
@@ -41,6 +39,7 @@ public class DecryptSMSDataService {
 
     public void Execute () throws FailedToEncryptSMSException {
         try {
+            Charset charset = Charset.defaultCharset();
             int ivLen = 32;
 
             byte[] iv = new byte[ivLen];
@@ -65,7 +64,7 @@ public class DecryptSMSDataService {
             // Remove padding
             byte[] result = new byte[dataLen];
             System.arraycopy(buf, 0, result, 0, dataLen);
-            _result = new String(result, _charset);
+            _result = new String(result, charset);
         } catch (
                 NullPointerException |
                 NoSuchAlgorithmException |

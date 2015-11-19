@@ -1,29 +1,40 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.StoredSMSFactory;
+import android.content.Context;
+import android.content.Intent;
+
+import java.nio.charset.Charset;
+
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.ShowSMSActivity;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToReceiveSMSException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.MethodNotImplementedException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
  */
 public class ReceiveSMSService {
+    private Context _context;
     private String _destinationAddress;
     private byte[] _data;
 
-    public ReceiveSMSService (String destinationAddress,
+    public ReceiveSMSService (Context context,
+                              String destinationAddress,
                               byte[] data) {
+        _context = context;
         _destinationAddress = destinationAddress;
         _data = data;
     }
 
     public void Execute() throws FailedToReceiveSMSException {
         try {
-            StoredSMSFactory smsFactory = new StoredSMSFactory();
-            smsFactory.getStoredSMS(_destinationAddress, _data);
+            //StoredSMSFactory smsFactory = new StoredSMSFactory();
+            //StoredSMS sms = smsFactory.getStoredSMS(_destinationAddress, _data);
 
-            // TODO:Integrate interface with SMS services
-        } catch (MethodNotImplementedException exception) {
+            Intent result = new Intent(_context, ShowSMSActivity.class);
+            result.putExtra("Destination Address", _destinationAddress);//sms.getDestinationAddress());
+            result.putExtra("Data", new String( _data, Charset.defaultCharset()));//sms.getData(), Charset.defaultCharset()));
+            result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            _context.startActivity(result);
+        } catch (Exception exception) {//MethodNotImplementedException exception) {
             throw new FailedToReceiveSMSException(exception);
         }
     }

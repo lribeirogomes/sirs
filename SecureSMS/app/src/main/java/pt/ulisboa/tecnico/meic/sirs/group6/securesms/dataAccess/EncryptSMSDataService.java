@@ -1,33 +1,17 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess;
 
-import org.spongycastle.crypto.BufferedBlockCipher;
-import org.spongycastle.crypto.CipherParameters;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.crypto.engines.AESEngine;
-import org.spongycastle.crypto.modes.CBCBlockCipher;
-import org.spongycastle.crypto.paddings.BlockCipherPadding;
-import org.spongycastle.crypto.paddings.PKCS7Padding;
-import org.spongycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import org.spongycastle.crypto.params.KeyParameter;
-import org.spongycastle.crypto.params.ParametersWithIV;
-
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToEncryptSMSException;
@@ -40,7 +24,6 @@ public class EncryptSMSDataService implements EncryptionService {
     private SecretKeySpec _key;
     private String _data;
     private byte[] _result;
-    private Charset _charset = StandardCharsets.UTF_8;
 
     public EncryptSMSDataService(SecretKeySpec key, String data) {
         _key = key;
@@ -57,6 +40,7 @@ public class EncryptSMSDataService implements EncryptionService {
 
     public void Execute () throws FailedToEncryptSMSException {
         try {
+            Charset charset = Charset.defaultCharset();
             int ivLen = 32;
             SecureRandom random = new SecureRandom();
 

@@ -4,6 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.telephony.SmsMessage;
+
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.ReceiveSMSService;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToReceiveSMSException;
 
 /**
  * Created by joao on 11/1/15.
@@ -15,12 +19,24 @@ public class SMSReceiver extends BroadcastReceiver {
         // Get the SendSMSService map from Intent
         Bundle bundle = intent.getExtras();
 
-        if ( bundle != null )
+        // Get received SendSMSService array
+        Object[] smsExtra = (Object[]) bundle.get( "pdus" );
+
+        byte[] data;
+        String address;
+        SmsMessage sms;
+
+        for ( int i = 0; i < smsExtra.length; i++ )
         {
-            Intent result = new Intent(context, ReceiveSMSActivity.class);
-            result.putExtra(ReceiveSMSActivity.MESSAGES, bundle);
-            result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(result);
+            sms = SmsMessage.createFromPdu((byte[]) smsExtra[i]); //, "3gpp");
+            data = sms.getUserData();
+            address = sms.getOriginatingAddress();
+            ReceiveSMSService service = new ReceiveSMSService(context ,address, data);
+            try {
+                service.Execute();
+            } catch (FailedToReceiveSMSException exception) {
+                // TODO:Integrate interface with exception handling
+            }
         }
     }
 }

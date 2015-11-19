@@ -27,16 +27,6 @@ public class StoredSMSFactory {
         int date = calendar.get(GregorianCalendar.DATE);
 
         try {
-            // Validate Arguments
-            if (destinationAddress.isEmpty() && data.isEmpty()) {
-                throw new IllegalArgumentException("Invalid destination address and data.");
-            }
-            if (destinationAddress.isEmpty()) {
-                throw new IllegalArgumentException("Invalid destination address.");
-            }
-            if (data.isEmpty()) {
-                throw new IllegalArgumentException("Invalid data.");
-            }
             // Encrypt SMS Body using password
             EncryptionService encryptionService = new EncryptDBDataService(password, data);
             encryptionService.Execute();
@@ -46,7 +36,7 @@ public class StoredSMSFactory {
             StoreSMSService storageService = new StoreSMSService(date, destinationAddress, result);
             storageService.Execute();
 
-            return new StoredSMS(date ,destinationAddress, result) ;
+            return new StoredSMS(date ,destinationAddress, data) ;
         } catch (
                 NullPointerException |
                 IllegalArgumentException |

@@ -1,7 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetEncryptedSMSException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetStoredSMSException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
@@ -12,7 +11,7 @@ public class EncryptedSMSFactory {
         byte [] result;
 
         try {
-            result = sms.getEncryptedData();
+            result = sms.getData();
             // TODO: get session key
             // Get session key
             //KeyManager manager = KeyManager.getInstance(password.toCharArray());

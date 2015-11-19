@@ -25,7 +25,7 @@ public class StoreSMSService {
         String TABLE_SMS= "SMS";
 
         try {
-            ContentValues values=new ContentValues();
+            /*ContentValues values=new ContentValues();
             values.put("Time",_date);
             values.put("DestinationAddress",_destinationAddress);
             values.put("Data",_encrypted);
@@ -38,8 +38,8 @@ public class StoreSMSService {
                     "BEGIN" +
                     "    CREATE TABLE " + TABLE_SMS + "(Time int, DestinationAddress VARCHAR(20), Data VARCHAR(20))" +
                     "END");
-            dataBase.insertOrThrow("Data", null, values);
-        } catch (SQLException exception) {
+            dataBase.insertOrThrow("Data", null, values);*/
+        } catch (Exception exception) {//SQLException exception) {
             throw new FailedToStoreEncryptedSMSException(exception);
         }
     }

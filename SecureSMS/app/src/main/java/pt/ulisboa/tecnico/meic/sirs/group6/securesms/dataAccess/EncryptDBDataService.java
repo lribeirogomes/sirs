@@ -12,7 +12,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -47,7 +46,7 @@ public class EncryptDBDataService implements EncryptionService {
 
     public void Execute () throws FailedToEncryptSMSException {
         try {
-            Charset _charset = StandardCharsets.UTF_8;
+            Charset _charset = Charset.defaultCharset();
             String algoritm = "PBKDF2WithHmacSHA1";
             int saltLen = 32, ivLen = 16;
             byte[] seed = _password.getBytes(_charset);
