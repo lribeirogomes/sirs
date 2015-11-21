@@ -25,7 +25,7 @@ public class ImportPrivateKeyService {
 
     public void Execute() throws FailedToImportException {
         try {
-            KeyManager km = KeyManager.getInstance(_storagePassword.toCharArray());
+            KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importPrivateKey(_filename, _keyPassword);
         } catch (FailedToLoadKeyStoreException | FailedToStoreException | ImportKeyException e) {
             throw new FailedToImportException(e.getMessage());

@@ -25,7 +25,7 @@ public class ImportContactCertificatesService {
 
     public void Execute() throws FailedToImportException, UntrustedCertificateException{
         try {
-            KeyManager km = KeyManager.getInstance(_storagePassword.toCharArray());
+            KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importUserCertificates(_filename, false, _validate);
         } catch (FailedToLoadKeyStoreException | FailedToStoreException | InvalidCertificateException | FailedToRetrieveKeyException e) {
             throw new FailedToImportException(e.getMessage());

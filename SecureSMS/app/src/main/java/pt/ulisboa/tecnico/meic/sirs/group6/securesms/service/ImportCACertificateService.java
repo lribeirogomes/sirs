@@ -19,7 +19,7 @@ public class ImportCACertificateService {
 
     public void Execute() throws FailedToImportException {
         try {
-            KeyManager km = KeyManager.getInstance(_storagePassword.toCharArray());
+            KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importCACertificate(_filename);
         } catch (FailedToLoadKeyStoreException | FailedToStoreException | InvalidCertificateException e) {
             throw new FailedToImportException(e.getMessage());

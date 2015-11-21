@@ -40,6 +40,7 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
@@ -85,8 +86,8 @@ public class KeyManager {
 
     private static KeyManager ourInstance = new KeyManager();
 
-    public static KeyManager getInstance(char[] password)throws FailedToLoadKeyStoreException {
-        init(password);
+    public static KeyManager getInstance(String password)throws FailedToLoadKeyStoreException {
+        init(password.toCharArray());
         return ourInstance;
     }
 
@@ -283,7 +284,7 @@ public class KeyManager {
         }
     }
 
-    public void importPrivateKey(String keyFilename, String password)throws  ImportKeyException, FailedToStoreException{
+    public void importPrivateKey(String keyFilename, String password)throws  ImportKeyException, FailedToStoreException{ //TODO:Check key length
         KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
         try {
             PrivateKey privateKey = importEncryptedPEMPrivateKey(keyFilename, password);
@@ -298,9 +299,10 @@ public class KeyManager {
             Certificate[] certificate_chain = {cert};
             KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(privateKey, certificate_chain);
 
-            if(privateKey.getAlgorithm().equals("EC"))
+            if(privateKey.getAlgorithm().equals("EC")){
+                //((ECKey)privateKey).getParams().getOrder().bitLength()
                 _ks.setEntry(OWN + SIGNING_KEY, privKeyEntry, protParam);
-            else if(privateKey.getAlgorithm().equals("RSA"))
+            }else if(privateKey.getAlgorithm().equals("RSA"))
                 _ks.setEntry(OWN + ENCRYPTION_KEY, privKeyEntry, protParam);
 
         }catch(IOException | NoSuchAlgorithmException | InvalidKeySpecException e){
