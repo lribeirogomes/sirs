@@ -7,7 +7,6 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 
@@ -30,7 +29,8 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.InvalidSi
 public class Cryptography {
     private static final int IV_SIZE = 16;
 
-    public static byte[] symmetricCipher(byte[] plainText, SecretKey key)throws FailedToEncryptException{//TODO: Should we really use CBC? It will cost 16 extra characters
+    public static byte[] symmetricCipher(byte[] plainText, SecretKey key)throws FailedToEncryptException{
+        //Should we really use CBC? It will cost 16 extra characters
         try{
             SecureRandom random = new SecureRandom();
             byte iv[] = new byte[IV_SIZE];
@@ -53,11 +53,10 @@ public class Cryptography {
                 | IllegalBlockSizeException
                 | InvalidAlgorithmParameterException
                 | BadPaddingException e){
-            //throw new FailedToEncryptException("Failed to encrypt data");
-            throw new FailedToEncryptException(e.getClass().toString() + e.getMessage());
-
+            throw new FailedToEncryptException("Failed to encrypt data");
         }
     }
+
     public static byte[] symmetricDecipher(byte[] cipheredData, SecretKey key)throws FailedToDecryptException{
         byte[] iv = new byte[IV_SIZE];
         System.arraycopy(cipheredData,0, iv, 0, IV_SIZE);
@@ -80,16 +79,43 @@ public class Cryptography {
             throw new FailedToDecryptException("Failed to decrypt data");
         }
     }
-    public static byte[] asymmetricCipher(byte[] plainText, PublicKey key){
-        return null;
+
+    public static byte[] asymmetricCipher(byte[] plainText, PublicKey key)throws FailedToEncryptException{
+        try {
+            Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return cipher.doFinal(plainText);
+        }catch(NoSuchAlgorithmException
+                | NoSuchProviderException
+                | NoSuchPaddingException
+                |InvalidKeyException
+                | IllegalBlockSizeException
+                | BadPaddingException e){
+            throw new FailedToEncryptException("Failed to encrypt data");
+        }
     }
-    public static byte[] asymmetricDecipher(byte[] cipheredData, PrivateKey key){
-        return null;
+
+    public static byte[] asymmetricDecipher(byte[] cipheredData, PrivateKey key)throws FailedToDecryptException{
+        try {
+            Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            return cipher.doFinal(cipheredData);
+        }catch(NoSuchAlgorithmException
+                | NoSuchProviderException
+                | NoSuchPaddingException
+                |InvalidKeyException
+                | IllegalBlockSizeException
+                | BadPaddingException e){
+            throw new FailedToDecryptException("Failed to decrypt data");
+        }
     }
+
     public static byte[] passwordCipher(byte[] plainText, String password){
+        //TODO: implement me!
         return null;
     }
     public static byte[] passwordDecipher(byte[] cipheredData, String password){
+        //TODO: implement me!
         return null;
     }
 
@@ -103,6 +129,7 @@ public class Cryptography {
             throw new FailedToSignException("Failed to produce a signature");
         }
     }
+
     public static void verifySignature(byte[] message, byte[] signature, PublicKey key)throws FailedToVerifySignatureException, InvalidSignatureException{
         try{
             Signature dsa = Signature.getInstance("SHA224withECDSA");
