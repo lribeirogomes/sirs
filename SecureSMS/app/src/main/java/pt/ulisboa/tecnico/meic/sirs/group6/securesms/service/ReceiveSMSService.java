@@ -27,7 +27,7 @@ public class ReceiveSMSService {
     public void Execute() throws FailedToReceiveSMSException {
         try {
             //StoredSMSFactory smsFactory = new StoredSMSFactory();
-            //StoredSMS sms = smsFactory.getStoredSMS(_destinationAddress, _data);
+            //StoredSMS sms = smsFactory.getInstance(_destinationAddress, _data);
 
             Intent result = new Intent(_context, ShowSMSActivity.class);
             result.putExtra("Destination Address", _destinationAddress);//sms.getDestinationAddress());

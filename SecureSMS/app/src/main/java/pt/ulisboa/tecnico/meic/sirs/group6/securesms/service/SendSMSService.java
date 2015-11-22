@@ -2,12 +2,6 @@ package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
 import android.telephony.SmsManager;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.EncryptedSMS;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.EncryptedSMSFactory;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.StoredSMS;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.StoredSMSFactory;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetEncryptedSMSException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetStoredSMSException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToSendSMSException;
 
 /**
@@ -27,10 +21,8 @@ public class SendSMSService {
 
     public void Execute() throws FailedToSendSMSException {
         try {
-            //StoredSMSFactory storedSMSFactory = new StoredSMSFactory();
-            //StoredSMS storedSMS = storedSMSFactory.getStoredSMS(_password, _destinationAddress, _data);
-            //EncryptedSMSFactory encryptedSMSFactory = new EncryptedSMSFactory();
-            //EncryptedSMS encryptedSMS = encryptedSMSFactory.getEncryptedSMS(storedSMS);
+            //StoredSMS storedSMS = StoredSMS.getInstance(_password, _destinationAddress, _data);
+            //EncryptedSMS encryptedSMS = EncryptedSMS.getEncryptedSMS(storedSMS);
             SmsManager manager = SmsManager.getDefault();
             manager.sendDataMessage(_destinationAddress,
                     null, // TODO: define scAddress if needed

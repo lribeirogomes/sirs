@@ -5,6 +5,6 @@ package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions;
  */
 public class FailedToSendSMSException extends Exception {
     public FailedToSendSMSException(Throwable throwable){
-        super("Failed do send sms.", throwable);
+        super("Failed to send sms.", throwable);
     }
 }
