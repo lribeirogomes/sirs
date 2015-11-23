@@ -21,6 +21,8 @@ public class ChangePasswordService {
         try {
             Password password = Password.getInstance(_oldPassword);
             password.setPassword(_newPassword);
+
+            // TODO: integrate output with interface
         } catch (Exception exception) {//FailedToGetPasswordException exception) {
             throw new FailedToLoginException(exception);
         }

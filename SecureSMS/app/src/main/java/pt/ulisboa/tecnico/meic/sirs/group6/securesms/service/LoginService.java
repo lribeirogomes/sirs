@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.ContactFolder;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.Password;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetPasswordException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToLoginException;
@@ -16,8 +17,11 @@ public class LoginService {
 
     public void Execute() throws FailedToLoginException {
         try {
-            Password.getInstance(_password);
-        } catch (FailedToGetPasswordException exception) {
+            Password password = Password.getInstance(_password);
+            ContactFolder[] contactFolderList = password.getContactFolderList();
+
+            // TODO: integrate output with interface
+        } catch (Exception exception) {//FailedToGetPasswordException exception) {
             throw new FailedToLoginException(exception);
         }
     }

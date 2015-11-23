@@ -32,6 +32,8 @@ public class SendSMSService {
                     sms.getContent(),
                     null,  // TODO: define sentIntent if needed
                     null); // TODO: define deliveryIntent if needed
+
+            // TODO: integrate output with interface
         } catch (
                 IllegalArgumentException |
                 FailedToGetSMSException exception) {

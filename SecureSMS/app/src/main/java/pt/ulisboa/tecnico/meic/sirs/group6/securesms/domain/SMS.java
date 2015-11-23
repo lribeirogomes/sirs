@@ -35,7 +35,7 @@ public class SMS {
             StoreSMSService storageService = new StoreSMSService(date, destinationAddress, result);
             storageService.Execute();
 
-            return new SMS(date ,destinationAddress, content) ;
+            return new SMS(date ,destinationAddress, content.getBytes(Charset.defaultCharset())) ;
         } catch (
                 NullPointerException |
                 IllegalArgumentException |
@@ -64,9 +64,6 @@ public class SMS {
         }
     }
 
-    private SMS(int date, String destinationAddress, String data) {
-        this(date, destinationAddress, data.getBytes(Charset.defaultCharset()));
-    }
     protected SMS(int date, String destinationAddress, byte[] data) {
         _timestamp = date;
         _destinationAddress = destinationAddress;

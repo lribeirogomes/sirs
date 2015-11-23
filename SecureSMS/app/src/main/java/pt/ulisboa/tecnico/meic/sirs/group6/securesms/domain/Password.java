@@ -48,4 +48,8 @@ public class Password {
     public void setPassword(String password) throws MethodNotImplementedException {
         throw new MethodNotImplementedException("getAllEncryptedSMS");
     }
+
+    public ContactFolder[] getContactFolderList () throws MethodNotImplementedException {
+        throw new MethodNotImplementedException("getAllEncryptedSMS");
+    }
 }

@@ -35,6 +35,8 @@ public class ReceiveSMSService {
             result.putExtra("Data", new String(sms.getContent(), Charset.defaultCharset()));
             result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             _context.startActivity(result);
+
+            // TODO: integrate output with interface
         } catch (FailedToGetSMSException exception) {
             throw new FailedToReceiveSMSException(exception);
         }
