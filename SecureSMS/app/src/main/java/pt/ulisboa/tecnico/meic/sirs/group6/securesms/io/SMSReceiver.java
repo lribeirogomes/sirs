@@ -31,7 +31,7 @@ public class SMSReceiver extends BroadcastReceiver {
             sms = SmsMessage.createFromPdu((byte[]) smsExtra[i]); //, "3gpp");
             data = sms.getUserData();
             address = sms.getOriginatingAddress();
-            ReceiveSMSService service = new ReceiveSMSService(context ,address, data);
+            ReceiveSMSService service = new ReceiveSMSService(address, data);
             try {
                 service.Execute();
             } catch (FailedToReceiveSMSException exception) {

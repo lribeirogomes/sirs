@@ -5,6 +5,6 @@ package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions;
  */
 public class FailedToGetSMSException extends Exception {
     public FailedToGetSMSException(Throwable throwable){
-        super("Failed to get SMS.", throwable);
+        super("Failed to get SMSMessage.", throwable);
     }
 }

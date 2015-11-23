@@ -9,7 +9,7 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedTo
 /**
  * Created by joao on 19/11/15.
  */
-public class ImportCACertificateService {
+public class ImportCACertificateService extends SecureSMSService {
     private String _filename, _storagePassword;
 
     public ImportCACertificateService(String filename, String storagePassword) {

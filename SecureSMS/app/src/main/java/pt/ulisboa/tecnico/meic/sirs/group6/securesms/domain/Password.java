@@ -4,7 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetPasswordException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.MethodNotImplementedException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.MethodNotImplementedException;
 
 /**
  * Created by lribeirogomes on 22/11/15.
@@ -49,7 +49,7 @@ public class Password {
         throw new MethodNotImplementedException("getAllEncryptedSMS");
     }
 
-    public ContactFolder[] getContactFolderList () throws MethodNotImplementedException {
+    public Contact[] getContactFolderList () throws MethodNotImplementedException {
         throw new MethodNotImplementedException("getAllEncryptedSMS");
     }
 }

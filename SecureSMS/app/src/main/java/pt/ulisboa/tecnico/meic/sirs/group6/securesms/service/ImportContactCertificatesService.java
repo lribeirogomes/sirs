@@ -13,7 +13,7 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.Untruste
 /**
  * Created by joao on 19/11/15.
  */
-public class ImportContactCertificatesService {
+public class ImportContactCertificatesService extends SecureSMSService {
     private String _filename, _storagePassword;
     private boolean _validate;
 

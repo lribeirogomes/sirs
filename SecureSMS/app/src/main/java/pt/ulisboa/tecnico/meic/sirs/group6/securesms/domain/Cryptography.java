@@ -1,5 +1,17 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain;
 
+import org.spongycastle.crypto.BufferedBlockCipher;
+import org.spongycastle.crypto.CipherParameters;
+import org.spongycastle.crypto.InvalidCipherTextException;
+import org.spongycastle.crypto.engines.AESEngine;
+import org.spongycastle.crypto.modes.CBCBlockCipher;
+import org.spongycastle.crypto.paddings.BlockCipherPadding;
+import org.spongycastle.crypto.paddings.PKCS7Padding;
+import org.spongycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.crypto.params.ParametersWithIV;
+
+import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -9,13 +21,17 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToDecryptException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToEncryptException;
@@ -46,14 +62,14 @@ public class Cryptography {
             System.arraycopy(cipherText, 0, ivPlusCipherText, iv.length, cipherText.length);
 
             return ivPlusCipherText;
-        }catch (InvalidKeyException
+        } catch (InvalidKeyException
                 | NoSuchProviderException
                 | NoSuchAlgorithmException
                 | NoSuchPaddingException
                 | IllegalBlockSizeException
                 | InvalidAlgorithmParameterException
-                | BadPaddingException e){
-            throw new FailedToEncryptException("Failed to encrypt data");
+                | BadPaddingException exception){
+            throw new FailedToEncryptException(exception);
         }
     }
 
@@ -69,14 +85,14 @@ public class Cryptography {
             Cipher aesCipher = Cipher.getInstance("AES/CBC/withCTS", "BC");
             aesCipher.init(Cipher.DECRYPT_MODE, key, ivspec);
             return aesCipher.doFinal(cipheredMessage);
-        }catch (InvalidKeyException
+        } catch (InvalidKeyException
                 | NoSuchProviderException
                 | NoSuchAlgorithmException
                 | NoSuchPaddingException
                 | IllegalBlockSizeException
                 | InvalidAlgorithmParameterException
-                | BadPaddingException e){
-            throw new FailedToDecryptException("Failed to decrypt data");
+                | BadPaddingException exception){
+            throw new FailedToDecryptException(exception);
         }
     }
 
@@ -88,10 +104,10 @@ public class Cryptography {
         }catch(NoSuchAlgorithmException
                 | NoSuchProviderException
                 | NoSuchPaddingException
-                |InvalidKeyException
+                | InvalidKeyException
                 | IllegalBlockSizeException
-                | BadPaddingException e){
-            throw new FailedToEncryptException("Failed to encrypt data");
+                | BadPaddingException exception){
+            throw new FailedToEncryptException(exception);
         }
     }
 
@@ -100,23 +116,105 @@ public class Cryptography {
             Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
             cipher.init(Cipher.DECRYPT_MODE, key);
             return cipher.doFinal(cipheredData);
-        }catch(NoSuchAlgorithmException
+        } catch (NoSuchAlgorithmException
                 | NoSuchProviderException
                 | NoSuchPaddingException
-                |InvalidKeyException
+                | InvalidKeyException
                 | IllegalBlockSizeException
-                | BadPaddingException e){
-            throw new FailedToDecryptException("Failed to decrypt data");
+                | BadPaddingException exception){
+            throw new FailedToDecryptException(exception);
         }
     }
 
-    public static byte[] passwordCipher(byte[] plainText, String password){
-        //TODO: implement me!
-        return null;
+    private static byte[] passwordCipher(byte[] data, String password, byte[] salt, byte[] iv, boolean encrypt) throws
+            NullPointerException,
+            NoSuchAlgorithmException,
+            InvalidKeySpecException,
+            InvalidCipherTextException {
+        String algorithm = "PBKDF2WithHmacSHA1";
+
+        // Define secret key
+        PBEKeySpec pbeKeySpec = new PBEKeySpec(
+                password.toCharArray(),
+                salt,
+                1000,
+                128);
+        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(algorithm);
+        SecretKey secretKey = keyFactory.generateSecret(pbeKeySpec);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+
+        // Define cipher parameters with key and IV
+        KeyParameter keyParam = new KeyParameter(secretKeySpec.getEncoded());
+        CipherParameters params = new ParametersWithIV(keyParam, iv);
+
+        // Define AES cipher in CBC mode with PKCS7 padding
+        BlockCipherPadding padding = new PKCS7Padding();
+        CBCBlockCipher cbcBlockCipher = new CBCBlockCipher(new AESEngine());
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(cbcBlockCipher, padding);
+        cipher.reset();
+        cipher.init(encrypt, params);
+
+        // Update data
+        byte[] newData = new byte[cipher.getOutputSize(data.length)];
+        int dataLen = cipher.processBytes(data, 0, data.length, newData, 0);
+        cipher.doFinal(newData, dataLen);
+
+        return newData;
     }
-    public static byte[] passwordDecipher(byte[] cipheredData, String password){
-        //TODO: implement me!
-        return null;
+
+    public static byte[] passwordCipher (byte[] plainText, String password) throws FailedToEncryptException {
+        int saltLen = 32, ivLen = 16;
+        byte[] seed = password.getBytes();
+        SecureRandom random = new SecureRandom(seed);
+        byte[] salt = new byte[saltLen],
+                iv = new byte[ivLen],
+                data = plainText;
+
+        try {
+            // Get salt and IV
+            random.nextBytes(salt);
+            random.nextBytes(iv);
+
+            // Encrypt data
+            byte[] encryptedData = passwordCipher(data ,password, salt, iv, true);
+
+            // Add salt and IV
+            byte[] result = new byte[saltLen + ivLen + encryptedData.length];
+            System.arraycopy(salt, 0, result, 0, saltLen);
+            System.arraycopy(iv, 0, result, saltLen, ivLen);
+            System.arraycopy(encryptedData, 0, result, saltLen + ivLen, encryptedData.length);
+
+            return result;
+        } catch (NullPointerException
+                | NoSuchAlgorithmException
+                | InvalidKeySpecException
+                | InvalidCipherTextException exception){
+            throw new FailedToEncryptException(exception);
+        }
+    }
+    public static byte[] passwordDecipher(byte[] cipherData, String password) throws FailedToDecryptException {
+        Charset charset = Charset.defaultCharset();
+        int saltLen = 32, ivLen = 16;
+        byte[] salt = new byte[saltLen],
+                iv = new byte[ivLen],
+                data = new byte[cipherData.length - saltLen - ivLen];
+
+        try {
+            // Get salt and IV
+            System.arraycopy(cipherData, 0, salt, 0, saltLen);
+            System.arraycopy(cipherData, saltLen, iv, 0, ivLen);
+            System.arraycopy(cipherData, saltLen + ivLen, data, 0, data.length);
+
+            // Decrypt data
+            byte[] decryptedData = passwordCipher(data, password, salt, iv, false);
+
+            return decryptedData;
+        } catch (NullPointerException
+                | NoSuchAlgorithmException
+                | InvalidKeySpecException
+                | InvalidCipherTextException exception){
+            throw new FailedToDecryptException(exception);
+        }
     }
 
     public static byte[] sign(byte[] message, PrivateKey key)throws FailedToSignException{
@@ -125,8 +223,10 @@ public class Cryptography {
             dsa.initSign(key);
             dsa.update(message);
             return dsa.sign();
-        }catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e){
-            throw new FailedToSignException("Failed to produce a signature");
+        }catch (NoSuchAlgorithmException
+                | InvalidKeyException
+                | SignatureException exception){
+            throw new FailedToSignException(exception);
         }
     }
 
@@ -137,8 +237,10 @@ public class Cryptography {
             dsa.update(message);
             if(!dsa.verify(signature))
                 throw new InvalidSignatureException("This Signature is not valid");
-        }catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e){
-            throw new FailedToVerifySignatureException("Error occurred when verifying the signature");
+        }catch (NoSuchAlgorithmException
+                | InvalidKeyException
+                | SignatureException exception){
+            throw new FailedToVerifySignatureException(exception);
         }
     }
 }

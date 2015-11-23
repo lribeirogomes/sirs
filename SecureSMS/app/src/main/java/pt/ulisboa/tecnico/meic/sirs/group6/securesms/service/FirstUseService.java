@@ -7,7 +7,7 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedTo
 /**
  * Created by lribeirogomes on 22/11/15.
  */
-public class FirstUseService {
+public class FirstUseService extends SecureSMSService {
     public void Execute() throws FailedToFirstUseException {
         try {
             Password password = Password.getInstance();

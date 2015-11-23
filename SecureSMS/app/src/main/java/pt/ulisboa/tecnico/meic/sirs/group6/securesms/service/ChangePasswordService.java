@@ -7,7 +7,7 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedTo
 /**
  * Created by lribeirogomes on 22/11/15.
  */
-public class ChangePasswordService {
+public class ChangePasswordService extends SecureSMSService {
     private String _oldPassword,
                    _newPassword;
 

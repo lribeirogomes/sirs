@@ -1,13 +1,15 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.ContactFolder;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMS;
+import java.util.List;
+
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToAccessContactFolderException;
 
 /**
  * Created by lribeirogomes on 23/11/15.
  */
-public class AccessContactFolderService {
+public class AccessContactFolderService extends SecureSMSService {
     private String _destinationAddress;
 
     public AccessContactFolderService(String destinationAddress) {
@@ -16,8 +18,8 @@ public class AccessContactFolderService {
 
     public void Execute() throws FailedToAccessContactFolderException {
         try {
-            ContactFolder contact = ContactFolder.getInstance(_destinationAddress);
-            SMS[] smsList = contact.getSMSList();
+            Contact contact = Contact.getInstance(_destinationAddress);
+            List<SMSMessage> smsList = contact.getMessages();
 
             // TODO: integrate output with interface
         } catch (Exception exception) { //FailedToGetContactException exception) {

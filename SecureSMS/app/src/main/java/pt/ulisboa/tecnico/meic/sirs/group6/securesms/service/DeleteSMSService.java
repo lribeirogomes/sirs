@@ -1,13 +1,13 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMS;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetSMSException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToDeleteSMSException;
 
 /**
  * Created by lribeirogomes on 23/11/15.
  */
-public class DeleteSMSService {
+public class DeleteSMSService extends SecureSMSService {
     private String _password, _destinationAddress, _data;
 
     public DeleteSMSService (String password,
@@ -22,7 +22,7 @@ public class DeleteSMSService {
         short smsPort= 8998;
 
         try {
-            SMS sms = SMS.getInstance(_password, _destinationAddress, _data);
+            SMSMessage sms = SMSMessage.getInstance(_password, _destinationAddress, _data);
 
             // TODO: integrate output with interface
         } catch (

@@ -13,7 +13,7 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedTo
 /**
  * Created by joao on 19/11/15.
  */
-public class ImportMyCertificatesService {
+public class ImportMyCertificatesService extends SecureSMSService {
     private String _filename, _storagePassword;
     private boolean _validate;
 
