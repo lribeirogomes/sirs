@@ -6,6 +6,8 @@ import android.content.Intent;
 import java.nio.charset.Charset;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.ShowSMSActivity;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMS;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetSMSException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToReceiveSMSException;
 
 /**
@@ -26,15 +28,14 @@ public class ReceiveSMSService {
 
     public void Execute() throws FailedToReceiveSMSException {
         try {
-            //StoredSMSFactory smsFactory = new StoredSMSFactory();
-            //StoredSMS sms = smsFactory.getInstance(_destinationAddress, _data);
+            SMS sms = SMS.getInstance(_destinationAddress, _data);
 
             Intent result = new Intent(_context, ShowSMSActivity.class);
-            result.putExtra("Destination Address", _destinationAddress);//sms.getDestinationAddress());
-            result.putExtra("Data", new String( _data, Charset.defaultCharset()));//sms.getData(), Charset.defaultCharset()));
+            result.putExtra("Destination Address", sms.getDestinationAddress());
+            result.putExtra("Data", new String(sms.getContent(), Charset.defaultCharset()));
             result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             _context.startActivity(result);
-        } catch (Exception exception) {//MethodNotImplementedException exception) {
+        } catch (FailedToGetSMSException exception) {
             throw new FailedToReceiveSMSException(exception);
         }
     }

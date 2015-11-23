@@ -1,33 +1,37 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetEncryptedSMSException;
+import javax.crypto.SecretKey;
+
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.EncryptionManager;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.KeyManager;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToEncryptSMSException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetSMSException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
  */
-public class EncryptedSMS extends AbstractSMS {
-    public static EncryptedSMS getInstance(StoredSMS sms)
-            throws FailedToGetEncryptedSMSException {
+public class EncryptedSMS extends SMS {
+    public static EncryptedSMS getInstance(String password, String destinationAddress, String content)
+            throws FailedToGetSMSException {
         byte [] result;
 
         try {
-            result = sms.getData();
-            // TODO: get session key
-            // Get session key
-            //KeyManager manager = KeyManager.getInstance(password.toCharArray());
+            SMS sms = SMS.getInstance(password, destinationAddress, content);
 
-            // Encrypt SMS Body using session key
-            //encryptionService = new EncryptDBDataService(password, data);
-            //encryptionService.Execute();
-            //result = encryptionService.getResult();
+            KeyManager keyManager = KeyManager.getInstance(password);
+            SecretKey key = keyManager.getSessionKey(destinationAddress);
 
-            return new EncryptedSMS(sms.getDate(), sms.getDestinationAddress(), result) ;
+            EncryptionManager encryptionManager = EncryptionManager.getInstance();
+            result = encryptionManager.encryptWithSessionKey(content, key);
+
+            return new EncryptedSMS(sms.getTimestamp(), sms.getDestinationAddress(), result) ;
         } catch (
-            //FailedToLoadKeyStoreException |
-            //FailedToGetResultException |
-            //FailedToEncryptSMSException |
-                Exception exception) {//FailedToGetStoredSMSException exception) {
-            throw new FailedToGetEncryptedSMSException(exception);
+            FailedToLoadKeyStoreException |
+            FailedToRetrieveKeyException |
+            FailedToEncryptSMSException exception) {
+            throw new FailedToGetSMSException(exception);
         }
     }
 

@@ -5,7 +5,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToStoreEncryptedSMSException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToStoreSMSException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
@@ -19,7 +19,7 @@ public class AccessSMSService {
         _encrypted = encrypted;
     }
 
-    public void Execute () throws FailedToStoreEncryptedSMSException {
+    public void Execute () throws FailedToStoreSMSException {
         String DB_FULL_PATH = "securesms";
         String TABLE_SMS= "SMS";
 
@@ -47,7 +47,7 @@ public class AccessSMSService {
                     "Time");
             // TODO: manage cursor
         } catch (SQLException exception) {
-            throw new FailedToStoreEncryptedSMSException(exception);
+            throw new FailedToStoreSMSException(exception);
         }
     }
 }

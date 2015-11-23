@@ -1,10 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess;
 
-import android.content.ContentValues;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToStoreEncryptedSMSException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToStoreSMSException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
@@ -20,7 +16,7 @@ public class StoreSMSService {
         _encrypted = encrypted;
     }
 
-    public void Execute () throws FailedToStoreEncryptedSMSException {
+    public void Execute () throws FailedToStoreSMSException {
         String DB_FULL_PATH = "securesms";
         String TABLE_SMS= "SMS";
 
@@ -40,7 +36,7 @@ public class StoreSMSService {
                     "END");
             dataBase.insertOrThrow("Data", null, values);*/
         } catch (Exception exception) {//SQLException exception) {
-            throw new FailedToStoreEncryptedSMSException(exception);
+            throw new FailedToStoreSMSException(exception);
         }
     }
 }
