@@ -14,6 +14,7 @@ import org.spongycastle.crypto.params.ParametersWithIV;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -35,6 +36,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToDecryptException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToEncryptException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToHashException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToSignException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToVerifySignatureException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.InvalidSignatureException;
@@ -164,8 +166,7 @@ public class Cryptography {
 
     public static byte[] passwordCipher (byte[] plainText, String password) throws FailedToEncryptException {
         int saltLen = 32, ivLen = 16;
-        byte[] seed = password.getBytes();
-        SecureRandom random = new SecureRandom(seed);
+        SecureRandom random = new SecureRandom();
         byte[] salt = new byte[saltLen],
                 iv = new byte[ivLen],
                 data = plainText;
@@ -193,7 +194,6 @@ public class Cryptography {
         }
     }
     public static byte[] passwordDecipher(byte[] cipherData, String password) throws FailedToDecryptException {
-        Charset charset = Charset.defaultCharset();
         int saltLen = 32, ivLen = 16;
         byte[] salt = new byte[saltLen],
                 iv = new byte[ivLen],
@@ -242,5 +242,24 @@ public class Cryptography {
                 | SignatureException exception){
             throw new FailedToVerifySignatureException(exception);
         }
+    }
+
+    public static byte[] hash(byte[] message) throws FailedToHashException {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-512");
+            md.update(message);
+            byte[] messageDigest = md.digest();
+            return messageDigest;
+        } catch ( NoSuchAlgorithmException exception) {
+            throw new FailedToHashException(exception);
+        }
+    }
+
+    public static byte[] encode(String message) {
+        return message.getBytes(Charset.defaultCharset());
+    }
+    public static String decode(byte[] message) {
+        return new String(message, Charset.defaultCharset());
     }
 }

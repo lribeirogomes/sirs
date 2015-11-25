@@ -1,8 +1,10 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.Password;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.User;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetPasswordException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToSetPasswordException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToLoginException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.InvalidAuthenticationException;
 
 /**
  * Created by lribeirogomes on 22/11/15.
@@ -19,11 +21,14 @@ public class ChangePasswordService extends SecureSMSService {
 
     public void Execute() throws FailedToLoginException {
         try {
-            Password password = Password.getInstance(_oldPassword);
-            password.setPassword(_newPassword);
-
-            // TODO: integrate output with interface
-        } catch (Exception exception) {//FailedToGetPasswordException exception) {
+            User user = User.getInstance();
+            if(!user.validates(_oldPassword)) {
+                throw new InvalidAuthenticationException();
+            }
+            user.setPassword(_newPassword);
+        } catch ( InvalidAuthenticationException
+                | FailedToGetPasswordException
+                | FailedToSetPasswordException exception) {
             throw new FailedToLoginException(exception);
         }
     }

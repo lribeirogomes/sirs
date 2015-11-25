@@ -1,96 +1,69 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess;
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToStoreSMSException;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.exceptions.FailedToRetrieveDataException;
 
-/**
- * Created by lribeirogomes on 23/11/15.
- */
 public class DataManager {
-    private static final String DATABASE_NAME = "securesms",
-                                SMS_TABLE_VIEW = "smsview",
-                                SMS_TABLE_NAME = "sms",
-                                TIME = "Time",
-                                ADDR = "DestinationAddress",
-                                CONTENT = "Content";
-    private static DataBase _dataBase = null;
 
-    private static DataManager ourInstance = new DataManager();
-
-    public static DataManager getInstance(Context context) throws FailedToCreateDataBaseException {
-        if(_dataBase != null){
-            throw new FailedToCreateDataBaseException();
-        }
-        _dataBase = new DataBase(context);
-        return ourInstance;
-    }
+    private static SharedPreferences sharedPreferences = null;
+    private static DataManager dataManager = new DataManager();
 
     public static DataManager getInstance() throws FailedToLoadDataBaseException {
-        if(_dataBase == null){
+        if(sharedPreferences == null) {
             throw new FailedToLoadDataBaseException();
         }
-        return ourInstance;
+        return dataManager;
     }
 
-    private DataManager() {
-
-    }
-
-    public List<SMSMessage> getMessages(String destinationAddress)  throws FailedToStoreSMSException {
-        List<SMSMessage> list = new ArrayList<>();
-
-        try {
-            SQLiteDatabase dataBase = _dataBase.getReadableDatabase();
-            Cursor cursor = dataBase.query(
-                    SMS_TABLE_VIEW,
-                    new String[] {TIME, CONTENT},
-                    ADDR + "=" + destinationAddress,
-                    new String[] {ADDR},
-                    null,
-                    null,
-                    null);
-
-            cursor.moveToFirst();
-            while(!cursor.isAfterLast()) {
-
-                list.add(null);
-            }
-
-            return list;
-        } catch (SQLException exception) {
-            throw new FailedToStoreSMSException(exception);
+    public static DataManager getInstance(Context context) throws FailedToCreateDataBaseException {
+        if(sharedPreferences != null) {
+            throw new FailedToCreateDataBaseException();
         }
+        sharedPreferences = context.getSharedPreferences("userDetails", 0);
+        return dataManager;
     }
 
-    public void storeSMS(int timestamp, String destinationAddress, byte[] content) throws FailedToStoreSMSException {
-        try {
-            ContentValues values = new ContentValues();
-            values.put(TIME, timestamp);
-            values.put(ADDR, destinationAddress);
-            values.put(CONTENT, content);
+    public DataManager() {
 
-            SQLiteDatabase dataBase = _dataBase.getWritableDatabase();
-            dataBase.insertOrThrow(SMS_TABLE_NAME, TIME, values);
-        } catch (SQLException exception) {
-            throw new FailedToStoreSMSException(exception);
-        }
     }
 
-    public void deleteSMS(int timestamp)
-    {
-        SQLiteDatabase db = _dataBase.getWritableDatabase();
-        db.delete(SMS_TABLE_NAME,TIME+"=?", new String [] {String.valueOf(timestamp)});
-        db.close();
+    public void add(String name, String object) {
+        Editor editor;
+
+        Set<String> dataSet = sharedPreferences.getStringSet(name, new TreeSet<String>());
+        List<String> dataList = new ArrayList<String>(dataSet);
+        dataList.add(object);
+        dataSet = new TreeSet<String>(dataList);
+
+        editor = sharedPreferences.edit();
+        editor.putStringSet(name, dataSet);
+        editor.commit();
+    }
+
+    public void remove(String name, String object) {
+        Editor editor;
+
+        Set<String> dataSet = sharedPreferences.getStringSet(name, new TreeSet<String>());
+        dataSet.remove(object);
+
+        editor = sharedPreferences.edit();
+        editor.putStringSet(name, dataSet);
+        editor.commit();
+    }
+
+    public Set<String> getAll(String name) throws FailedToRetrieveDataException {
+        Set<String> stringSet = sharedPreferences.getStringSet(name, new TreeSet<String>());
+
+        return stringSet;
     }
 }

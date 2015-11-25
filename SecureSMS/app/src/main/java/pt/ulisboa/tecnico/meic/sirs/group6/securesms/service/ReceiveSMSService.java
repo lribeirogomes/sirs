@@ -1,7 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetSMSException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions.FailedToGetSMSMessageException;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToReceiveSMSException;
 
 /**
@@ -29,7 +29,7 @@ public class ReceiveSMSService extends SecureSMSService {
     public void Execute() throws FailedToReceiveSMSException {
         try {
             _result = SMSMessage.getInstance(_phoneNumber, _encryptedSMS);
-        } catch (FailedToGetSMSException exception) {
+        } catch (FailedToGetSMSMessageException exception) {
             throw new FailedToReceiveSMSException(exception);
         }
     }

@@ -5,7 +5,7 @@ package pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.exceptions;
  */
 public class FailedToGetPasswordException extends Exception {
     public FailedToGetPasswordException(Throwable throwable){
-        super("Failed to get user.", throwable);
+        super("Failed to get password.", throwable);
     }
 }
 

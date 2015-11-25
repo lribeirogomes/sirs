@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -13,8 +12,8 @@ import android.widget.TextView;
 
 import java.security.Security;
 
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.SendSMSService;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToSendSMSException;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.TestingService;
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToAccessContactException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,12 +62,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendSMS(View view) {
-        SendSMSService service = new SendSMSService("Ildefonsina", "+351964248700", "Hello World 2.0");
+        TestingService service = new TestingService(getApplicationContext());
         try {
             service.Execute();
-        } catch (FailedToSendSMSException exception) {
+        } catch (FailedToAccessContactException exception) {
             TextView messageTextView = (TextView) findViewById(R.id.output);
-            messageTextView.setText(exception.getMessage());
+            messageTextView.setText(exception.getCause().getMessage());
         }
     }
 }

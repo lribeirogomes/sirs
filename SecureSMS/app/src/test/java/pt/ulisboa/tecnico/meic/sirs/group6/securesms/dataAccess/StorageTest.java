@@ -10,26 +10,20 @@ import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Set;
 import java.util.TimeZone;
+
+import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
 
 /**
  * Created by lribeirogomes on 23/11/15.
  */
 public class StorageTest extends AndroidTestCase {
-/*
-    private int _timestamp;
-    private String _destinationAddress;
-    private byte[] _content;
+
     private long _startTime;
-    private DataManager _manager;
 
     @Before
     public void setUp() {
-        _manager = DataManager.getInstance();
-        Calendar calendar = new GregorianCalendar(TimeZone.getDefault());
-        _timestamp = calendar.get(GregorianCalendar.DATE);
-        _destinationAddress = "964248700";
-        _content = "Hello World".getBytes(Charset.defaultCharset());
         _startTime = new Date().getTime();
     }
 
@@ -42,9 +36,20 @@ public class StorageTest extends AndroidTestCase {
 
     @Test
     public void testStorage() throws Exception {
-        _manager.storeSMS(_timestamp, _destinationAddress, _content);
+        DataManager dm = DataManager.getInstance(getContext());
 
-        //assertEquals(_content, plainText);
+        dm.add("teste", "Corpo");
+        dm.add("teste", "Xuxa");
+        dm.add("teste", "Mente");
+        dm.remove("teste", "Xuxa");
+
+        Set<String> testes = dm.getAll("teste");
+        String boss = "";
+
+        for (String teste : testes ) {
+            boss += teste;
+        }
+
+        assertEquals("CorpoMente", boss);
     }
-    */
 }
