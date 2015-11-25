@@ -68,24 +68,12 @@ public class User {
                 phoneNumber = json.optString(PHONE_NUMBER);
             }
 
-            // Get phone number if nonexistent
-            if (phoneNumber.equals("")){
-                // Get phone number from telephone
-                telephonyManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-                phoneNumber = telephonyManager.getLine1Number();
-
-                // Store new user information
-                _user = new User(phoneNumber, passwordHash);
-                _user.onStore();
-            }
-
             // Return user information
             _user = new User(phoneNumber, passwordHash);
             return _user;
         } catch ( JSONException
                 | FailedToCreateDataBaseException
-                | FailedToRetrieveDataException
-                | FailedToStorePasswordException exception) {
+                | FailedToRetrieveDataException exception) {
             throw new FailedToGetPasswordException(exception);
         }
     }
@@ -106,11 +94,14 @@ public class User {
         String data;
 
         try {
+            // Clean user information
+            dm = DataManager.getInstance();
+            dm.clean(USER);
+
             // Prepare user information for storage
             data = exportIntoData();
 
             // Store user information
-            dm = DataManager.getInstance();
             dm.add(USER, data);
         } catch ( FailedToLoadDataBaseException
                 | FailedToImportIntoDataException exception) {
@@ -137,6 +128,18 @@ public class User {
             onStore();
         } catch ( FailedToHashException
                 | FailedToStorePasswordException exception) {
+            throw new FailedToSetPasswordException(exception);
+        }
+    }
+
+    public void setPhoneNumber(String phoneNumber) throws FailedToSetPasswordException {
+        try {
+            // Hash new password
+            _phoneNumber = phoneNumber;
+
+            // Store user information
+            onStore();
+        } catch ( FailedToStorePasswordException exception ) {
             throw new FailedToSetPasswordException(exception);
         }
     }

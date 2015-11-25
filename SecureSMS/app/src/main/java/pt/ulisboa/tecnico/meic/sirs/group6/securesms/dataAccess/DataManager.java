@@ -26,10 +26,8 @@ public class DataManager {
     }
 
     public static DataManager getInstance(Context context) throws FailedToCreateDataBaseException {
-        if(sharedPreferences != null) {
-            throw new FailedToCreateDataBaseException();
-        }
         sharedPreferences = context.getSharedPreferences("userDetails", 0);
+
         return dataManager;
     }
 
@@ -58,6 +56,14 @@ public class DataManager {
 
         editor = sharedPreferences.edit();
         editor.putStringSet(name, dataSet);
+        editor.commit();
+    }
+
+    public void clean(String name) {
+        Editor editor;
+
+        editor = sharedPreferences.edit();
+        editor.remove(name);
         editor.commit();
     }
 

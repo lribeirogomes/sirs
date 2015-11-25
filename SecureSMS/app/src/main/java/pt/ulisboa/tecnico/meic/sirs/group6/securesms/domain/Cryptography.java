@@ -165,7 +165,8 @@ public class Cryptography {
     }
 
     public static byte[] passwordCipher (byte[] plainText, String password) throws FailedToEncryptException {
-        int saltLen = 32, ivLen = 16;
+        return plainText;
+        /*int saltLen = 32, ivLen = 16;
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[saltLen],
                 iv = new byte[ivLen],
@@ -191,10 +192,11 @@ public class Cryptography {
                 | InvalidKeySpecException
                 | InvalidCipherTextException exception){
             throw new FailedToEncryptException(exception);
-        }
+        }*/
     }
     public static byte[] passwordDecipher(byte[] cipherData, String password) throws FailedToDecryptException {
-        int saltLen = 32, ivLen = 16;
+        return cipherData;
+        /*int saltLen = 32, ivLen = 16;
         byte[] salt = new byte[saltLen],
                 iv = new byte[ivLen],
                 data = new byte[cipherData.length - saltLen - ivLen];
@@ -214,7 +216,7 @@ public class Cryptography {
                 | InvalidKeySpecException
                 | InvalidCipherTextException exception){
             throw new FailedToDecryptException(exception);
-        }
+        }*/
     }
 
     public static byte[] sign(byte[] message, PrivateKey key)throws FailedToSignException{

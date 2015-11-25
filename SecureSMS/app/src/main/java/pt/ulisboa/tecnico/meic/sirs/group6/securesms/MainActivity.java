@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
         TestingService service = new TestingService(getApplicationContext());
         try {
             service.Execute();
+            TextView messageTextView = (TextView) findViewById(R.id.output);
+            messageTextView.setText(service.getResult());
         } catch (FailedToAccessContactException exception) {
             TextView messageTextView = (TextView) findViewById(R.id.output);
             messageTextView.setText(exception.getCause().getMessage());

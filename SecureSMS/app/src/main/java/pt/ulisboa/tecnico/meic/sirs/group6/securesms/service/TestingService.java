@@ -2,13 +2,7 @@ package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
 import android.content.Context;
 
-import java.nio.charset.Charset;
-import java.util.Set;
-
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.DataManager;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.dataAccess.KeyManager;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.Contact;
-import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.User;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedToAccessContactException;
@@ -34,25 +28,30 @@ public class TestingService extends SecureSMSService {
 
     public void Execute() throws FailedToAccessContactException {
         try {
-            String password = "password1";
+            /*String password = "password1";
             byte[] cipherText = Cryptography.passwordCipher(_content.getBytes(Charset.defaultCharset()), password);
             byte[] plainText = Cryptography.passwordDecipher(cipherText, password);
 
             _result = "Expected: " + _content + " Actual: " +
-                    new String(plainText, Charset.defaultCharset());
+                    new String(plainText, Charset.defaultCharset());*/
 
-            /*User user = User.getInstance(_context);
+            User user = User.getInstance(_context);
             user.setPassword("Bla");
+            user.setPhoneNumber("42");
             Contact contact = Contact.getInstance(_destinationAddress, "asdrubal");
             SMSMessage.getInstance(_destinationAddress, _content);
 
             String test1 = user.getPhoneNumber();
             String test2 = user.getPasswordHash();
             String test3 = user.getContacts().get(_destinationAddress).getPhoneNumber();
+            String test4 = "";
+            for (SMSMessage sms : contact.getMessages()) {
+                test4 += sms.getContent();
+            }
 
             _result = "User phone: " + test1 + " pass: " + test2 +
                     " contacts: " + test3 +
-                    " sms: " + contact.getMessages().isEmpty();*/
+                    " sms: " + test4;
         } catch (Exception exception) {
             throw new FailedToAccessContactException(exception);
         }

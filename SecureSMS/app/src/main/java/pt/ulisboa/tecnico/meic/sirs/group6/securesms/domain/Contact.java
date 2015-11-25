@@ -4,6 +4,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.security.Key;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -32,7 +34,7 @@ public class Contact {
     private Key _pubEncryptKey,
                 _pubSignKey;
     private Session _session;
-    private Set<SMSMessage> _messages;
+    private List<SMSMessage> _messages;
 
     public static Contact getInstance(String phoneNumber, String name) throws
             FailedToGetContactException {
@@ -108,9 +110,9 @@ public class Contact {
         }
     }
 
-    public Set<SMSMessage> getMessages()  throws FailedToGetSMSMessagesException {
+    public List<SMSMessage> getMessages()  throws FailedToGetSMSMessagesException {
         Set<String> dataSet;
-        Set<SMSMessage> messages;
+        List<SMSMessage> messages;
         SMSMessage message;
         DataManager dm;
         String passwordHash;
@@ -123,7 +125,7 @@ public class Contact {
         try {
             password = User.getInstance();
             passwordHash = password.getPasswordHash();
-            messages = new TreeSet<>();
+            messages = new ArrayList<>();
             dm = DataManager.getInstance();
 
             dataSet = dm.getAll(_phoneNumber);

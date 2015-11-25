@@ -1,7 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.group6.securesms.service;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.group6.securesms.domain.SMSMessage;
@@ -16,14 +16,14 @@ import pt.ulisboa.tecnico.meic.sirs.group6.securesms.service.exceptions.FailedTo
  */
 public class AccessContactService extends SecureSMSService {
     private String _phoneNumber;
-    private Set<SMSMessage> _result;
+    private List<SMSMessage> _result;
 
     public AccessContactService(String phoneNumber) {
         _phoneNumber = phoneNumber;
         _result = null;
     }
 
-    public Set<SMSMessage> getResult() throws NullPointerException {
+    public List<SMSMessage> getResult() throws NullPointerException {
         if (_result == null) {
             throw new NullPointerException();
         }
