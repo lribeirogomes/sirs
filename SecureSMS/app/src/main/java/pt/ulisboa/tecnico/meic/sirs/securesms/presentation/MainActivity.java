@@ -8,6 +8,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
@@ -176,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements FileDialog.OnFile
         PRIVATE_KEY
     }
 
-    View view;
+    View v;
     Spinner spCACertificate;
     Spinner spUserCertificate;
     Spinner spPrivateKeys;
@@ -185,19 +186,19 @@ public class MainActivity extends AppCompatActivity implements FileDialog.OnFile
     public void setupApplicationActivity() {
         //show another view without exiting the current
         LayoutInflater factory = LayoutInflater.from(this);
-        view = factory.inflate(R.layout.activity_setup_application, null);
+        v = factory.inflate(R.layout.activity_setup_application, null);
 
         //set items
-        spCACertificate = (Spinner) findViewById(R.id.spCACertificate);
+        spCACertificate = (Spinner) v.findViewById(R.id.spCACertificate);
         spCACertificate.setOnItemSelectedListener(customOnItemSelectedListener(ImportFileType.CA_CERTIFICATE));
 
-        spUserCertificate = (Spinner) findViewById(R.id.spUserCertificate);
+        spUserCertificate = (Spinner) v.findViewById(R.id.spUserCertificate);
         spUserCertificate.setOnItemSelectedListener(customOnItemSelectedListener(ImportFileType.USER_CERTIFICATE));
 
-        spPrivateKeys = (Spinner) findViewById(R.id.spPrivateKeys);
+        spPrivateKeys = (Spinner) v.findViewById(R.id.spPrivateKeys);
         spPrivateKeys.setOnItemSelectedListener(customOnItemSelectedListener(ImportFileType.PRIVATE_KEY));
 
-        etPassword = (EditText) findViewById(R.id.etPassword);
+        etPassword = (EditText) v.findViewById(R.id.etPassword);
     }
 
     public AdapterView.OnItemSelectedListener customOnItemSelectedListener(final ImportFileType type) {
@@ -228,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements FileDialog.OnFile
 
     @Override
     public void onFileSelected(FileDialog dialog, File file) {
-        finish();
+        Log.d("SMS", "Importing");
         ImportFileType type = ImportFileType.values()[dialog.getArguments().getInt("type")];
         try {
             switch (type) {
@@ -253,8 +254,10 @@ public class MainActivity extends AppCompatActivity implements FileDialog.OnFile
                     break;
                 }
             }
+            Log.d("SMS", "Import successful");
             Toast.makeText(getApplicationContext(), "Import successful", Toast.LENGTH_SHORT);
         } catch (SecureSMSException exception) {
+            Log.d("SMS",exception.getMessage());
             Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
         }
 
@@ -273,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements FileDialog.OnFile
         spPrivateKeys.setAdapter(adapter);
 
         //show password
-        CheckBox cbShowPassword = (CheckBox) view.findViewById(R.id.cbShowPassword);
+        CheckBox cbShowPassword = (CheckBox) v.findViewById(R.id.cbShowPassword);
         cbShowPassword.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -300,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements FileDialog.OnFile
 
         //create alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(view);
+        builder.setView(v);
         //create buttons
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
