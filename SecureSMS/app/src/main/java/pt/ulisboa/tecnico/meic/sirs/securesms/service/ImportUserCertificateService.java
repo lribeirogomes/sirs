@@ -16,6 +16,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToImportE
 public class ImportUserCertificateService extends SecureSmsService {
     private String _filename, _storagePassword;
     private boolean _validate;
+    private boolean _isValid;
 
     public ImportUserCertificateService(String filename, boolean validate, String storagePassword) {
         _filename = filename;
@@ -23,14 +24,20 @@ public class ImportUserCertificateService extends SecureSmsService {
         _validate = validate;
     }
 
-    public void Execute() throws FailedToImportException, UntrustedCertificateException{
+    public void Execute() throws FailedToImportException {//, UntrustedCertificateException{
         try {
             KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importUserCertificates(_filename, true, _validate);
         } catch (FailedToLoadKeyStoreException | FailedToStoreException | InvalidCertificateException | FailedToRetrieveKeyException e) {
             throw new FailedToImportException(e.getMessage());
         } catch (CertPathValidatorException e){
-            throw new UntrustedCertificateException("Certificate cannot be trusted");
+            _isValid = false;
+            //throw new UntrustedCertificateException("Certificate cannot be trusted");
         }
+        _isValid = true;
+    }
+
+    public boolean getResult() {
+        return _isValid;
     }
 }
