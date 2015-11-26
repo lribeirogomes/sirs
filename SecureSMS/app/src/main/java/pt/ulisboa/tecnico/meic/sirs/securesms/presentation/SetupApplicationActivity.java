@@ -3,14 +3,20 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
+
+import com.rustamg.filedialogs.FileDialog;
+import com.rustamg.filedialogs.OpenFileDialog;
 
 import java.util.ArrayList;
 
@@ -20,14 +26,20 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.R;
  * Created by Ana Beatriz on 25/11/2015.
  */
 public class SetupApplicationActivity {
+    public enum ImportFileType {
+        CA_CERTIFICATE,
+        USER_CERTIFICATE,
+        PRIVATE_KEY
+    }
+
     View view;
     Spinner spCACertificate;
     Spinner spUserCertificate;
     Spinner spPrivateKeys;
     EditText etPassword;
-    Activity mainActivity;
+    AppCompatActivity mainActivity;
 
-    public SetupApplicationActivity(Activity activity) {
+    public SetupApplicationActivity(AppCompatActivity activity) {
         //show another view without exiting the current
         mainActivity = activity;
         LayoutInflater factory = LayoutInflater.from(activity);
@@ -35,9 +47,32 @@ public class SetupApplicationActivity {
 
         //set items
         spCACertificate = (Spinner) view.findViewById(R.id.spCACertificate);
+        spCACertificate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (!parent.getSelectedItem().toString().equals("None")) {
+                    showFileDialog(".pem", ImportFileType.CA_CERTIFICATE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
         spUserCertificate = (Spinner) view.findViewById(R.id.spUserCertificate);
         spPrivateKeys = (Spinner) view.findViewById(R.id.spPrivateKeys);
         etPassword = (EditText) view.findViewById(R.id.etPassword);
+    }
+
+    public void showFileDialog(String extension, ImportFileType type) {
+        FileDialog openDialog = new OpenFileDialog();
+        Bundle args = new Bundle();
+        args.putString(FileDialog.EXTENSION, extension);
+        args.putInt("type", type.ordinal());
+        openDialog.setArguments(args);
+        openDialog.setStyle(android.support.v4.app.DialogFragment.STYLE_NO_TITLE, R.style.AppTheme);
+        openDialog.show(mainActivity.getSupportFragmentManager(), OpenFileDialog.class.getName());
     }
 
     public void createDialogItems() {
