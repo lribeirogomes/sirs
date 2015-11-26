@@ -90,6 +90,7 @@ public class SetupApplicationActivity implements FileDialog.OnFileSelectedListen
         openDialog.show(mainActivity.getSupportFragmentManager(), OpenFileDialog.class.getName());
     }
 
+
     @Override
     public void onFileSelected(FileDialog dialog, File file) {
         mainActivity.finish();
@@ -149,6 +150,14 @@ public class SetupApplicationActivity implements FileDialog.OnFileSelectedListen
                 etPassword.setSelection(etPassword.getText().length());
             }
         });
+    }
+
+    public void updateSpinnerOption(Spinner sp, String filename) {
+        ArrayList<String> options = new ArrayList<String>();
+        options.add("None");
+        options.add(filename);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mainActivity,
+                android.R.layout.simple_spinner_dropdown_item, options);
     }
 
     public void display() {
