@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
-import android.app.Activity;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -9,6 +9,7 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -26,7 +27,6 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ImportCACertificateService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ImportPrivateKeysService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ImportUserCertificateService;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.SecureSmsService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.SecureSMSException;
 
 /**
@@ -54,48 +54,30 @@ public class SetupApplicationActivity implements FileDialog.OnFileSelectedListen
 
         //set items
         spCACertificate = (Spinner) view.findViewById(R.id.spCACertificate);
-        spCACertificate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!parent.getSelectedItem().toString().equals("None")) {
-                    showFileDialog(".pem", ImportFileType.CA_CERTIFICATE);
-                }
-            }
+        spCACertificate.setOnItemSelectedListener(customOnItemSelectedListener(ImportFileType.CA_CERTIFICATE));
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
         spUserCertificate = (Spinner) view.findViewById(R.id.spUserCertificate);
-        spUserCertificate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!parent.getSelectedItem().toString().equals("None")) {
-                    showFileDialog(".pem", ImportFileType.USER_CERTIFICATE);
-                }
-            }
+        spUserCertificate.setOnItemSelectedListener(customOnItemSelectedListener(ImportFileType.USER_CERTIFICATE));
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
         spPrivateKeys = (Spinner) view.findViewById(R.id.spPrivateKeys);
-        spPrivateKeys.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spPrivateKeys.setOnItemSelectedListener(customOnItemSelectedListener(ImportFileType.PRIVATE_KEY));
+
+        etPassword = (EditText) view.findViewById(R.id.etPassword);
+    }
+
+    public OnItemSelectedListener customOnItemSelectedListener(final ImportFileType type) {
+        return new OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (!parent.getSelectedItem().toString().equals("None")) {
-                    showFileDialog(".pem", ImportFileType.PRIVATE_KEY);
+                    showFileDialog(".pem", type);
                 }
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
-        });
-        etPassword = (EditText) view.findViewById(R.id.etPassword);
+        };
     }
 
     public void showFileDialog(String extension, ImportFileType type) {
@@ -110,6 +92,7 @@ public class SetupApplicationActivity implements FileDialog.OnFileSelectedListen
 
     @Override
     public void onFileSelected(FileDialog dialog, File file) {
+        mainActivity.finish();
         ImportFileType type = ImportFileType.values()[dialog.getArguments().getInt("type")];
         try {
             switch (type) {
