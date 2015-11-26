@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/fab_margin"
+        android:maxWidth="300dp"
+        android:layout_gravity="left"
+        android:longClickable="false"
+        android:background="@color/teal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Message received\nablablabla\nablablabla"
+            android:id="@+id/tvReceivedMessage" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:maxWidth="300dp"
+        android:padding="@dimen/fab_margin"
+        android:layout_gravity="right"
+        android:layout_height="wrap_content"
+        android:background="#d2d2d2">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Message sent\nblablabla\nablablabl"
+            android:id="@+id/tvSentMessage"
+            android:textColor="#282828" />
+    </LinearLayout>
+
+</LinearLayout>

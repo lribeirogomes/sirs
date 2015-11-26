@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".presentation.ComposeMessageActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/teal"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:context=".presentation.ComposeMessageActivity"
+        tools:showIn="@layout/activity_write_message">
+
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxHeight="80dp"
+            android:minHeight="@dimen/design_fab_size_normal"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:id="@+id/etMessage"
+            android:hint="Write a message..."
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignRight="@+id/lvMessages"
+            android:layout_alignEnd="@+id/lvMessages"
+            android:layout_marginRight="@dimen/design_fab_size_normal" />
+
+        <ListView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/lvMessages"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_above="@+id/etMessage"
+            android:stackFromBottom="true"
+            android:layout_below="@+id/tlReceivers" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:id="@+id/tlReceivers" >
+            <TextView
+
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="To: "
+                android:id="@+id/tvTo"
+                android:layout_gravity="center"
+                android:layout_alignTop="@+id/lvMessages" />
+
+
+            <TableRow
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/trReceivers" >
+            </TableRow>
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fabAddReceiver"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_plus_sign_mini"
+                android:scaleType="center"
+                app:backgroundTint="@color/pink"
+                android:layout_gravity="center"
+                android:onClick="chooseContact" />
+
+
+        </TableRow>
+
+    </RelativeLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabSendMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_send_message"
+        android:scaleType="center"
+        app:backgroundTint="@color/teal"
+        android:onClick="sendMessage" />
+
+</android.support.design.widget.CoordinatorLayout>
