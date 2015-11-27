@@ -7,8 +7,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoad
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.InvalidCertificateException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToImportException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.UntrustedCertificateException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
  * Created by joao on 19/11/15.
@@ -23,14 +22,16 @@ public class ImportContactCertificateService extends SecureSmsService {
         _validate = validate;
     }
 
-    public void Execute() throws FailedToImportException, UntrustedCertificateException{
+    public void Execute() throws FailedServiceException {
         try {
             KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importUserCertificates(_filename, false, _validate);
-        } catch (FailedToLoadKeyStoreException | FailedToStoreException | InvalidCertificateException | FailedToRetrieveKeyException e) {
-            throw new FailedToImportException(e.getMessage());
-        } catch (CertPathValidatorException e){
-            throw new UntrustedCertificateException("Certificate cannot be trusted");
+        } catch ( FailedToLoadKeyStoreException
+                | FailedToStoreException
+                | InvalidCertificateException
+                | FailedToRetrieveKeyException
+                | CertPathValidatorException exception) {
+            throw new FailedServiceException("import contact certificate", exception);
         }
     }
 }

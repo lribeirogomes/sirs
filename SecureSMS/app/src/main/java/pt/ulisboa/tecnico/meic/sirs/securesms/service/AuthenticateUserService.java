@@ -1,49 +1,29 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
-import java.util.Map;
-import java.util.Set;
-
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetContactsException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetPasswordException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToLoginException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.InvalidAuthenticationException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.UserManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToValidatePasswordException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
  * Created by lribeirogomes on 22/11/15.
  */
 public class AuthenticateUserService extends SecureSmsService {
     private String _password;
-    private Map<String, Contact> _result;
 
     public AuthenticateUserService(String password) {
         _password = password;
-        _result = null;
     }
 
-    public Map<String, Contact> getResult() throws NullPointerException {
-        if (_result == null) {
-            throw new NullPointerException();
-        }
-        return _result;
-    }
-
-
-    public void Execute() throws FailedToLoginException {
+    public void Execute() throws FailedServiceException {
         try {
-            User user = User.getInstance();
-            if(!user.validates(_password)) {
-                throw new InvalidAuthenticationException();
-            }
+            User user = UserManager.retrieveUser();
 
-            Map<String, Contact> contacts = user.getContacts();
-
-            _result = contacts;
-        } catch ( InvalidAuthenticationException
-                | FailedToGetPasswordException
-                | FailedToGetContactsException exception ) {
-            throw new FailedToLoginException(exception);
+            user.validatesPassword(_password);
+        } catch ( FailedToRetrieveUserException
+                | FailedToValidatePasswordException exception ) {
+            throw new FailedServiceException("authenticate user", exception);
         }
     }
 }

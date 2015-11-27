@@ -1,201 +1,86 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
-import android.content.Context;
-import android.telephony.TelephonyManager;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.security.Key;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.DataManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveDataException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetContactException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetContactsException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetPasswordException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToImportIntoDataException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllContactsException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSetPasswordException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToStorePasswordException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToValidatePasswordException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidAuthenticationException;
 
 /**
  * Created by lribeirogomes on 23/11/15.
  */
 public class User {
-    private String _phoneNumber,
-                   _passwordHash;
-    private Key _priEncryptKey,
-                _priSignKey;
+    private String _passwordHash;
     private Map<String, Contact> _contacts;
 
-    private static final String USER = "User",
-                                PHONE_NUMBER = "PhoneNumber",
-                                PASSWORD = "Password";
-    private static User _user = null;
-
-    public static User getInstance(Context context) throws FailedToGetPasswordException {
-        DataManager dm;
-        TelephonyManager telephonyManager;
-        Set<String> dataSet;
-        String object,
-               passwordHash,
-               phoneNumber;
-        JSONObject json;
-
-        try {
-            // Get all user information (from one user, actually)
-            dm = DataManager.getInstance(context);
-            dataSet = dm.getAll(USER);
-            object = "";
-            for (String data : dataSet) {
-                object = data;
-            }
-
-            // Export user information from json object
-            if (object.equals("")) {
-                json = new JSONObject();
-                passwordHash = "";
-                phoneNumber = "";
-            } else {
-                json = new JSONObject(object);
-                passwordHash = json.optString(PASSWORD);
-                phoneNumber = json.optString(PHONE_NUMBER);
-            }
-
-            // Return user information
-            _user = new User(phoneNumber, passwordHash);
-            return _user;
-        } catch ( JSONException
-                | FailedToCreateDataBaseException
-                | FailedToRetrieveDataException exception) {
-            throw new FailedToGetPasswordException(exception);
-        }
-    }
-
-    public static User getInstance() throws FailedToGetPasswordException {
-        return _user;
-    }
-
-    public String getPasswordHash() {
-        return _passwordHash;
-    }
-    public String getPhoneNumber() {
-        return _phoneNumber;
-    }
-
-    public void onStore() throws FailedToStorePasswordException {
-        DataManager dm;
-        String data;
-
-        try {
-            // Clean user information
-            dm = DataManager.getInstance();
-            dm.clean(USER);
-
-            // Prepare user information for storage
-            data = exportIntoData();
-
-            // Store user information
-            dm.add(USER, data);
-        } catch ( FailedToLoadDataBaseException
-                | FailedToImportIntoDataException exception) {
-            throw new FailedToStorePasswordException(exception);
-        }
-    }
-
-    private User(String phoneNumber, String passwordHash) {
-        _phoneNumber = phoneNumber;
+    User(String passwordHash) {
         _passwordHash = passwordHash;
     }
 
-    public void setPassword(String password) throws FailedToSetPasswordException {
-        byte[] encodedData,
-               encodedHash;
-
-        try {
-            // Hash new password
-            encodedData = Cryptography.encode(password);
-            encodedHash = Cryptography.hash(encodedData);
-            _passwordHash = Cryptography.decode(encodedHash);
-
-            // Store user information
-            onStore();
-        } catch ( FailedToHashException
-                | FailedToStorePasswordException exception) {
-            throw new FailedToSetPasswordException(exception);
-        }
-    }
-
-    public void setPhoneNumber(String phoneNumber) throws FailedToSetPasswordException {
-        try {
-            // Hash new password
-            _phoneNumber = phoneNumber;
-
-            // Store user information
-            onStore();
-        } catch ( FailedToStorePasswordException exception ) {
-            throw new FailedToSetPasswordException(exception);
-        }
-    }
-
-    public Map<String, Contact> getContacts() throws FailedToGetContactsException {
-        Set<String> dataSet;
-        Map<String, Contact> contacts;
-        Contact contact;
-        DataManager dm;
-
-        if (_contacts != null) {
-            return _contacts;
-        }
-
-        try {
-            // Create contacts hash map
-            contacts = new HashMap<>();
-
+    public Map<String, Contact> getContacts() throws
+            FailedToRetrieveAllContactsException {
+        // If map of contacts not loaded
+        if (_contacts == null) {
             // Get all contacts from storage
-            dm = DataManager.getInstance();
-            dataSet = dm.getAll(Contact.CONTACTS);
-            for (String data : dataSet) {
-                // Decrypt each contact and add into set
-                contact = Contact.getInstance(data);
-                contacts.put(contact.getPhoneNumber(), contact);
+            _contacts = ContactManager.retrieveAllContacts();
+        }
+
+        // Return map of contacts
+        return _contacts;
+    }
+
+    String getPasswordHash() {
+        return _passwordHash;
+    }
+    public boolean isFirstUse() {
+        return _passwordHash.equals("");
+    }
+
+    public void validatesPassword(String password) throws
+            FailedToValidatePasswordException {
+        byte[] encodedPassword,
+                encodedPasswordHash;
+        String passwordHash;
+
+        try {
+            // Hash password
+            encodedPassword = Cryptography.encode(password);
+            encodedPasswordHash = Cryptography.hash(encodedPassword);
+            passwordHash = Cryptography.decode(encodedPasswordHash);
+
+            // If password is invalid
+            if (passwordHash.equals(_passwordHash)) {
+                // Throw invalid authentication exception
+                throw new InvalidAuthenticationException();
+            }
+        } catch ( FailedToHashException
+                | InvalidAuthenticationException exception ) {
+            throw new FailedToValidatePasswordException(exception);
+        }
+    }
+
+    public void setPassword(String oldPassword, String newPassword) throws
+            FailedToSetPasswordException {
+        byte[] encodedPassword,
+                encodedPasswordHash;
+        String passwordHash;
+
+        try {
+            if (!_passwordHash.equals("")) {
+                validatesPassword(oldPassword);
             }
 
-            // Return set of contacts
-            _contacts = contacts;
-            return contacts;
-        } catch ( FailedToGetContactException
-                | FailedToLoadDataBaseException
-                | FailedToRetrieveDataException exception) {
-            throw new FailedToGetContactsException(exception);
-        }
-    }
+            // Hash new password
+            encodedPassword = Cryptography.encode(newPassword);
+            encodedPasswordHash = Cryptography.hash(encodedPassword);
+            passwordHash = Cryptography.decode(encodedPasswordHash);
 
-    public boolean validates(String string) {
-        return _passwordHash.equals(string);
-    }
-
-    private String exportIntoData() throws FailedToImportIntoDataException {
-        JSONObject data;
-
-        try {
-            // Create json object
-            data = new JSONObject();
-
-            // Add user information into json object
-            data.put(PHONE_NUMBER, _phoneNumber);
-            data.put(PASSWORD, _passwordHash);
-
-            // Return json object in string format
-            return data.toString();
-        } catch ( JSONException exception ) {
-            throw new FailedToImportIntoDataException(exception);
+            _passwordHash = passwordHash;
+        } catch ( FailedToValidatePasswordException
+                | FailedToHashException exception ) {
+            throw new FailedToSetPasswordException(exception);
         }
     }
 }

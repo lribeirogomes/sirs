@@ -7,8 +7,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoad
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.InvalidCertificateException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.UntrustedCertificateException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToImportException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
  * Created by joao on 19/11/15.
@@ -24,13 +23,16 @@ public class ImportUserCertificateService extends SecureSmsService {
         _validate = validate;
     }
 
-    public void Execute() throws FailedToImportException {//, UntrustedCertificateException{
+    public void Execute() throws FailedServiceException {//, UntrustedCertificateException{
         try {
             KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importUserCertificates(_filename, true, _validate);
-        } catch (FailedToLoadKeyStoreException | FailedToStoreException | InvalidCertificateException | FailedToRetrieveKeyException e) {
-            throw new FailedToImportException(e.getMessage());
-        } catch (CertPathValidatorException e){
+        } catch ( FailedToLoadKeyStoreException
+                | FailedToStoreException
+                | InvalidCertificateException
+                | FailedToRetrieveKeyException exception) {
+            throw new FailedServiceException("import user certificate", exception);
+        } catch (CertPathValidatorException e) {
             _isValid = false;
             //throw new UntrustedCertificateException("Certificate cannot be trusted");
         }

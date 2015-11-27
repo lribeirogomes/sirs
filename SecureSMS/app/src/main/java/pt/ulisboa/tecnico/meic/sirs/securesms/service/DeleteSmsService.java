@@ -1,29 +1,25 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDeleteSmsMessageException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetSmsMessageException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToGetSmsMessagesException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToDeleteSMSException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
  * Created by lribeirogomes on 23/11/15.
  */
 public class DeleteSmsService extends SecureSmsService {
-    private String _destinationAddress, _data;
+    private SmsMessage _smsMessage;
 
-    public DeleteSmsService (String destinationAddress, String data) {
-        _destinationAddress = destinationAddress;
-        _data = data;
+    public DeleteSmsService (SmsMessage smsMessage) {
+        _smsMessage = smsMessage;
     }
 
-    public void Execute() throws FailedToDeleteSMSException {
+    public void Execute() throws FailedServiceException {
         try {
-            SmsMessage sms = SmsMessage.getInstance(_destinationAddress, _data);
-            sms.onDelete();
-        } catch ( FailedToGetSmsMessageException
-                | FailedToDeleteSmsMessageException exception ) {
-            throw new FailedToDeleteSMSException(exception);
+            SmsMessageManager.deleteSmsMessage(_smsMessage);
+        } catch ( FailedToDeleteSmsMessageException exception ) {
+            throw new FailedServiceException("delete sms message", exception);
         }
     }
 }
