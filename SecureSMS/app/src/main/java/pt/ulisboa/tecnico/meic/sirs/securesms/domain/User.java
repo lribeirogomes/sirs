@@ -1,9 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
-import java.util.Map;
-
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllContactsException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSetPasswordException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToValidatePasswordException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidAuthenticationException;
@@ -12,27 +9,24 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidAuthentic
  * Created by lribeirogomes on 23/11/15.
  */
 public class User {
-    private String _passwordHash;
-    private Map<String, Contact> _contacts;
+    private String _passwordHash,
+                   _password;
 
     User(String passwordHash) {
         _passwordHash = passwordHash;
-    }
-
-    public Map<String, Contact> getContacts() throws
-            FailedToRetrieveAllContactsException {
-        // If map of contacts not loaded
-        if (_contacts == null) {
-            // Get all contacts from storage
-            _contacts = ContactManager.retrieveAllContacts();
-        }
-
-        // Return map of contacts
-        return _contacts;
+        _password = null;
     }
 
     String getPasswordHash() {
         return _passwordHash;
+    }
+    String getPassword() {
+        if (_password == null) {
+            // throws new exception
+        }
+        String password = _password;
+        _password = null;
+        return password;
     }
     public boolean isFirstUse() {
         return _passwordHash.equals("");
@@ -71,6 +65,8 @@ public class User {
             if (!_passwordHash.equals("")) {
                 validatesPassword(oldPassword);
             }
+
+            _password = newPassword;
 
             // Hash new password
             encodedPassword = Cryptography.encode(newPassword);

@@ -8,6 +8,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateUs
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllSmsMessagesException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 /**
  * Created by lribeirogomes on 22/11/15.
@@ -21,9 +22,9 @@ public class GetFirstUseStateService extends SecureSmsService {
         _result = null;
     }
 
-    public Boolean getResult() throws NullPointerException {
+    public Boolean getResult() throws FailedToGetResultException {
         if (_result == null) {
-            throw new NullPointerException();
+            throw new FailedToGetResultException();
         }
         return _result;
     }
@@ -34,8 +35,7 @@ public class GetFirstUseStateService extends SecureSmsService {
             User user = UserManager.retrieveUser();
 
             _result = user.isFirstUse();
-        } catch ( FailedToCreateUserException
-                | FailedToRetrieveUserException exception) {
+        } catch ( Exception exception) {
             throw new FailedServiceException("get first use state", exception);
         }
     }

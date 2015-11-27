@@ -135,6 +135,7 @@ public class Cryptography {
             InvalidCipherTextException {
         String algorithm = "PBKDF2WithHmacSHA1";
 
+        // TODO: move this block into key manager
         // Define secret key
         PBEKeySpec pbeKeySpec = new PBEKeySpec(
                 password.toCharArray(),

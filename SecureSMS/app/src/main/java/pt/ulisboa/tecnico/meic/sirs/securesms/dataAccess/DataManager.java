@@ -1,8 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
-import java.io.InvalidClassException;
-import java.util.IllegalFormatException;
-import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

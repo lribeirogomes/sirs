@@ -8,17 +8,17 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
  * Created by lribeirogomes on 23/11/15.
  */
 public class CreateContactService extends SecureSmsService {
-    private String _phoneNumber,
-                   _contactName;
+    private String _contactName,
+                   _phoneNumber;
 
-    public CreateContactService(String phoneNumber, String contactName) {
-        _phoneNumber = phoneNumber;
+    public CreateContactService(String contactName, String phoneNumber) {
         _contactName = contactName;
+        _phoneNumber = phoneNumber;
     }
 
     public void Execute() throws FailedServiceException {
         try {
-            ContactManager.createContact(_phoneNumber, _contactName);
+            ContactManager.createContact(_contactName, _phoneNumber);
         } catch ( FailedToCreateContactException exception) {
             throw new FailedServiceException("create contact", exception);
         }

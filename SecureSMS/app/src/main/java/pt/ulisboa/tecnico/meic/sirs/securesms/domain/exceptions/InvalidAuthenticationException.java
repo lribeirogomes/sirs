@@ -5,7 +5,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.SecureSmsExcept
 /**
  * Created by lribeirogomes on 24/11/15.
  */
-public class InvalidAuthenticationException extends SecureSmsException {
+public class InvalidAuthenticationException extends Exception {
     public InvalidAuthenticationException(){
         super("Invalid authentication.");
     }

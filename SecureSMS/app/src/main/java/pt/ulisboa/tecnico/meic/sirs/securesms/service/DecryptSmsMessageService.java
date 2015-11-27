@@ -4,6 +4,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
@@ -20,9 +21,9 @@ public class DecryptSmsMessageService extends SecureSmsService {
         _result = null;
     }
 
-    public String getResult() throws NullPointerException {
+    public String getResult() throws FailedToGetResultException {
         if (_result == null) {
-            throw new NullPointerException();
+            throw new FailedToGetResultException();
         }
         return _result;
     }

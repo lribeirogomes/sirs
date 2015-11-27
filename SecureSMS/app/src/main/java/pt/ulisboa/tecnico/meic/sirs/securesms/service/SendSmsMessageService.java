@@ -2,7 +2,7 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import android.telephony.SmsManager;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageManager;
@@ -14,10 +14,10 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
  * Created by lribeirogomes on 15/11/15.
  */
 public class SendSmsMessageService extends SecureSmsService {
-    private List<String> _phoneNumbers;
+    private ArrayList<String> _phoneNumbers;
     private String _plainTextSms;
 
-    public SendSmsMessageService(List<String> phoneNumbers,
+    public SendSmsMessageService(ArrayList<String> phoneNumbers,
                                  String plainTextSms) {
         _phoneNumbers = phoneNumbers;
         _plainTextSms = plainTextSms;

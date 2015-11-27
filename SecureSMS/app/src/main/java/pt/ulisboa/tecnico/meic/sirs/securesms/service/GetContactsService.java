@@ -1,23 +1,28 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllContactsException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 /**
  * Created by lribeirogomes on 23/11/15.
  */
 public class GetContactsService extends SecureSmsService {
-    private Map<String, Contact> _result;
+    private ArrayList<Contact> _result;
 
     public GetContactsService() {
         _result = null;
     }
 
-    public Map<String, Contact> GetResult() {
+    public ArrayList<Contact> GetResult() throws FailedToGetResultException {
+        if (_result == null) {
+            throw new FailedToGetResultException();
+        }
         return _result;
     }
 

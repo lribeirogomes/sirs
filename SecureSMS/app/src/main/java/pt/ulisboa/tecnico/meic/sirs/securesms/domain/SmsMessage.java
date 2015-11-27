@@ -49,15 +49,17 @@ public class SmsMessage {
         try {
             // TODO: Reimplement getInstance after implementing getInstance without arguments
             // Encrypt message content
-            keyManager = KeyManager.getInstance("dummy");
-            key = keyManager.getSessionKey(_sender);
+            // keyManager = KeyManager.getInstance("dummy");
+            // key = keyManager.getSessionKey(_sender);
             encodedData = Cryptography.encode(_content);
-            cipheredData = Cryptography.symmetricCipher(encodedData, key);
+            // cipheredData = Cryptography.symmetricCipher(encodedData, key);
 
-            return cipheredData;
-        } catch ( FailedToLoadKeyStoreException
-                | FailedToRetrieveKeyException
-                | FailedToEncryptException exception) {
+            // return cipheredData;
+            return encodedData;
+        } catch //( FailedToLoadKeyStoreException
+                //| FailedToRetrieveKeyException
+                //| FailedToEncryptException exception) {
+                (Exception exception) {
             throw new FailedToEncryptSmsMessageException(exception);
         }
     }

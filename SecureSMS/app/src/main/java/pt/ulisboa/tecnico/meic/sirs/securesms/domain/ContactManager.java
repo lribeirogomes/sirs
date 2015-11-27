@@ -1,7 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.Set;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.DataManager;
@@ -22,7 +21,7 @@ public class ContactManager {
                          CONTACTS = "Contacts",
                          USER_NAME = "UserName";
 
-    public static void createContact(String phoneNumber, String contactName) throws
+    public static void createContact(String contactName, String phoneNumber) throws
             FailedToCreateContactException {
         DataManager dm;
 
@@ -37,9 +36,9 @@ public class ContactManager {
         }
     }
 
-    public static Map<String, Contact> retrieveAllContacts() throws
+    public static ArrayList<Contact> retrieveAllContacts() throws
             FailedToRetrieveAllContactsException {
-        Map<String, Contact> contacts;
+        ArrayList<Contact> contacts;
         DataManager dm;
         Set<String> contactIds;
         String contactName;
@@ -47,7 +46,7 @@ public class ContactManager {
 
         try {
             // Create contacts hash map
-            contacts = new HashMap<>();
+            contacts = new ArrayList<>();
 
             // Get all contact id's from storage
             dm = DataManager.getInstance();
@@ -59,8 +58,8 @@ public class ContactManager {
                 contactName = dm.getAttributeString(phoneNumber, CONTACT_NAME);
 
                 // Add contact information into hash map
-                contact = new Contact(phoneNumber, contactName);
-                contacts.put(phoneNumber, contact);
+                contact = new Contact(contactName, phoneNumber);
+                contacts.add(contact);
             }
 
             // Return hash map of contacts

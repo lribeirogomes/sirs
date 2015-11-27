@@ -3,14 +3,14 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 import android.content.Context;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.DataManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.KeyManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateUserException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToUpdateUserException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidAuthenticationException;
 
 /**
  * Created by Ana Beatriz on 26/11/2015.
@@ -58,10 +58,14 @@ public class UserManager {
             // Get information from user
             passwordHash = user.getPasswordHash();
 
+            // Update password in key manager
+            KeyManager.getInstance(user.getPassword());
+
             // Update user in storage
             dm = DataManager.getInstance();
             dm.setAttribute(USER_NAME, PASSWORD_HASH, passwordHash);
-        } catch ( FailedToLoadDataBaseException exception ) {
+        } catch ( FailedToLoadDataBaseException
+                | FailedToLoadKeyStoreException exception ) {
             throw new FailedToUpdateUserException(exception);
         }
     }

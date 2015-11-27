@@ -44,15 +44,17 @@ public class SmsMessageManager {
         try {
             // TODO: Reimplement getInstance after implementing getInstance without arguments
             // Decrypt message content
-            keyManager = KeyManager.getInstance("dummy");
-            key = keyManager.getSessionKey(sender);
-            decipheredData = Cryptography.symmetricDecipher(cipherText, key);
-            plainText = Cryptography.decode(decipheredData);
+            // keyManager = KeyManager.getInstance("dummy");
+            // key = keyManager.getSessionKey(sender);
+            // decipheredData = Cryptography.symmetricDecipher(cipherText, key);
+            // plainText = Cryptography.decode(decipheredData);
+            plainText = Cryptography.decode(cipherText);
 
             return createSmsMessage(sender, plainText);
-        } catch ( FailedToLoadKeyStoreException
-                | FailedToRetrieveKeyException
-                | FailedToDecryptException exception ) {
+        } catch //( FailedToLoadKeyStoreException
+                //| FailedToRetrieveKeyException
+                //| FailedToDecryptException exception ) {
+                (Exception exception) {
             throw new FailedToCreateSmsMessageException(exception);
         }
     }
@@ -89,7 +91,7 @@ public class SmsMessageManager {
         }
     }
 
-    public static List<SmsMessage> retrieveAllSmsMessages(Contact contact) throws
+    public static List<SmsMessage> retrieveAllSmsMessages(String phoneNumber) throws
             FailedToRetrieveAllSmsMessagesException {
         // TODO: Implement message content encryption after fixing encoding issue
         // User user;
@@ -118,7 +120,7 @@ public class SmsMessageManager {
 
             // Get all sms message id's from storage
             dm = DataManager.getInstance();
-            messageIds = dm.getAttributeSet(contact.getPhoneNumber(), MESSAGES);
+            messageIds = dm.getAttributeSet(phoneNumber, MESSAGES);
 
             // For each sms message id
             for (String messageId : messageIds) {

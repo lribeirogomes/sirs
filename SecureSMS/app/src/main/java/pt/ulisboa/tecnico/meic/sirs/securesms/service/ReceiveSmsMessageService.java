@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
@@ -18,9 +19,9 @@ public class ReceiveSmsMessageService extends SecureSmsService {
         _result = null;
     }
 
-    public SmsMessage getResult() throws NullPointerException {
+    public SmsMessage getResult() throws FailedToGetResultException {
         if (_result == null) {
-            throw new NullPointerException();
+            throw new FailedToGetResultException();
         }
         return _result;
     }

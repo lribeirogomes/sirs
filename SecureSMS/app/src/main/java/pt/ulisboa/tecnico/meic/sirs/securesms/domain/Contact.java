@@ -8,13 +8,13 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieve
  * Created by lribeirogomes on 23/11/15.
  */
 public class Contact {
-    private String _phoneNumber,
-                   _contactName;
+    private String _contactName,
+                   _phoneNumber;
     private List<SmsMessage> _messages;
 
-    Contact(String phoneNumber, String contactName) {
-        _phoneNumber = phoneNumber;
+    Contact(String contactName, String phoneNumber) {
         _contactName = contactName;
+        _phoneNumber = phoneNumber;
         _messages = null;
     }
 
@@ -32,12 +32,25 @@ public class Contact {
         _contactName = contactName;
     }
 
+    public SmsMessage getLastMessage() throws
+            FailedToRetrieveAllSmsMessagesException {
+        List<SmsMessage> messages;
+
+        messages = getSmsMessages();
+        if(messages.isEmpty()) {
+            return null;
+        }
+
+        // Return last message
+        return messages.get(0);
+    }
+
     public List<SmsMessage> getSmsMessages() throws
             FailedToRetrieveAllSmsMessagesException {
         // If list of messages not loaded
         if (_messages == null) {
             // Get all messages from storage
-            _messages = SmsMessageManager.retrieveAllSmsMessages(this);
+            _messages = SmsMessageManager.retrieveAllSmsMessages(_phoneNumber);
         }
 
         // Return list of messages

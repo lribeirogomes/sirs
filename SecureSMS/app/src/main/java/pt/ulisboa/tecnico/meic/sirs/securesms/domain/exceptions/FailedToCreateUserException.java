@@ -5,7 +5,7 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions;
  */
 public class FailedToCreateUserException extends Exception {
     public FailedToCreateUserException(Throwable throwable){
-        super("Failed to get password.", throwable);
+        super("Failed to create user.", throwable);
     }
 }
 
