@@ -40,7 +40,6 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.ECKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
@@ -61,10 +60,11 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetr
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.ImportKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.InvalidCertificateException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 
 /**
  * Created by joao on 11/11/15.
- * This is a Singleton used to manage functionality related to the generation, storage, retrieval and processing of cryptographic keys
+ * This is a Singleton used to manage functionality related to the generation, storage and retrieval of cryptographic keys
  * for the SecureSMS android application
  */
 public class KeyManager {
@@ -91,6 +91,12 @@ public class KeyManager {
         return ourInstance;
     }
 
+    public static KeyManager getInstance()throws KeyStoreIsLockedException{
+        if(null == _ks)
+            throw new KeyStoreIsLockedException();
+        return ourInstance;
+    }
+
     private KeyManager() {
 
     }
@@ -102,7 +108,7 @@ public class KeyManager {
                 _ks = KeyStore.getInstance("UBER", "SC");
                 java.io.FileInputStream fis = null;
                 try {
-                    fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Store on internal memory
+                    fis = new java.io.FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);
                     _ks.load(fis, _keyStorePassword);
                 }catch(FileNotFoundException e){
                     _ks.load(null);
@@ -121,7 +127,7 @@ public class KeyManager {
     private void saveKeyStore()throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException{
         java.io.FileOutputStream fos = null;
         try {
-            fos = new java.io.FileOutputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);//TODO:Store on internal memory
+            fos = new java.io.FileOutputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + KEYSTORE_FILE);
             _ks.store(fos, _keyStorePassword);
         } finally {
             if (fos != null) {
@@ -136,8 +142,6 @@ public class KeyManager {
             KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry) _ks.getEntry(OWN + SIGNING_KEY, protParam);
             if (null == privKeyEntry)
                 throw new FailedToRetrieveKeyException("Private signing key not yet imported.");
-            if (!(privKeyEntry instanceof KeyStore.PrivateKeyEntry))
-                throw new FailedToRetrieveKeyException("Private key is invalid.");
             return privKeyEntry.getPrivateKey();
 
         }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
@@ -151,8 +155,6 @@ public class KeyManager {
             KeyStore.PrivateKeyEntry privKeyEntry = (KeyStore.PrivateKeyEntry) _ks.getEntry(OWN + ENCRYPTION_KEY, protParam);
             if (null == privKeyEntry)
                 throw new FailedToRetrieveKeyException("Private encryption key not yet imported.");
-            if (!(privKeyEntry instanceof KeyStore.PrivateKeyEntry))
-                throw new FailedToRetrieveKeyException("Private key is invalid.");
             return privKeyEntry.getPrivateKey();
 
         }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
@@ -207,8 +209,6 @@ public class KeyManager {
             KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) _ks.getEntry(sessionId + SECRET_KEY, protParam);
             if (null == secretKeyEntry)
                 throw new FailedToRetrieveKeyException("No session key with that id.");
-            if (!(secretKeyEntry instanceof KeyStore.SecretKeyEntry))
-                throw new FailedToRetrieveKeyException("Session key is invalid.");
             return secretKeyEntry.getSecretKey();
 
         }catch(NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e){
