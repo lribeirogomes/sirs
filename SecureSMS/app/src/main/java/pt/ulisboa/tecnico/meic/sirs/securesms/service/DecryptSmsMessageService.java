@@ -1,8 +1,11 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
@@ -14,8 +17,7 @@ public class DecryptSmsMessageService extends SecureSmsService {
     private byte[] _encryptedSms;
     private String _result;
 
-    public DecryptSmsMessageService(String phoneNumber,
-                                    byte[] data) {
+    public DecryptSmsMessageService(String phoneNumber, byte[] data) {
         _phoneNumber = phoneNumber;
         _encryptedSms = data;
         _result = null;
@@ -28,11 +30,12 @@ public class DecryptSmsMessageService extends SecureSmsService {
         return _result;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         try {
-            SmsMessage smsMessage = SmsMessageManager.createSmsMessage(_phoneNumber, _encryptedSms);
+            Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
+            SmsMessage smsMessage = SmsMessageManager.createSmsMessage(contact, _encryptedSms);
             _result = smsMessage.getContent();
-        } catch (FailedToCreateSmsMessageException exception) {
+        } catch (FailedToCreateSmsMessageException | FailedToRetrieveContactException exception) {
             throw new FailedServiceException("decrypt sms message", exception);
         }
     }

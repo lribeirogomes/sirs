@@ -14,31 +14,26 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptS
  * Created by lribeirogomes on 17/11/15.
  */
 public class SmsMessage {
-    private long _id,
-                 _dateNumber;
-    private String _sender,
-            _content;
+    private String _id;
+    private long _dateNumber;
+    private Contact _contact;
+    private String _content;
 
-    SmsMessage(long id, long dateNumber, String sender, String content) {
+    public SmsMessage(String id, Contact contact, long dateNumber, String content) {
         _id = id;
+        _contact = contact;
         _dateNumber = dateNumber;
-        _sender = sender;
         _content = content;
     }
 
-    public String getID() { return _sender + _id; }
-    public long getDateNumber() {
-        return _dateNumber;
-    }
-    public Date getDate() {
-        return new Date(_dateNumber * 1000);
-    }
-    public String getsender() {
-        return _sender;
-    }
-    public String getContent() {
-        return _content;
-    }
+    public String getId() { return _id; }
+
+    public Contact getContact() {return _contact; }
+
+    public Date getDate() { return new Date(_dateNumber * 1000); }
+
+    public String getContent() { return _content; }
+
     public byte[] getEncryptedContent() throws
             FailedToEncryptSmsMessageException {
         KeyManager keyManager;

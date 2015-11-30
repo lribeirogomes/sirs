@@ -16,8 +16,6 @@ import android.widget.ListView;
 import android.widget.Button;
 import android.widget.TextView;
 
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.TestingService;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToAccessContactException;
 
 import java.util.ArrayList;
 
@@ -82,7 +80,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
         if (requestCode == CHOOSE_CONTACT_REQ) {
             if(resultCode == RESULT_OK){
                 //put returned contacts in the list
-                displayContactsToSend(chooseContactIntent.getExtras().getStringArrayList("contactsToSend"));
+                displayContactsToSend(chooseContactIntent.getExtras().getStringArrayList("contactsToSendNames"));
             }
             if (resultCode == RESULT_CANCELED) {
                 //if there's no result
@@ -91,12 +89,12 @@ public class ComposeMessageActivity extends AppCompatActivity {
     }
 
     public void sendMessage(View view) {
-        TestingService service = new TestingService(getApplicationContext()); //DELETE THIS
+        //TestingService service = new TestingService(getApplicationContext()); //DELETE THIS
         EditText etMessage = (EditText) findViewById(R.id.etMessage);
         String message = etMessage.getText().toString();
         try {
             if (!message.equals("")) {
-                service.Execute();
+                //service.execute();
                 etMessage.setText("");
 
                 //SendMessageService
@@ -108,7 +106,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
                 InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 im.hideSoftInputFromWindow(etMessage.getWindowToken(), 0);
             }
-        }catch (FailedToAccessContactException exception) {
+        }catch (Exception exception) {
                 //show exception
         }
     }

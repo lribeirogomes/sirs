@@ -17,7 +17,7 @@ public class ImportCACertificateService extends SecureSmsService {
         _storagePassword = storagePassword;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         try {
             KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importCACertificate(_filename);

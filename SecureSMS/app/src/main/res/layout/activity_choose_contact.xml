@@ -16,7 +16,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/pink"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
@@ -35,22 +34,22 @@
         tools:showIn="@layout/activity_choose_contact">
 
         <ListView
+            android:id="@+id/lvContacts"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/lvContacts"
-            android:layout_alignParentTop="true"
+            android:layout_above="@+id/space"
+            android:layout_alignParentEnd="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true"
-            android:layout_above="@+id/space" />
+            android:layout_alignParentTop="true" />
 
         <Space
+            android:id="@+id/space"
             android:layout_width="match_parent"
             android:layout_height="@dimen/design_fab_size_normal"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:id="@+id/space" />
+            android:layout_alignParentStart="true" />
     </RelativeLayout>
 
 
@@ -60,9 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_check_mark"
-        android:scaleType="center"
-        app:backgroundTint="@color/pink"
-        android:onClick="confirmChooseContact" />
+        android:onClick="confirmChooseContact"
+        android:src="@drawable/ic_check_mark"/>
 
 </android.support.design.widget.CoordinatorLayout>

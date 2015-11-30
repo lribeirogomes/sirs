@@ -1,11 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--<color name="colorPrimaryDark">#303F9F</color>-->
-    <color name="blue">#477bff</color>
-    <color name="colorAccent">#ffffff</color>
+    <color name="colorPrimaryDark">#252b30</color>
+    <color name="colorPrimary">#252b30</color>
+    <color name="colorAccent">#ff4859</color>
+    <color name="colorBackground">#192024</color>
+
+
+    <color name="transparent">#00000000</color>
+    <color name="lighterBackground">#14ffffff</color>
+
+    <color name="darkerNeutral">#14ffffff</color>
+    <color name="lighterNeutral">#50ffffff</color>
+
+
+
+    <color name="backgroundColor">#303030</color>
+    <color name="navyLight">#252b30</color>
+    <color name="navyDark">#192024</color>
+
+
+    <color name="blue">#166b84</color>v
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
     <color name="coral">#ff4e51</color>
     <color name="mustard">#f1af00</color>
     <color name="teal">#00a08b</color>
     <color name="pink">#ff5067</color>
+    <color name="red">#ff4859</color>
+    
+    <color name="black_semi_transparent">#B2000000</color>
+    <color name="background">#e5e5e5</color>
+    <color name="half_black">#808080</color>
+    <color name="half_white">#fafafa</color>
+    <color name="half_white_pressed">#f1f1f1</color>
+    <color name="half_pink">#e91e63</color>
+    <color name="half_pink_pressed">#ec407a</color>
+    <color name="blue_semi_transparent">#805677fc</color>
+    <color name="blue_semi_transparent_pressed">#80738ffe</color>
 
 </resources>

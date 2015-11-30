@@ -12,15 +12,15 @@ public class User {
     private String _passwordHash,
                    _password;
 
-    User(String passwordHash) {
+    public User(String passwordHash) {
         _passwordHash = passwordHash;
         _password = null;
     }
 
-    String getPasswordHash() {
+    public String getPasswordHash() {
         return _passwordHash;
     }
-    String getPassword() {
+    public String getPassword() {
         if (_password == null) {
             // throws new exception
         }
@@ -28,11 +28,8 @@ public class User {
         _password = null;
         return password;
     }
-    public boolean isFirstUse() {
-        return _passwordHash.equals("");
-    }
 
-    public void validatesPassword(String password) throws
+    public void validatePassword(String password) throws
             FailedToValidatePasswordException {
         byte[] encodedPassword,
                 encodedPasswordHash;
@@ -63,7 +60,7 @@ public class User {
 
         try {
             if (!_passwordHash.equals("")) {
-                validatesPassword(oldPassword);
+                validatePassword(oldPassword);
             }
 
             _password = newPassword;

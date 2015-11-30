@@ -16,7 +16,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/teal"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
@@ -34,79 +33,50 @@
         tools:context=".presentation.ComposeMessageActivity"
         tools:showIn="@layout/activity_write_message">
 
-
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxHeight="80dp"
-            android:minHeight="@dimen/design_fab_size_normal"
-            android:inputType="textMultiLine"
-            android:ems="10"
-            android:id="@+id/etMessage"
-            android:hint="Write a message..."
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignRight="@+id/lvMessages"
-            android:layout_alignEnd="@+id/lvMessages"
-            android:layout_marginRight="@dimen/design_fab_size_normal" />
-
-        <ListView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/lvMessages"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_above="@+id/etMessage"
-            android:stackFromBottom="true"
-            android:layout_below="@+id/tlReceivers" />
-
         <TableRow
+            android:id="@+id/tlReceivers"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:id="@+id/tlReceivers" >
+            android:layout_toLeftOf="@+id/fabAddReceiver"
+            android:layout_toStartOf="@+id/fabAddReceiver">
+
             <TextView
 
+                android:id="@+id/tvTo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="To: "
-                android:id="@+id/tvTo"
                 android:layout_gravity="center"
-                android:layout_alignTop="@+id/lvMessages" />
+                android:text="To: "
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
 
             <TableRow
+                android:id="@+id/trReceivers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:id="@+id/trReceivers" >
-            </TableRow>
-
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/fabAddReceiver"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ic_plus_sign_mini"
-                android:scaleType="center"
-                app:backgroundTint="@color/pink"
-                android:layout_gravity="center"
-                android:onClick="chooseContact" />
+                android:layout_gravity="center" />
 
 
         </TableRow>
 
+        <include
+            layout="@layout/list_write_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/tlReceivers" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabAddReceiver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/tlReceivers"
+            android:onClick="chooseContact"
+            android:src="@drawable/ic_plus_sign"/>
     </RelativeLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fabSendMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_send_message"
-        android:scaleType="center"
-        app:backgroundTint="@color/teal"
-        android:onClick="sendMessage" />
 
 </android.support.design.widget.CoordinatorLayout>

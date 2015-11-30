@@ -24,7 +24,7 @@ public class EncryptSmsMessageService extends SecureSmsService {
         return _result;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         try {
             _result = _smsMessage.getEncryptedContent();
         } catch (FailedToEncryptSmsMessageException exception) {

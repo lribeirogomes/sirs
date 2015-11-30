@@ -14,15 +14,44 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemo
 
 public class DataManager {
 
-    private Context _context;
     private static DataManager dataManager;
+    private Context _context;
+    private String _userId;
 
-    public static void createDataManager(Context context) throws FailedToCreateDataBaseException {
+    public static final String USER = "";
+    //user file and attributes
+    private static final String USER_CLASS = "User";
+    public static final String PASSWORD_HASH = "PasswordHash";
+    public static final String CONTACT_TABLE = "Contacts";
+    public static final String CONTACT_COUNT = "ContactCount";
+
+    //contact file and attributes
+    public static final String CONTACT_CLASS = "Contact";
+    public static final String CONTACT_NAME = "Name";
+    public static final String CONTACT_PHONE_NUMBER = "PhoneNumber";
+    public static final String MESSAGE_TABLE = "Messages";
+    public static final String MESSAGE_COUNT = "MessagesCount";
+
+    //message file and attributes
+    public static final String MESSAGE_CLASS = "Message";
+    public static final String MESSAGE_DIRECTION = "MessageDirection";
+    public static final String MESSAGE_DATE_NUMBER = "MessageDate";
+    public static final String MESSAGE_CONTENT = "MessageContent";
+
+    //session file and attributes
+    public static final String SESSION_CLASS = "Session";
+
+
+    private DataManager() {}
+
+    public static DataManager createDataManager(Context context, String userId) throws FailedToCreateDataBaseException {
         if (dataManager != null) {
             throw new FailedToCreateDataBaseException();
         }
         dataManager = new DataManager();
         dataManager._context = context;
+        dataManager._userId = userId;
+        return dataManager;
     }
 
     public static DataManager getInstance() throws FailedToLoadDataBaseException {
@@ -32,18 +61,17 @@ public class DataManager {
         return dataManager;
     }
 
-    private DataManager() {
 
+    private Editor getEditor(String spFilename) {
+        spFilename = USER_CLASS+_userId+spFilename;
+        return _context.getSharedPreferences(spFilename, Context.MODE_PRIVATE).edit();
     }
 
-    private Editor getEditor(String sharedPreferencesName) {
-        return _context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE).edit();
-    }
-
-    public String getAttributeString(String className, String attributeName) throws
+    public String getAttributeString(String spFilename, String attributeName) throws
             FailedToGetAttributeException {
         try {
-            String attribute = _context.getSharedPreferences(className, Context.MODE_PRIVATE).
+            spFilename = USER_CLASS+_userId+spFilename;
+            String attribute = _context.getSharedPreferences(spFilename, Context.MODE_PRIVATE).
                     getString(attributeName, "");
 
             return attribute;
@@ -52,10 +80,11 @@ public class DataManager {
         }
     }
 
-    public long getAttributeLong(String className, String attributeName) throws
+    public long getAttributeLong(String spFilename, String attributeName) throws
             FailedToGetAttributeException {
         try {
-            long attribute = _context.getSharedPreferences(className, Context.MODE_PRIVATE).
+            spFilename = USER_CLASS+_userId+spFilename;
+            long attribute = _context.getSharedPreferences(spFilename, Context.MODE_PRIVATE).
                     getLong(attributeName, -1);
 
             return attribute;
@@ -64,36 +93,57 @@ public class DataManager {
         }
     }
 
-    public Set<String> getAttributeSet(String className, String attributeName) throws
+    public int getAttributeInt(String spFilename, String attributeName) throws
             FailedToGetAttributeException {
         try {
-            return _context.getSharedPreferences(className, Context.MODE_PRIVATE).
+            spFilename = USER_CLASS+_userId+spFilename;
+            int attribute = _context.getSharedPreferences(spFilename, Context.MODE_PRIVATE).
+                    getInt(attributeName, -1);
+
+            return attribute;
+        } catch ( ClassCastException exception) {
+            throw new FailedToGetAttributeException(exception);
+        }
+    }
+
+    public Set<String> getAttributeSet(String spFilename, String attributeName) throws
+            FailedToGetAttributeException {
+        try {
+            spFilename = USER_CLASS+_userId+spFilename;
+            return _context.getSharedPreferences(spFilename, Context.MODE_PRIVATE).
                     getStringSet(attributeName, new LinkedHashSet<String>());
         } catch (ClassCastException exception) {
             throw new FailedToGetAttributeException(exception);
         }
     }
 
-    public void setAttribute(String className, String attributeName, String value) {
-            Editor editor = getEditor(className);
+    public void setAttribute(String spFilename, String attributeName, String value) {
+            Editor editor = getEditor(spFilename);
 
             editor.putString(attributeName, value);
             editor.commit();
     }
 
-    public void setAttribute(String className, String attributeName, long value) {
-            Editor editor = getEditor(className);
+    public void setAttribute(String spFilename, String attributeName, long value) {
+            Editor editor = getEditor(spFilename);
 
             editor.putLong(attributeName, value);
             editor.commit();
     }
 
-    public void addAttribute(String className, String attributeName, String value) throws
+    public void setAttribute(String spFilename, String attributeName, int value) {
+        Editor editor = getEditor(spFilename);
+
+        editor.putInt(attributeName, value);
+        editor.commit();
+    }
+
+    public void addAttribute(String spFilename, String attributeName, String value) throws
             FailedToAddAttributeException {
         try {
-            Editor editor = getEditor(className);
+            Editor editor = getEditor(spFilename);
 
-            Set<String> dataSet = getAttributeSet(className, attributeName);
+            Set<String> dataSet = getAttributeSet(spFilename, attributeName);
             dataSet.add(value);
 
             editor.putStringSet(attributeName, dataSet);
@@ -103,12 +153,12 @@ public class DataManager {
         }
     }
 
-    public void removeAttribute(String className, String attributeName, String value) throws
+    public void removeAttribute(String spFilename, String attributeName, String value) throws
             FailedToRemoveAttributeException {
         try {
-            Editor editor = getEditor(className);
+            Editor editor = getEditor(spFilename);
 
-            Set<String> dataSet = getAttributeSet(className, attributeName);
+            Set<String> dataSet = getAttributeSet(spFilename, attributeName);
             dataSet.remove(value);
 
             editor.putStringSet(attributeName, dataSet);
@@ -118,8 +168,8 @@ public class DataManager {
         }
     }
 
-    public void cleanAttribute(String className) {
-        Editor editor = getEditor(className);
+    public void cleanAttribute(String spFilename) {
+        Editor editor = getEditor(spFilename);
 
         editor.clear();
         editor.commit();

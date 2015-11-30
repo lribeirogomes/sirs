@@ -6,8 +6,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.charset.Charset;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
+import java.util.TimeZone;
+
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 
 /**
  * Created by lribeirogomes on 23/11/15.

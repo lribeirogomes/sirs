@@ -12,8 +12,7 @@ public class ReceiveSmsMessageService extends SecureSmsService {
     private byte[] _encryptedSms;
     private SmsMessage _result;
 
-    public ReceiveSmsMessageService(String phoneNumber,
-                                    byte[] data) {
+    public ReceiveSmsMessageService(String phoneNumber, byte[] data) {
         _phoneNumber = phoneNumber;
         _encryptedSms = data;
         _result = null;
@@ -26,12 +25,12 @@ public class ReceiveSmsMessageService extends SecureSmsService {
         return _result;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         SecureSmsService service;
 
         try {
             service = new DecryptSmsMessageService(_phoneNumber, _encryptedSms);
-            service.Execute();
+            service.execute();
         } catch (FailedServiceException exception) {
             throw new FailedServiceException("receive sms message", exception);
         }

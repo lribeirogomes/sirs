@@ -34,7 +34,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignature
  */
 public class CryptographyTest extends TestCase {
 
-    private PrivateKey _ecPrivateKey, _rsaPrivateKey;
+    private PrivateKey _EcPrivateKey, _PrivateKeys;
     private PublicKey _ecPublicKey, _rsaPublicKey;
     private SecretKey _aesKey;
     private long _startTime;
@@ -52,13 +52,13 @@ public class CryptographyTest extends TestCase {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
         keyGen.initialize(224, new SecureRandom());
         KeyPair ECKeyPair = keyGen.generateKeyPair();
-        _ecPrivateKey = ECKeyPair.getPrivate();
+        _EcPrivateKey = ECKeyPair.getPrivate();
         _ecPublicKey = ECKeyPair.getPublic();
 
         keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048, new SecureRandom());
         KeyPair RSAKeyPair = keyGen.generateKeyPair();
-        _rsaPrivateKey = RSAKeyPair.getPrivate();
+        _PrivateKeys = RSAKeyPair.getPrivate();
         _rsaPublicKey = RSAKeyPair.getPublic();
 
         KeyGenerator aesKeyGen = KeyGenerator.getInstance("AES");
@@ -76,13 +76,13 @@ public class CryptographyTest extends TestCase {
 
     @Test
     public void testSignature() throws Exception {
-        byte[] signature = Cryptography.sign(_plaintext, _ecPrivateKey);
+        byte[] signature = Cryptography.sign(_plaintext, _EcPrivateKey);
         Cryptography.verifySignature(_plaintext, signature, _ecPublicKey);
     }
 
     @Test(expected = InvalidSignatureException.class)
     public void testBadSignature() throws Exception{//Not entirely deterministic!
-        byte[] signature = Cryptography.sign(_plaintext, _ecPrivateKey);
+        byte[] signature = Cryptography.sign(_plaintext, _EcPrivateKey);
         signature[10] = 0;
         signature[11] = 0;
         signature[12] = 0;

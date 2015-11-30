@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ListView
+        android:id="@+id/lvMessages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:stackFromBottom="true"
+        android:layout_above="@+id/linearLayout3" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:background="@drawable/shape_text_box_light"
+        android:gravity="right"
+
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.00"
+            android:background="@drawable/shape_text_box_transparent"
+            android:ems="10"
+            android:hint="Write a message..."
+            android:inputType="textMultiLine"
+            android:maxHeight="80dp" />
+
+        <ImageButton
+            android:id="@+id/bSendMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/shape_text_box_transparent"
+            android:onClick="sendMessage"
+            android:scaleType="center"
+            android:src="@drawable/ic_send_message" />
+
+        <ImageButton
+            android:id="@+id/bEncryptMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/shape_text_box_mini"
+            android:src="@drawable/ic_encrypt"
+            android:visibility="gone" />
+    </LinearLayout>
+
+
+</RelativeLayout>

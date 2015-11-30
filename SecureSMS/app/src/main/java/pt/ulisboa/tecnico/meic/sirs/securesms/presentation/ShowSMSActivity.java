@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sirs.securesms;
+package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.TextView;
+
+import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 
 public class ShowSMSActivity extends AppCompatActivity {
 

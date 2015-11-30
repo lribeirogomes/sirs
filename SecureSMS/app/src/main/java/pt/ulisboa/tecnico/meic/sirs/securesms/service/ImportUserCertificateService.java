@@ -23,7 +23,7 @@ public class ImportUserCertificateService extends SecureSmsService {
         _validate = validate;
     }
 
-    public void Execute() throws FailedServiceException {//, UntrustedCertificateException{
+    public void execute() throws FailedServiceException {//, UntrustedCertificateException{
         try {
             KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importUserCertificates(_filename, true, _validate);

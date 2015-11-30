@@ -19,21 +19,21 @@ public class GetAllLastMessagesService extends SecureSmsService {
         _result = null;
     }
 
-    public ArrayList<SmsMessage> GetResult() throws FailedToGetResultException {
+    public ArrayList<SmsMessage> getResult() throws FailedToGetResultException {
         if (_result == null) {
             throw new FailedToGetResultException();
         }
         return _result;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         GetContactsService service;
         SmsMessage smsMessage;
 
         try {
             service = new GetContactsService();
-            service.Execute();
-            ArrayList<Contact> contacts = service.GetResult();
+            service.execute();
+            ArrayList<Contact> contacts = service.getResult();
 
             _result = new ArrayList<>();
             for (Contact contact : contacts) {

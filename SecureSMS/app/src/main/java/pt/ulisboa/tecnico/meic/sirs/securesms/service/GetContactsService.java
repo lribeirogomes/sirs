@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllContactsException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
@@ -19,14 +19,14 @@ public class GetContactsService extends SecureSmsService {
         _result = null;
     }
 
-    public ArrayList<Contact> GetResult() throws FailedToGetResultException {
+    public ArrayList<Contact> getResult() throws FailedToGetResultException {
         if (_result == null) {
             throw new FailedToGetResultException();
         }
         return _result;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         try {
             _result = ContactManager.retrieveAllContacts();
         } catch ( FailedToRetrieveAllContactsException exception ) {

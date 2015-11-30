@@ -22,7 +22,7 @@ public class ImportContactCertificateService extends SecureSmsService {
         _validate = validate;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         try {
             KeyManager km = KeyManager.getInstance(_storagePassword);
             km.importUserCertificates(_filename, false, _validate);

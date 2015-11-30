@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
@@ -16,7 +16,7 @@ public class CreateContactService extends SecureSmsService {
         _phoneNumber = phoneNumber;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         try {
             ContactManager.createContact(_contactName, _phoneNumber);
         } catch ( FailedToCreateContactException exception) {

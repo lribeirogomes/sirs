@@ -7,5 +7,5 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.SecureSmsExcept
  * Created by lribeirogomes on 23/11/15.
  */
 public abstract class SecureSmsService {
-    public abstract void Execute() throws FailedServiceException;
+    public abstract void execute() throws FailedServiceException;
 }

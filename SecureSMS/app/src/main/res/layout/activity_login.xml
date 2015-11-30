@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/colorPrimary"
+    tools:context=".presentation.LoginActivity">
+
+
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:context=".presentation.LoginActivity">
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Secure SMS"
+            android:gravity="center"
+            android:id="@+id/textView8"
+            android:layout_centerHorizontal="true"
+            android:focusableInTouchMode="false" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:hint="Phone number"
+            android:id="@+id/etPhoneNumberLogin"
+            android:inputType="phone"
+            android:gravity="center_vertical"
+            android:background="@drawable/shape_text_box_light_padding"
+            android:layout_below="@+id/textView8"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space14"
+            android:layout_below="@+id/etPhoneNumberLogin"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:id="@+id/etPasswordLogin"
+            android:gravity="center_vertical"
+            android:background="@drawable/shape_text_box_light_padding"
+            android:layout_below="@+id/space14"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space15"
+            android:layout_below="@+id/etPasswordLogin"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Show Password"
+            android:id="@+id/cbShowPasswordLogin"
+            android:layout_below="@+id/space15"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:checked="false" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space16"
+            android:layout_below="@+id/cbShowPasswordLogin"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <Space
+            android:layout_width="@dimen/box_min_size"
+            android:layout_height="5dp"
+            android:id="@+id/space12"
+            android:layout_below="@+id/space16"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <Space
+            android:layout_width="@dimen/box_min_size"
+            android:layout_height="5dp"
+            android:id="@+id/space22"
+            android:layout_below="@+id/cbShowPasswordLogin"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+        <Button
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/box_min_size"
+            android:text="Unlock"
+            android:id="@+id/bLoginConfirm"
+            android:backgroundTint="@color/colorAccent"
+            app:backgroundTint="@color/colorAccent"
+            android:layout_below="@+id/space12"
+            android:layout_toRightOf="@+id/space12"
+            android:layout_toLeftOf="@+id/space22"
+            android:layout_toStartOf="@+id/space22"
+            android:layout_toEndOf="@+id/space12"
+            android:onClick="login" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space18"
+            android:layout_below="@+id/bLoginConfirm"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/register_link"
+            android:id="@+id/tvRegister"
+            android:onClick="register"
+            android:layout_below="@+id/space3"
+            android:layout_centerHorizontal="true"
+            android:singleLine="false" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space4"
+            android:layout_below="@+id/cbShowPasswordLogin"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="— or —"
+            android:id="@+id/textView12"
+            android:gravity="center"
+            android:layout_alignRight="@+id/bLoginConfirm"
+            android:layout_alignEnd="@+id/bLoginConfirm"
+            android:layout_below="@+id/space18"
+            android:layout_alignLeft="@+id/bLoginConfirm"
+            android:layout_alignStart="@+id/bLoginConfirm" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space2"
+            android:layout_below="@+id/bLoginConfirm"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:id="@+id/space3"
+            android:layout_below="@+id/textView12"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+    </RelativeLayout>
+
+</android.support.design.widget.CoordinatorLayout>

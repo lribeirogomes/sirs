@@ -13,16 +13,22 @@ import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.GetContactsService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 public class ChooseContactActivity extends AppCompatActivity {
 
-    private ArrayList<Contact> getContacts = new ArrayList<Contact>();
-    private ArrayList<String> contactsToSend = new ArrayList<String>();
+    private ArrayList<String> contactsToSendNames = new ArrayList<String>();
+    private ArrayList<String> contactsToSendNumbers = new ArrayList<String>();
+
+    private ListView lvContacts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +37,8 @@ public class ChooseContactActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        populateItemList();
+
         //getContacts.add(new Contact("Ana", "+351927519814"));
         //getContacts.add(new Contact("Ana", "+351927519814"));
         //getContacts.add(new Contact("Ana", "+351927519814"));
@@ -38,17 +46,30 @@ public class ChooseContactActivity extends AppCompatActivity {
         //getContacts.add(new Contact("Ana", "+351927519814"));
         //getContacts.add(new Contact("Ana", "+351927519814"));
 
-        ListView lvContacts = (ListView) findViewById(R.id.lvContacts);
 
-        ContactAdapter adapter = new ContactAdapter(this,
-                R.layout.list_item_contact, getContacts);
-        lvContacts.setAdapter(adapter);
+    }
+
+    private void populateItemList() {
+        try {
+            lvContacts = (ListView) findViewById(R.id.lvContacts);
+
+            GetContactsService service = new GetContactsService();
+            service.execute();
+            ArrayList<Contact> contacts = service.getResult();
+
+            ContactAdapter adapter = new ContactAdapter(this,
+                    R.layout.list_item_contact, service.getResult());
+            lvContacts.setAdapter(adapter);
+        } catch(FailedServiceException  |FailedToGetResultException exception) {
+            Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(),Toast.LENGTH_SHORT);
+            toast.show();
+        }
     }
 
     public void confirmChooseContact(View view) {
         //make array with chosen contacts
         Intent outputIntent = new Intent();
-        outputIntent.putStringArrayListExtra("contactsToSend", contactsToSend);
+        outputIntent.putStringArrayListExtra("contactsToSendNames", contactsToSendNames);
         setResult(getParent().RESULT_OK, outputIntent);
         finish();
     }
@@ -81,9 +102,9 @@ public class ChooseContactActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     cbContact.setChecked(!cbContact.isChecked());
                     if (cbContact.isChecked()) {
-                        contactsToSend.add(_contacts.get(position).getName());
+                        contactsToSendNames.add(_contacts.get(position).getName());
                     }
-                    else contactsToSend.remove(_contacts.get(position).getName());
+                    else contactsToSendNames.remove(_contacts.get(position).getName());
                 }
             });
             return convertView;

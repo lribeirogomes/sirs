@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        tools:context=".presentation.RegisterActivity">
+
+
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/rlCertificates"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true">
+
+
+            <TextView
+                android:id="@+id/textView9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:text="CA Certificate"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <TextView
+                android:id="@+id/tvCACertificateValid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@+id/bCACertificate"
+                android:layout_toStartOf="@+id/bCACertificate"
+                android:text="Valid"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/teal"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/tvCACertificateInvalid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@+id/bCACertificate"
+                android:layout_toStartOf="@+id/bCACertificate"
+                android:text="Invalid"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/coral"
+                android:visibility="invisible" />
+
+            <EditText
+                android:id="@+id/etCACertificate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_alignEnd="@+id/etUserCertificate"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignRight="@+id/etUserCertificate"
+                android:layout_below="@+id/textView9"
+                android:enabled="true"
+                android:gravity="center_vertical"
+                android:inputType="textUri"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <ImageButton
+                android:id="@+id/bCACertificate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/etCACertificate"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/textView9"
+                android:background="@drawable/shape_text_box_mini"
+                android:gravity="center"
+                android:src="@drawable/ic_browse_files"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <Space
+                android:id="@+id/space5"
+                android:layout_width="10dp"
+                android:layout_height="20dp"
+                android:layout_alignLeft="@+id/etCACertificate"
+                android:layout_alignStart="@+id/etCACertificate"
+                android:layout_below="@+id/etCACertificate" />
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/space5"
+                android:text="User Certificate"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <TextView
+                android:id="@+id/tvUserCertificateValid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/textView10"
+                android:layout_toLeftOf="@+id/bUserCertificate"
+                android:layout_toStartOf="@+id/bUserCertificate"
+                android:text="Valid"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/teal"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/tvUserCertificateInvalid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/space5"
+                android:layout_toLeftOf="@+id/bUserCertificate"
+                android:layout_toStartOf="@+id/bUserCertificate"
+                android:text="Invalid"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/coral"
+                android:visibility="invisible" />
+
+            <EditText
+                android:id="@+id/etUserCertificate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/textView10"
+                android:layout_toLeftOf="@+id/bUserCertificate"
+                android:layout_toStartOf="@+id/bUserCertificate"
+                android:gravity="center_vertical"
+                android:inputType="textUri"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <ImageButton
+                android:id="@+id/bUserCertificate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/etUserCertificate"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignTop="@+id/etUserCertificate"
+                android:background="@drawable/shape_text_box_mini"
+                android:gravity="center"
+
+                android:src="@drawable/ic_browse_files"
+                android:text="..."
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </RelativeLayout>
+
+        <Space
+            android:id="@+id/space23"
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/rlCertificates" />
+
+        <!-- IMPORT PRIVATE KEYS -->
+
+        <!-- IMPORT PRIVATE KEYS -->
+
+        <!-- PHONE NUMBER -->
+
+        <!-- PHONE NUMBER -->
+
+        <!-- PASSWORD -->
+
+        <!-- PASSWORD -->
+
+        <!-- SHOW PASSWORD -->
+
+        <CheckBox
+            android:id="@+id/cbSelfSigned"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/space23"
+            android:checked="false"
+            android:text="Self-signed" />
+
+
+        <Space
+            android:id="@+id/space9"
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/cbSelfSigned" />
+
+        <Space
+            android:id="@+id/space19"
+            android:layout_width="@dimen/box_min_size_mini"
+            android:layout_height="5dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/space9" />
+
+        <Space
+            android:id="@+id/space20"
+            android:layout_width="@dimen/box_min_size_mini"
+            android:layout_height="5dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/space19" />
+
+        <Button
+            android:id="@+id/bBackRegister2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/space19"
+            android:layout_toEndOf="@+id/space19"
+            android:layout_toLeftOf="@+id/space6"
+            android:layout_toRightOf="@+id/space19"
+            android:layout_toStartOf="@+id/space6"
+            android:backgroundTint="@color/lighterBackground"
+            app:backgroundTint="@color/lighterBackground"
+            android:minHeight="@dimen/box_min_size"
+            android:onClick="showPrevious"
+            android:text="Back" />
+
+        <Button
+            android:id="@+id/bNextRegister2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lighterBackground"
+            app:backgroundTint="@color/lighterBackground"
+            android:minHeight="@dimen/box_min_size"
+            android:onClick="showNext"
+            android:text="Next"
+            android:layout_below="@+id/space6"
+            android:layout_toLeftOf="@+id/space20"
+            android:layout_toRightOf="@+id/space6"
+            android:layout_toEndOf="@+id/space6"
+            android:layout_toStartOf="@+id/space20" />
+
+        <Space
+            android:id="@+id/space6"
+            android:layout_width="@dimen/box_min_size_mini"
+            android:layout_height="5dp"
+            android:layout_alignTop="@+id/space19"
+            android:layout_centerHorizontal="true" />
+
+    </RelativeLayout>
+</merge>

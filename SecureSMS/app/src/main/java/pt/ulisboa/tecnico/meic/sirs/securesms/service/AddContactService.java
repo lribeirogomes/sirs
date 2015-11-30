@@ -16,7 +16,7 @@ public class AddContactService extends SecureSmsService {
         _fileName = fileName;
     }
 
-    public void Execute() throws FailedServiceException {
+    public void execute() throws FailedServiceException {
         SecureSmsService createContactService,
                          importContactCertificateService;
 
@@ -24,7 +24,7 @@ public class AddContactService extends SecureSmsService {
         // TODO : implement extension identification
         //importContactCertificateService = new ImportContactCertificateService(_phoneNumber, true, _fileName);
 
-        createContactService.Execute();
-        //importContactCertificateService.Execute();
+        createContactService.execute();
+        //importContactCertificateService.execute();
     }
 }

@@ -16,7 +16,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/mustard"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
@@ -73,13 +72,13 @@
             android:id="@+id/tvName"
             android:layout_marginTop="30dp"
             android:layout_below="@+id/linearLayout"
-            android:layout_alignLeft="@+id/etName"
-            android:layout_alignStart="@+id/etName" />
+            android:layout_alignLeft="@+id/etContactName"
+            android:layout_alignStart="@+id/etContactName" />
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/etName"
+            android:id="@+id/etContactName"
             android:layout_below="@+id/tvName"
             android:maxLines="1"
             android:inputType="text"
@@ -93,7 +92,7 @@
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Phone Number"
             android:id="@+id/tvPhoneNumber"
-            android:layout_below="@+id/etName"
+            android:layout_below="@+id/etContactName"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="14dp" />
@@ -101,7 +100,7 @@
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/etPhoneNumber"
+            android:id="@+id/etContactPhoneNumber"
             android:layout_below="@+id/tvPhoneNumber"
             android:maxLines="1"
             android:inputType="text"
@@ -114,7 +113,7 @@
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Certificate"
             android:id="@+id/tvCertificate"
-            android:layout_below="@+id/etPhoneNumber"
+            android:layout_below="@+id/etContactPhoneNumber"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="24dp" />
@@ -139,7 +138,6 @@
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/ic_check_mark"
         android:scaleType="center"
-        app:backgroundTint="@color/mustard"
         android:onClick="confirmAddContact" />
 
 </android.support.design.widget.CoordinatorLayout>
