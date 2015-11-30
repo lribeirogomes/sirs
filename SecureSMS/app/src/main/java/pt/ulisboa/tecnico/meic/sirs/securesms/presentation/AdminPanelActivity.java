@@ -84,12 +84,12 @@ public class AdminPanelActivity extends AppCompatActivity {
             Set<String> contactTable = dm.getTable(dm.CONTACT_TABLE);
             for (String contact : contactTable) {
                 String currentContactList = tvContactList.getText().toString();
-                tvUserList.setText(currentContactList + "\n" + contact);
+                tvContactList.setText(currentContactList + "\n" + contact);
             }
             Set<String> messageTable = dm.getTable(dm.MESSAGE_TABLE);
             for (String message : messageTable) {
                 String currentMessageList = tvMessageList.getText().toString();
-                tvUserList.setText(currentMessageList + "\n" + message);
+                tvMessageList.setText(currentMessageList + "\n" + message);
             }
             Toast toast = Toast.makeText(getApplicationContext(), "done", Toast.LENGTH_SHORT);
             toast.show();

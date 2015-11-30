@@ -15,11 +15,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSmsMessageService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 public class ComposeMessageActivity extends AppCompatActivity {
     //request code so this activity knows when the ChooseContactActivity is ready to return
@@ -89,7 +92,6 @@ public class ComposeMessageActivity extends AppCompatActivity {
     }
 
     public void sendMessage(View view) {
-        //TestingService service = new TestingService(getApplicationContext()); //DELETE THIS
         EditText etMessage = (EditText) findViewById(R.id.etMessage);
         String message = etMessage.getText().toString();
         try {
@@ -99,6 +101,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
 
                 //SendMessageService
                 //StoreMessageService
+                sendSms();
 
                 getMessages.add(message);
                 showMessages();
@@ -108,6 +111,22 @@ public class ComposeMessageActivity extends AppCompatActivity {
             }
         }catch (Exception exception) {
                 //show exception
+        }
+    }
+
+    public void sendSms() {
+        ArrayList<String> contacts = new ArrayList<String>();
+        contacts.add("+351927519814");
+        try {
+
+            SendSmsMessageService service = new SendSmsMessageService(contacts, "Hello World 2.0");
+            service.execute();
+
+            Toast toast = Toast.makeText(getApplicationContext(), "sent", Toast.LENGTH_SHORT);
+            toast.show();
+        } catch (FailedServiceException exception) {
+            Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
+            toast.show();
         }
     }
 }

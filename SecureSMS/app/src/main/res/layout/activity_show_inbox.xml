@@ -44,6 +44,36 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true" />
 
+        <android.support.design.widget.FloatingActionButton
+            app:fabSize="mini"
+            android:id="@+id/fabComposeMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:onClick="composeMessage"
+            android:scaleType="center"
+            app:backgroundTint="@color/lighterNeutral"
+            android:src="@drawable/ic_new_message"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="133dp" />
+
+        <android.support.design.widget.FloatingActionButton
+            app:fabSize="mini"
+            android:id="@+id/fabAddContact"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:onClick="addContact"
+            android:scaleType="center"
+            app:backgroundTint="@color/lighterNeutral"
+            android:src="@drawable/ic_add_contact"
+            android:layout_above="@+id/fabComposeMessage"
+            android:layout_alignLeft="@+id/fabComposeMessage"
+            android:layout_alignStart="@+id/fabComposeMessage"
+            android:layout_marginBottom="39dp" />
+
 
     </RelativeLayout>
 
@@ -56,29 +86,29 @@
         android:layout_margin="@dimen/fab_margin"
         fab:fab_addButtonColorNormal="@color/colorAccent"
         fab:fab_addButtonColorPressed="@color/colorAccent">
+        <!--
+               <android.support.design.widget.FloatingActionButton
+                    app:fabSize="mini"
+                    android:id="@+id/fabAddContact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:onClick="addContact"
+                    android:scaleType="center"
+                    app:backgroundTint="@color/lighterNeutral"
+                    android:src="@drawable/ic_add_contact"/>
 
-        <android.support.design.widget.FloatingActionButton
-            app:fabSize="mini"
-            android:id="@+id/fabAddContact"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:onClick="addContact"
-            android:scaleType="center"
-            app:backgroundTint="@color/lighterNeutral"
-            android:src="@drawable/ic_add_contact"/>
-
-        <android.support.design.widget.FloatingActionButton
-            app:fabSize="mini"
-            android:id="@+id/fabComposeMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:onClick="composeMessage"
-            android:scaleType="center"
-            app:backgroundTint="@color/lighterNeutral"
-            android:src="@drawable/ic_new_message"/>
-
+                <android.support.design.widget.FloatingActionButton
+                    app:fabSize="mini"
+                    android:id="@+id/fabComposeMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:onClick="composeMessage"
+                    android:scaleType="center"
+                    app:backgroundTint="@color/lighterNeutral"
+                    android:src="@drawable/ic_new_message"/>
+        -->
 
     </com.getbase.floatingactionbutton.FloatingActionsMenu>
 

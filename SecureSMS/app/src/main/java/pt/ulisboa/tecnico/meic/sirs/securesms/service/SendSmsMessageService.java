@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import android.telephony.SmsManager;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
@@ -16,7 +17,9 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
 /**
  * Created by lribeirogomes on 15/11/15.
  */
+
 public class SendSmsMessageService extends SecureSmsService {
+    private final short SMS_PORT= 8998;
     private ArrayList<String> _phoneNumbers;
     private String _plainTextSms;
 
@@ -26,8 +29,6 @@ public class SendSmsMessageService extends SecureSmsService {
     }
 
     public void execute() throws FailedServiceException {
-        short smsPort= 8998;
-
         try {
             for (String phoneNumber : _phoneNumbers) {
                 Contact contact = ContactManager.retrieveContactByPhoneNumber(phoneNumber);
@@ -36,15 +37,17 @@ public class SendSmsMessageService extends SecureSmsService {
                 SmsManager manager = SmsManager.getDefault();
                 manager.sendDataMessage(phoneNumber,
                         null, // TODO: define scAddress if needed
-                        smsPort,
-                        sms.getEncryptedContent(),
+                        SMS_PORT,
+                        _plainTextSms.getBytes("UTF-8"),
+                        //sms.getEncryptedContent(),
                         null,  // TODO: define sentIntent if needed
                         null); // TODO: define deliveryIntent if needed
             }
         } catch ( IllegalArgumentException
+                | UnsupportedEncodingException
                 | FailedToRetrieveContactException
-                | FailedToCreateSmsMessageException
-                | FailedToEncryptSmsMessageException exception) {
+                | FailedToCreateSmsMessageException exception) {
+                //| FailedToEncryptSmsMessageException exception) {
             throw new FailedServiceException("send sms message", exception);
         }
     }

@@ -1,12 +1,19 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
+import android.content.Context;
+import android.content.Intent;
+
+import java.nio.charset.Charset;
+
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.presentation.ShowSMSActivity;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
  */
+
 public class ReceiveSmsMessageService extends SecureSmsService {
     private String _phoneNumber;
     private byte[] _encryptedSms;
@@ -36,3 +43,4 @@ public class ReceiveSmsMessageService extends SecureSmsService {
         }
     }
 }
+

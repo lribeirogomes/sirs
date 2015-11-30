@@ -51,9 +51,13 @@
         android:name=".presentation.ChooseContactActivity"
         android:label="@string/title_activity_choose_contact"
         android:windowSoftInputMode="stateHidden" />
+    <activity
+        android:name=".presentation.ShowSMSActivity"
+        android:label="@string/title_activity_choose_contact"
+        android:windowSoftInputMode="stateHidden" />
 
 
-    <receiver android:name=".presentation.SMSReceiver" >
+    <receiver android:name=".presentation.SmsReceiver" >
         <intent-filter>
             <action android:name="android.intent.action.DATA_SMS_RECEIVED" />
             <!-- <action android:name="android.provider.Telephony.SMS_RECEIVED" /> -->

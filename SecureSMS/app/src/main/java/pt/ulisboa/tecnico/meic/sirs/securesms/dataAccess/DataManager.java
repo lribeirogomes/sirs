@@ -6,14 +6,12 @@ import java.util.Set;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.widget.Toast;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveAttributeException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
 
 public class DataManager {
 
@@ -130,17 +128,17 @@ public class DataManager {
     }
 
     public void setAttribute(String spFilename, String attributeName, String value) {
-            Editor editor = getEditor(spFilename);
+        Editor editor = getEditor(spFilename);
 
-            editor.putString(attributeName, value);
-            editor.commit();
+        editor.putString(attributeName, value);
+        editor.commit();
     }
 
     public void setAttribute(String spFilename, String attributeName, long value) {
-            Editor editor = getEditor(spFilename);
+        Editor editor = getEditor(spFilename);
 
-            editor.putLong(attributeName, value);
-            editor.commit();
+        editor.putLong(attributeName, value);
+        editor.commit();
     }
 
     public void setAttribute(String spFilename, String attributeName, int value) {
@@ -187,13 +185,16 @@ public class DataManager {
         editor.commit();
     }
 
+
+
     public void createTable(String spTableName, String spEntryName) {
         SharedPreferences sp =  _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE);
+        Editor editor = sp.edit();
         Set<String> dataSet = sp.getStringSet(spTableName, new LinkedHashSet<String>());
         dataSet.add(spEntryName);
 
-        sp.edit().putStringSet(spTableName, dataSet);
-        sp.edit().commit();
+        editor.putStringSet(spTableName, dataSet);
+        editor.commit();
     }
 
     public Set<String> getTable(String spTableName) {
@@ -203,12 +204,16 @@ public class DataManager {
 
     public void dropTable(String spTableName) {
         Set<String> table = getTable(spTableName);
+        Editor editor;
 
         for (String entry : table) {
-            Editor editor = _context.getSharedPreferences(entry, Context.MODE_PRIVATE).edit();
+            editor = _context.getSharedPreferences(entry, Context.MODE_PRIVATE).edit();
             editor.clear();
             editor.commit();
         }
+        editor = _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE).edit();
+        editor.clear();
+        editor.commit();
     }
 
     public void dropAllTables() {
