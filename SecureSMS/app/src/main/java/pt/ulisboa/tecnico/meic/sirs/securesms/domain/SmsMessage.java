@@ -44,7 +44,7 @@ public class SmsMessage {
         try {
             // TODO: Reimplement encryption
             // Encrypt message content
-            // keyManager = KeyManager.getInstance();
+            // keyManager = KeyManager.getInstance("dummy");
             // key = keyManager.getSessionKey(_sender);
             encodedData = Cryptography.encode(_content);
             // cipheredData = Cryptography.symmetricCipher(encodedData, key);

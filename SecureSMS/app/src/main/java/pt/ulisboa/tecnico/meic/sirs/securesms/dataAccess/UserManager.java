@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
 import android.content.Context;
+import android.widget.Toast;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
@@ -18,9 +19,9 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToUpdateUs
  */
 public class UserManager {
 
-    public static void createUser(Context context, String phoneNumber, String password) throws  FailedToCreateUserException {
-        byte[] encodedPassword,
-                encodedPasswordHash;
+    public static void createUser(String phoneNumber, String password) throws  FailedToCreateUserException {
+        byte[] encodedPassword;
+        byte[] encodedPasswordHash;
         String passwordHash;
 
         try {
@@ -30,33 +31,41 @@ public class UserManager {
             passwordHash = Cryptography.encodeForStorage(encodedPasswordHash);
 
             // Create or open storage
-            DataManager dm = DataManager.createDataManager(context, phoneNumber);
+            DataManager dm = DataManager.getInstance();
+            dm.setCurrentUser(phoneNumber);
 
-            dm.setAttribute(dm.USER, dm.CONTACT_COUNT, 0);
+            dm.createTable(dm.USER_TABLE, phoneNumber);
+
+            dm.setAttribute(dm.USER, dm.USER_ID, phoneNumber);
             dm.setAttribute(dm.USER, dm.PASSWORD_HASH, passwordHash);
+            dm.setAttribute(dm.USER, dm.CONTACT_COUNT, 0);
 
-        } catch ( FailedToHashException
-                | FailedToCreateDataBaseException exception) {
+
+        } catch ( FailedToHashException | FailedToLoadDataBaseException exception) {
             throw new FailedToCreateUserException(exception);
         }
     }
 
-    public static User retrieveUser(Context context, String phoneNumber) throws FailedToRetrieveUserException {
+    public static User retrieveUser(String phoneNumber) throws FailedToRetrieveUserException {
         DataManager dm;
         String encodedPasswordHash;
+        String userId;
         byte[] passwordHash;
         User user;
 
         try {
             // Get user information from storage
-            dm = DataManager.createDataManager(context, phoneNumber);
+            dm = DataManager.getInstance();
+            dm.setCurrentUser(phoneNumber);
+            userId = dm.getAttributeString(dm.USER, dm.USER_ID);
+
             encodedPasswordHash = dm.getAttributeString(dm.USER, dm.PASSWORD_HASH);
             passwordHash = Cryptography.decodeFromStorage(encodedPasswordHash);
 
             // Return user
-            user = new User(passwordHash);
+            user = new User(userId, passwordHash);
             return user;
-        } catch ( FailedToCreateDataBaseException
+        } catch ( FailedToLoadDataBaseException
                 | FailedToGetAttributeException exception) {
             throw new FailedToRetrieveUserException(exception);
         }
@@ -66,15 +75,12 @@ public class UserManager {
     /*public static void updateUser(User user) throws FailedToUpdateUserException {
         String passwordHash;
         DataManager dm;
-
         try {
             // Get information from user
             passwordHash = user.getPasswordHash();
-
             // TODO: Reimplement after bla
             // Update password in key manager
             // KeyManager.getInstance(user.getPassword());
-
             // Update user in storage
             dm = DataManager.getInstance();
             dm.setAttribute(dm.USER, dm.PASSWORD_HASH, passwordHash);

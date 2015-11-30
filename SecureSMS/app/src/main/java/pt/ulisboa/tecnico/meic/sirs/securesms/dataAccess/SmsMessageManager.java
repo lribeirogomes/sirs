@@ -35,7 +35,7 @@ public class SmsMessageManager {
         try {
             // TODO: Reimplement decryption
             // Decrypt message content
-            // keyManager = KeyManager.getInstance();
+            // keyManager = KeyManager.getInstance("dummy");
             // key = keyManager.getSessionKey(sender);
             // decipheredData = Cryptography.symmetricDecipher(cipherText, key);
             // plainText = Cryptography.decode(decipheredData);
@@ -73,13 +73,13 @@ public class SmsMessageManager {
             contactId = contact.getId();
             messageCount = dm.getAttributeInt(contactId, dm.MESSAGE_COUNT);
             messageId = contactId + dm.MESSAGE_CLASS + messageCount;
-            //increment
-            dm.setAttribute(contactId, dm.MESSAGE_COUNT, ++messageCount);
-
             //set attributes
+            dm.setAttribute(contactId, dm.MESSAGE_COUNT, ++messageCount);
             dm.addAttribute(contactId, dm.MESSAGE_TABLE, messageId);
             dm.setAttribute(messageId, dm.MESSAGE_DATE_NUMBER, dateNumber);
             dm.setAttribute(messageId, dm.MESSAGE_CONTENT, content);
+
+            dm.createTable(dm.MESSAGE_TABLE, contactId);
 
             smsMessage = new SmsMessage(messageId, contact, dateNumber, content);
             return smsMessage;

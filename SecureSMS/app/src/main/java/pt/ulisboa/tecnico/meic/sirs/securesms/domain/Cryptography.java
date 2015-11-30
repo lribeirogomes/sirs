@@ -174,21 +174,17 @@ public class Cryptography {
         byte[] salt = new byte[saltLen],
                 iv = new byte[ivLen],
                 data = plainText;
-
         try {
             // Get salt and IV
             random.nextBytes(salt);
             random.nextBytes(iv);
-
             // Encrypt data
             byte[] encryptedData = passwordCipher(data ,password, salt, iv, true);
-
             // Add salt and IV
             byte[] result = new byte[saltLen + ivLen + encryptedData.length];
             System.arraycopy(salt, 0, result, 0, saltLen);
             System.arraycopy(iv, 0, result, saltLen, ivLen);
             System.arraycopy(encryptedData, 0, result, saltLen + ivLen, encryptedData.length);
-
             return result;
         } catch (NullPointerException
                 | NoSuchAlgorithmException
@@ -203,16 +199,13 @@ public class Cryptography {
         byte[] salt = new byte[saltLen],
                 iv = new byte[ivLen],
                 data = new byte[cipherData.length - saltLen - ivLen];
-
         try {
             // Get salt and IV
             System.arraycopy(cipherData, 0, salt, 0, saltLen);
             System.arraycopy(cipherData, saltLen, iv, 0, ivLen);
             System.arraycopy(cipherData, saltLen + ivLen, data, 0, data.length);
-
             // Decrypt data
             byte[] decryptedData = passwordCipher(data, password, salt, iv, false);
-
             return decryptedData;
         } catch (NullPointerException
                 | NoSuchAlgorithmException

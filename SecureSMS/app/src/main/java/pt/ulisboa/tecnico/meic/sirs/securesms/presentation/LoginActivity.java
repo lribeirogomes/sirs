@@ -18,6 +18,8 @@ import java.security.Security;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.AuthenticateUserService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.BeginApplicationService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.ResetDataService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
@@ -25,6 +27,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
  */
 public class LoginActivity extends AppCompatActivity {
     private boolean loggedIn;
+    private boolean running;
 
     private EditText etPhoneNumberLogin;
     private EditText etPasswordLogin;
@@ -41,9 +44,14 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        if (!running) {
+            beginApplication();
+            running = true;
+        }
         if (loggedIn) {
             showInbox();
         }
+
         etPhoneNumberLogin = (EditText) findViewById(R.id.etPhoneNumberLogin);
         etPasswordLogin = (EditText) findViewById(R.id.etPasswordLogin);
         cbShowPasswordLogin = (CheckBox) findViewById(R.id.cbShowPasswordLogin);
@@ -82,6 +90,17 @@ public class LoginActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void beginApplication() {
+        try {
+            BeginApplicationService service = new BeginApplicationService(getApplicationContext());
+            service.execute();
+        }
+        catch (FailedServiceException exception) {
+            Toast toast = Toast.makeText(getApplicationContext(), "Failed to begin", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
     public void register(View view) {
         Intent registerIntent = new Intent(getApplicationContext(), RegisterActivity.class);
         startActivity(registerIntent);
@@ -91,7 +110,7 @@ public class LoginActivity extends AppCompatActivity {
         try {
             String phoneNumber = etPhoneNumberLogin.getText().toString();
             String password = etPasswordLogin.getText().toString();
-            AuthenticateUserService service = new AuthenticateUserService(getApplicationContext(), phoneNumber, password);
+            AuthenticateUserService service = new AuthenticateUserService(phoneNumber, password);
             service.execute();
             loggedIn = true;
             showInbox();
@@ -105,5 +124,10 @@ public class LoginActivity extends AppCompatActivity {
     private void showInbox() {
         Intent showInboxIntent = new Intent(getApplicationContext(), ShowInboxActivity.class);
         startActivity(showInboxIntent);
+    }
+
+    public void showAdminPanel(View view) {
+        Intent adminPanelIntent = new Intent(getApplicationContext(), AdminPanelActivity.class);
+        startActivity(adminPanelIntent);
     }
 }

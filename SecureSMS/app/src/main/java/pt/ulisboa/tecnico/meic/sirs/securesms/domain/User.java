@@ -14,19 +14,20 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidAuthentic
  */
 public class User {
     private byte[] _passwordHash;
+    private String _id;
 
-    public User(byte[] passwordHash) {
+    public User(String id, byte[] passwordHash) {
+        _id = id;
         _passwordHash = passwordHash;
     }
-
-    public byte[] getPasswordHash() {
-        return _passwordHash;
-    }
+    
+    public String getId() {return _id; }
+    public byte[] getPasswordHash() { return _passwordHash; }
 
     public void validatePassword(String encodedPassword) throws
             FailedToValidatePasswordException {
         byte[] password,
-               passwordHash;
+                passwordHash;
 
         try {
             // Hash password

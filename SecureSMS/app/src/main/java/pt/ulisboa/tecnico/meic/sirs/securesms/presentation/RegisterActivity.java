@@ -331,7 +331,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         try {
             String phoneNumber = etPhoneNumberRegister.getText().toString();
             String password = etPasswordRegister.getText().toString();
-            CreateUserService service = new CreateUserService(getApplicationContext(), phoneNumber, password);
+            CreateUserService service = new CreateUserService(phoneNumber, password);
             service.execute();
 
             toast = Toast.makeText(getApplicationContext(), "Setup successful", Toast.LENGTH_SHORT);

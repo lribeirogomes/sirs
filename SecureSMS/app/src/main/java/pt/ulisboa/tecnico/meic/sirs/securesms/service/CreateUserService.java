@@ -12,22 +12,20 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
  * Created by Ana Beatriz on 30/11/2015.
  */
 public class CreateUserService extends SecureSmsService {
-    private Context _context;
     private String _userPhoneNumber;
     private String _userPassword;
 
-    public CreateUserService(Context context, String userPhoneNumber, String userPassword) {
-        _context = context;
+    public CreateUserService(String userPhoneNumber, String userPassword) {
         _userPhoneNumber = userPhoneNumber;
         _userPassword = userPassword;
 
     }
     public void execute() throws FailedServiceException {
         try {
-            UserManager.createUser(_context, _userPhoneNumber, _userPassword);
+            UserManager.createUser(_userPhoneNumber, _userPassword);
 
         }catch (FailedToCreateUserException exception) {
-            throw new FailedServiceException("Failed to create user", exception);
+            throw new FailedServiceException("create user", exception);
         }
     }
 

@@ -12,19 +12,17 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
  * Created by lribeirogomes on 22/11/15.
  */
 public class AuthenticateUserService extends SecureSmsService {
-    private Context _context;
     private String _phoneNumber;
     private String _password;
 
-    public AuthenticateUserService(Context context, String phoneNumber, String password) {
-        _context = context;
+    public AuthenticateUserService(String phoneNumber, String password) {
         _phoneNumber = phoneNumber;
         _password = password;
     }
 
     public void execute() throws FailedServiceException {
         try {
-            User user = UserManager.retrieveUser(_context, _phoneNumber);
+            User user = UserManager.retrieveUser(_phoneNumber);
 
             user.validatePassword(_password);
         } catch ( FailedToRetrieveUserException

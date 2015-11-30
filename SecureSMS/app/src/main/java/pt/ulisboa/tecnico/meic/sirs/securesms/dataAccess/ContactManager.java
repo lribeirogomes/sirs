@@ -31,13 +31,14 @@ public class ContactManager {
             //each contact has id in this form: Contact0, Contact1, etc...
             contactCount = dm.getAttributeInt(dm.USER, dm.CONTACT_COUNT);
             contactId = dm.CONTACT_CLASS + contactCount;
-            //increment
+            //set attributes
             dm.setAttribute(dm.USER, dm.CONTACT_COUNT, ++contactCount);
-            //add all attributes
             dm.addAttribute(dm.USER, dm.CONTACT_TABLE, contactId);
             dm.setAttribute(contactId, dm.CONTACT_NAME, name);
             dm.setAttribute(contactId, dm.CONTACT_PHONE_NUMBER, phoneNumber);
             dm.setAttribute(contactId, dm.MESSAGE_COUNT, 0);
+
+            dm.createTable(dm.CONTACT_TABLE, contactId);
         } catch ( FailedToLoadDataBaseException
                 | FailedToGetAttributeException
                 | FailedToAddAttributeException exception ) {

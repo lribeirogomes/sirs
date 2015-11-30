@@ -4,13 +4,16 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.widget.Toast;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveAttributeException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
 
 public class DataManager {
 
@@ -18,9 +21,12 @@ public class DataManager {
     private Context _context;
     private String _userId;
 
+    public static final String DATABASE = "Database";
+    public static final String USER_TABLE = "Users";
     public static final String USER = "";
     //user file and attributes
     private static final String USER_CLASS = "User";
+    public static final String USER_ID = "UserId";
     public static final String PASSWORD_HASH = "PasswordHash";
     public static final String CONTACT_TABLE = "Contacts";
     public static final String CONTACT_COUNT = "ContactCount";
@@ -44,12 +50,12 @@ public class DataManager {
 
     private DataManager() {}
 
-    public static DataManager createDataManager(Context context, String userId) throws FailedToCreateDataBaseException {
+    public static DataManager createDataManager(Context context) throws FailedToCreateDataBaseException {
         if (dataManager == null) {
             dataManager = new DataManager();
         }
+        dataManager = new DataManager();
         dataManager._context = context;
-        dataManager._userId = userId;
         return dataManager;
     }
 
@@ -60,6 +66,13 @@ public class DataManager {
         return dataManager;
     }
 
+    public static void setCurrentUser(String userId) {
+        dataManager._userId = userId;
+    }
+
+    public static Context getContext() {
+        return dataManager._context;
+    }
 
     private Editor getEditor(String spFilename) {
         spFilename = USER_CLASS+_userId+spFilename;
@@ -172,5 +185,35 @@ public class DataManager {
 
         editor.clear();
         editor.commit();
+    }
+
+    public void createTable(String spTableName, String spEntryName) {
+        SharedPreferences sp =  _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE);
+        Set<String> dataSet = sp.getStringSet(spTableName, new LinkedHashSet<String>());
+        dataSet.add(spEntryName);
+
+        sp.edit().putStringSet(spTableName, dataSet);
+        sp.edit().commit();
+    }
+
+    public Set<String> getTable(String spTableName) {
+        SharedPreferences sp =  _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE);
+        return sp.getStringSet(spTableName, new LinkedHashSet<String>());
+    }
+
+    public void dropTable(String spTableName) {
+        Set<String> table = getTable(spTableName);
+
+        for (String entry : table) {
+            Editor editor = _context.getSharedPreferences(entry, Context.MODE_PRIVATE).edit();
+            editor.clear();
+            editor.commit();
+        }
+    }
+
+    public void dropAllTables() {
+        dropTable(USER_TABLE);
+        dropTable(CONTACT_TABLE);
+        dropTable(MESSAGE_TABLE);
     }
 }
