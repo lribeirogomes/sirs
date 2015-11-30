@@ -42,9 +42,9 @@ public class SmsMessage {
         byte[] cipheredData;
 
         try {
-            // TODO: Reimplement getInstance after implementing getInstance without arguments
+            // TODO: Reimplement encryption
             // Encrypt message content
-            // keyManager = KeyManager.getInstance("dummy");
+            // keyManager = KeyManager.getInstance();
             // key = keyManager.getSessionKey(_sender);
             encodedData = Cryptography.encode(_content);
             // cipheredData = Cryptography.symmetricCipher(encodedData, key);

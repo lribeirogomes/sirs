@@ -45,10 +45,9 @@ public class DataManager {
     private DataManager() {}
 
     public static DataManager createDataManager(Context context, String userId) throws FailedToCreateDataBaseException {
-        if (dataManager != null) {
-            throw new FailedToCreateDataBaseException();
+        if (dataManager == null) {
+            dataManager = new DataManager();
         }
-        dataManager = new DataManager();
         dataManager._context = context;
         dataManager._userId = userId;
         return dataManager;

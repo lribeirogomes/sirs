@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
+import android.util.Base64;
+
 import org.spongycastle.crypto.BufferedBlockCipher;
 import org.spongycastle.crypto.CipherParameters;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -264,5 +266,12 @@ public class Cryptography {
     }
     public static String decode(byte[] message) {
         return new String(message, Charset.defaultCharset());
+    }
+
+    public static String encodeForStorage(byte[] message) {
+        return Base64.encodeToString(message, Base64.DEFAULT);
+    }
+    public static byte[] decodeFromStorage(String message) {
+        return Base64.decode(message, Base64.DEFAULT);
     }
 }

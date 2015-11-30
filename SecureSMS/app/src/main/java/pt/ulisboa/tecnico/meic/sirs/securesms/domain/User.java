@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
+import android.util.Log;
+
+import java.util.Arrays;
+
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSetPasswordException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToValidatePasswordException;
@@ -9,40 +13,28 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidAuthentic
  * Created by lribeirogomes on 23/11/15.
  */
 public class User {
-    private String _passwordHash,
-                   _password;
+    private byte[] _passwordHash;
 
-    public User(String passwordHash) {
+    public User(byte[] passwordHash) {
         _passwordHash = passwordHash;
-        _password = null;
     }
 
-    public String getPasswordHash() {
+    public byte[] getPasswordHash() {
         return _passwordHash;
     }
-    public String getPassword() {
-        if (_password == null) {
-            // throws new exception
-        }
-        String password = _password;
-        _password = null;
-        return password;
-    }
 
-    public void validatePassword(String password) throws
+    public void validatePassword(String encodedPassword) throws
             FailedToValidatePasswordException {
-        byte[] encodedPassword,
-                encodedPasswordHash;
-        String passwordHash;
+        byte[] password,
+               passwordHash;
 
         try {
             // Hash password
-            encodedPassword = Cryptography.encode(password);
-            encodedPasswordHash = Cryptography.hash(encodedPassword);
-            passwordHash = Cryptography.decode(encodedPasswordHash);
+            password = Cryptography.decodeFromStorage(encodedPassword);
+            passwordHash = Cryptography.hash(password);
 
             // If password is invalid
-            if (passwordHash.equals(_passwordHash)) {
+            if (!Arrays.equals(passwordHash, _passwordHash)) {
                 // Throw invalid authentication exception
                 throw new InvalidAuthenticationException();
             }
@@ -56,21 +48,17 @@ public class User {
             FailedToSetPasswordException {
         byte[] encodedPassword,
                 encodedPasswordHash;
-        String passwordHash;
 
         try {
             if (!_passwordHash.equals("")) {
                 validatePassword(oldPassword);
             }
 
-            _password = newPassword;
-
             // Hash new password
-            encodedPassword = Cryptography.encode(newPassword);
+            encodedPassword = Cryptography.decodeFromStorage(newPassword);
             encodedPasswordHash = Cryptography.hash(encodedPassword);
-            passwordHash = Cryptography.decode(encodedPasswordHash);
 
-            _passwordHash = passwordHash;
+            _passwordHash = encodedPasswordHash;
         } catch ( FailedToValidatePasswordException
                 | FailedToHashException exception ) {
             throw new FailedToSetPasswordException(exception);

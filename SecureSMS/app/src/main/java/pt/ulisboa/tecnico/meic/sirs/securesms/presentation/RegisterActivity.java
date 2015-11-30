@@ -387,7 +387,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
             }
             case PRIVATE_KEY: {
                 try {
-                    ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), "12345678", "storagePassword");
+                    ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), "password12345", "storagePassword");
                     service.execute();
                     tvPrivateKeysValid.setVisibility(View.VISIBLE);
                     tvPrivateKeysInvalid.setVisibility(View.INVISIBLE);

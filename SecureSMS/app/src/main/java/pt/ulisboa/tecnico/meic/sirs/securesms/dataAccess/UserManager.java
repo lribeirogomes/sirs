@@ -6,8 +6,10 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCrea
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateUserException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToUpdateUserException;
 
@@ -17,27 +19,39 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToUpdateUs
 public class UserManager {
 
     public static void createUser(Context context, String phoneNumber, String password) throws  FailedToCreateUserException {
+        byte[] encodedPassword,
+                encodedPasswordHash;
+        String passwordHash;
+
         try {
+            // Hash password
+            encodedPassword = Cryptography.decodeFromStorage(password);
+            encodedPasswordHash = Cryptography.hash(encodedPassword);
+            passwordHash = Cryptography.encodeForStorage(encodedPasswordHash);
+
             // Create or open storage
             DataManager dm = DataManager.createDataManager(context, phoneNumber);
 
             dm.setAttribute(dm.USER, dm.CONTACT_COUNT, 0);
-            dm.setAttribute(dm.USER, dm.PASSWORD_HASH, password);
+            dm.setAttribute(dm.USER, dm.PASSWORD_HASH, passwordHash);
 
-        } catch ( FailedToCreateDataBaseException exception) {
+        } catch ( FailedToHashException
+                | FailedToCreateDataBaseException exception) {
             throw new FailedToCreateUserException(exception);
         }
     }
 
     public static User retrieveUser(Context context, String phoneNumber) throws FailedToRetrieveUserException {
         DataManager dm;
-        String passwordHash;
+        String encodedPasswordHash;
+        byte[] passwordHash;
         User user;
 
         try {
             // Get user information from storage
             dm = DataManager.createDataManager(context, phoneNumber);
-            passwordHash = dm.getAttributeString(dm.USER, dm.PASSWORD_HASH);
+            encodedPasswordHash = dm.getAttributeString(dm.USER, dm.PASSWORD_HASH);
+            passwordHash = Cryptography.decodeFromStorage(encodedPasswordHash);
 
             // Return user
             user = new User(passwordHash);
@@ -48,7 +62,8 @@ public class UserManager {
         }
     }
 
-    public static void updateUser(User user) throws FailedToUpdateUserException {
+    // TODO: warning! This cannot be implemented for now
+    /*public static void updateUser(User user) throws FailedToUpdateUserException {
         String passwordHash;
         DataManager dm;
 
@@ -56,15 +71,15 @@ public class UserManager {
             // Get information from user
             passwordHash = user.getPasswordHash();
 
+            // TODO: Reimplement after bla
             // Update password in key manager
-            KeyManager.getInstance(user.getPassword());
+            // KeyManager.getInstance(user.getPassword());
 
             // Update user in storage
             dm = DataManager.getInstance();
             dm.setAttribute(dm.USER, dm.PASSWORD_HASH, passwordHash);
-        } catch ( FailedToLoadDataBaseException
-                | FailedToLoadKeyStoreException exception ) {
+        } catch ( FailedToLoadDataBaseException exception ) {
             throw new FailedToUpdateUserException(exception);
         }
-    }
+    }*/
 }

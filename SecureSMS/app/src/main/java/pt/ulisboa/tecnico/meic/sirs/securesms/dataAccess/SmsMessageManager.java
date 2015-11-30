@@ -33,9 +33,9 @@ public class SmsMessageManager {
         String plainText;
 
         try {
-            // TODO: Reimplement getInstance after implementing getInstance without arguments
+            // TODO: Reimplement decryption
             // Decrypt message content
-            // keyManager = KeyManager.getInstance("dummy");
+            // keyManager = KeyManager.getInstance();
             // key = keyManager.getSessionKey(sender);
             // decipheredData = Cryptography.symmetricDecipher(cipherText, key);
             // plainText = Cryptography.decode(decipheredData);
