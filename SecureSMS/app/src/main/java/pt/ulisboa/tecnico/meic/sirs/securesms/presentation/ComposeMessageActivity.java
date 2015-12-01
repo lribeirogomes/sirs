@@ -20,6 +20,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
@@ -101,7 +103,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
         String message = etMessage.getText().toString();
         try {
             if (!message.equals("")) {
-
+                _contactsToSendNumbers.add("+351927519814");
                 SendSmsMessageService service = new SendSmsMessageService(_contactsToSendNumbers, message);
                 service.execute();
                 etMessage.setText("");
@@ -112,7 +114,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
                 InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 im.hideSoftInputFromWindow(etMessage.getWindowToken(), 0);
             }
-        } catch (FailedServiceException exception) {
+        } catch (Exception exception) {
             Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
             toast.show();
         }

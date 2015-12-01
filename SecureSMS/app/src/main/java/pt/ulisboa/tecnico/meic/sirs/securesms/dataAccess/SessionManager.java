@@ -1,5 +1,8 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
+import android.provider.ContactsContract;
+import android.util.Base64;
+
 import org.spongycastle.util.Arrays;
 
 import java.nio.ByteBuffer;
@@ -21,12 +24,14 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoad
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveSessionException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSignException;
@@ -37,13 +42,14 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignature
  * Created by Ana Beatriz on 26/11/2015.
  */
 public class SessionManager {
-    private final String SESSION = "SESSION";
-    private final String MY_SEQUENCE_NUMBER = "mySeqNum";
-    private final String CONTACT_SEQUENCE_NUMBER = "contactSeqNum";
-    private final String AWAITING_ACK = "awaitingAck";
-    private final String TIMESTAMP = "timestamp";
+    private static final String SESSION = "SESSION";
+    private static final String MY_SEQUENCE_NUMBER = "mySeqNum";
+    private static final String CONTACT_SEQUENCE_NUMBER = "contactSeqNum";
+    private static final String STATUS = "status";
+    private static final String TIMESTAMP = "timestamp";
+    private static final String PARTIAL_REQUEST = "partialRequest";
 
-    public Session create(Contact contact)throws FailedToCreateSessionException{
+    public static Session create(Contact contact)throws FailedToCreateSessionException{
         try {
             KeyManager km = KeyManager.getInstance();
             SecretKey sessionKey = km.generateNewSessionKey(contact.getPhoneNumber());
@@ -64,15 +70,16 @@ public class SessionManager {
         }
     }
 
-    private void storeSession(Session session, Contact contact)throws FailedToLoadDataBaseException, FailedToAddAttributeException{
+    private static void storeSession(Session session, Contact contact)throws FailedToLoadDataBaseException, FailedToAddAttributeException{
         DataManager dm = DataManager.getInstance();
         String contactId = contact.getId();
         dm.setAttribute(contactId + SESSION, MY_SEQUENCE_NUMBER, Byte.toString(session.getMySequenceNumber()));
         dm.setAttribute(contactId + SESSION, CONTACT_SEQUENCE_NUMBER, Byte.toString(session.getContactSequenceNumber()));
-        dm.setAttribute(contactId + SESSION, AWAITING_ACK, Boolean.toString(session.getStatus()));
+        dm.setAttribute(contactId + SESSION, STATUS, session.getStatus().ordinal());
         dm.setAttribute(contactId + SESSION, TIMESTAMP, session.getTimestamp());
     }
-    public Session retrieve(Contact contact)throws FailedToRetrieveSessionException{
+
+    public static Session retrieve(Contact contact)throws FailedToRetrieveSessionException{
         try {
             KeyManager km = KeyManager.getInstance();
             SecretKey sessionKey = km.getSessionKey(contact.getPhoneNumber());
@@ -82,9 +89,10 @@ public class SessionManager {
             String contactId = contact.getId();
             byte mySequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, MY_SEQUENCE_NUMBER));
             byte contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
-            boolean status = Boolean.parseBoolean(dm.getAttributeString(contactId + SESSION, AWAITING_ACK));
+            int storedStatus = dm.getAttributeInt(contactId + SESSION, STATUS);
             int timestamp = dm.getAttributeInt(contactId + SESSION, TIMESTAMP);
 
+            Session.Status status = Session.Status.values()[storedStatus];
             Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status);
 
             return newSession;
@@ -95,7 +103,8 @@ public class SessionManager {
             throw new FailedToRetrieveSessionException("Failed to retrieve the session");
         }
     }
-    public void update(Contact contact, Session session)throws FailedToUpdateSessionException{
+
+    public static void update(Contact contact, Session session)throws FailedToUpdateSessionException{
         try{
             storeSession(session, contact);
         }catch(FailedToAddAttributeException
@@ -103,7 +112,8 @@ public class SessionManager {
             throw new FailedToUpdateSessionException("Failed to update session");
         }
     }
-    public void delete(Contact contact)throws FailedToDeleteSessionException {
+
+    public static void delete(Contact contact)throws FailedToDeleteSessionException {
         try {
             KeyManager km = KeyManager.getInstance();
             km.removeSessionKey(contact.getPhoneNumber());
@@ -117,7 +127,7 @@ public class SessionManager {
         }
     }
 
-    public byte[] generateSessionRequest(Contact contact)throws FailedToGenerateSessionRequestException{
+    public static byte[] generateSessionRequest(Contact contact)throws FailedToGenerateSessionRequestException{
         try{
             Session session = retrieve(contact);
 
@@ -156,7 +166,7 @@ public class SessionManager {
 
     }
 
-    public Session processSessionRequest(Contact contact, byte[] kek)throws FailedToCreateSessionException{
+    private static Session processSessionRequest(Contact contact, byte[] kek)throws FailedToCreateSessionException{
         try{
             final int SEQ_NUM_LENGTH = 1;
             final int TIMESTAMPT_LENGTH = 4;
@@ -191,6 +201,8 @@ public class SessionManager {
             //Store it
             storeSession(session, contact);
 
+            SmsMessageManager.sendSessionAcknowledge(contact);
+
             return session;
 
         }catch(KeyStoreIsLockedException
@@ -200,13 +212,14 @@ public class SessionManager {
                 | InvalidSignatureException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
+                | FailedToSendSessionAcknowledgeException
                 | FailedToStoreException e){
             throw new FailedToCreateSessionException("Failed to create a session from the request");
         }
 
     }
 
-    public byte[] generateSessionAcknowledge(Contact contact)throws FailedToAcknowledgeSessionException{
+    public static byte[] generateSessionAcknowledge(Contact contact)throws FailedToAcknowledgeSessionException{
         try{
             Session session = retrieve(contact);
 
@@ -232,7 +245,7 @@ public class SessionManager {
         }
     }
 
-    public Session processSessionAcknowledge(Contact contact, byte[] ack)throws FailedToAcknowledgeSessionException{
+    private static Session processSessionAcknowledge(Contact contact, byte[] ack)throws FailedToAcknowledgeSessionException{
         try{
             Session session = retrieve(contact);
 
@@ -266,4 +279,53 @@ public class SessionManager {
         }
     }
 
+    public static void receiveRequestSMS(Contact contact, byte[] sms)throws FailedToCreateSessionException{
+        try{
+            DataManager dm = DataManager.getInstance();
+            String contactId = contact.getId();
+            Session.Status status = checkSessionStatus(contact);
+            switch (status){
+                case NonExistent:
+                    Session session = new Session();
+                    storeSession(session, contact);
+                    dm.setAttribute(contactId + SESSION, PARTIAL_REQUEST, Base64.encodeToString(sms, Base64.DEFAULT));
+                    break;
+                case PartialReqReceived:
+                    byte[] completeMessage = {};
+                    byte[] previousPart = Base64.decode(dm.getAttributeString(contactId + SESSION, PARTIAL_REQUEST), Base64.DEFAULT);
+                    SmsMessageType type = SmsMessageType.values()[previousPart[0]];
+                    previousPart = Arrays.copyOfRange(previousPart, 1, previousPart.length);
+                    sms = Arrays.copyOfRange(sms, 1, sms.length);
+                    if(SmsMessageType.RequestFirstSMS == type)
+                        completeMessage = Arrays.concatenate(previousPart, sms);
+                    else if(SmsMessageType.RequestSecondSMS == type)
+                        completeMessage = Arrays.concatenate(sms, previousPart);
+
+                    processSessionRequest(contact, completeMessage);
+                    break;
+            }
+        }catch(FailedToLoadDataBaseException
+                | FailedToAddAttributeException
+                | FailedToGetAttributeException
+                | FailedToCreateSessionException e){
+            throw new FailedToCreateSessionException("Failed to process the received session request");
+        }
+
+    }
+    public static void receiveAcknowledgeSMS(Contact contact, byte[] sms)throws FailedToAcknowledgeSessionException{
+        byte[] message = Arrays.copyOfRange(sms, 1, sms.length);
+        processSessionAcknowledge(contact, message);
+    }
+
+    public static Session.Status checkSessionStatus(Contact contact){
+        Session.Status status;
+        try{
+            Session session = retrieve(contact);
+            status = session.getStatus();
+            return status;
+        }catch(FailedToRetrieveSessionException e){
+            status = Session.Status.NonExistent;
+            return status;
+        }
+    }
 }

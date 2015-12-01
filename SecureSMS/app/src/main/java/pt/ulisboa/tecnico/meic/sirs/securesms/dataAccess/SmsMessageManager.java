@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
+import android.telephony.SmsManager;
+
+import org.spongycastle.util.Arrays;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,13 +14,19 @@ import java.util.TimeZone;
 
 import javax.crypto.SecretKey;
 
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveAttributeException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDeleteSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllSmsMessagesException;
@@ -165,5 +175,64 @@ public class SmsMessageManager {
                 | FailedToRemoveAttributeException exception) {
             throw new FailedToDeleteSmsMessageException(exception);
         }
+    }
+    public static void sendSessionRequest(Contact contact)throws FailedToSendSessionRequestException{
+        final int MAX_REQUEST_LENGTH = 256;
+        final int REQUEST_SMS_LENGTH = 128;
+        final short SMS_PORT= 8998;
+
+        try {
+            byte[] request = SessionManager.generateSessionRequest(contact);
+
+            if(request.length != MAX_REQUEST_LENGTH)
+                throw new FailedToSendSessionRequestException("Request lenght is not standard");
+
+            byte[] firstMessage = Arrays.copyOfRange(request, 0, REQUEST_SMS_LENGTH);
+            byte[] secondMessage = Arrays.copyOfRange(request, REQUEST_SMS_LENGTH, request.length);
+
+            byte[] firstType = new byte[1];
+            firstType[0] = (byte) SmsMessageType.RequestFirstSMS.ordinal();
+            byte[] secondType = new byte[1];
+            secondType[0] = (byte) SmsMessageType.RequestSecondSMS.ordinal();
+
+            firstMessage = Arrays.concatenate(firstType, firstMessage);
+            secondMessage = Arrays.concatenate(secondType, secondMessage);
+
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendDataMessage(contact.getPhoneNumber(),
+                    null, // TODO: define scAddress if needed
+                    SMS_PORT,
+                    firstMessage,
+                    null,  // TODO: define sentIntent if needed
+                    null); // TODO: define deliveryIntent if needed
+
+            smsManager.sendDataMessage(contact.getPhoneNumber(),
+                    null, // TODO: define scAddress if needed
+                    SMS_PORT,
+                    secondMessage,
+                    null,  // TODO: define sentIntent if needed
+                    null); // TODO: define deliveryIntent if needed
+
+        }catch(FailedToGenerateSessionRequestException e){
+            throw new FailedToSendSessionRequestException("Failed to send the session request sms");
+        }
+    }
+
+    public static void sendSessionAcknowledge(Contact contact)throws FailedToSendSessionAcknowledgeException{
+        final short SMS_PORT= 8998;
+
+        try {
+            byte[] ack = SessionManager.generateSessionAcknowledge(contact);
+            byte[] type = new byte[1];
+            type[0] = (byte)SmsMessageType.Acknowledge.ordinal();
+            byte[] message = Arrays.concatenate(type, ack);
+
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendDataMessage(contact.getPhoneNumber(), null, SMS_PORT, message, null, null);
+
+        }catch(FailedToAcknowledgeSessionException e){
+            throw new FailedToSendSessionAcknowledgeException("Failed to respond to the session request");
+        }
+
     }
 }

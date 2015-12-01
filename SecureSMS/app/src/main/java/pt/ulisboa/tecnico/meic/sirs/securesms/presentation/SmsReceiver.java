@@ -46,8 +46,10 @@ public class SmsReceiver extends BroadcastReceiver {
                 service.execute();
                 SmsMessage sms = service.getResult();
 
-                showNotification(context, sms.getContact(), new String(data, Charset.defaultCharset()));
+                if(null != sms) //if it is than its a session establishment message so dont display anything
+                    showNotification(context, sms.getContact(), new String(data, Charset.defaultCharset()));
 
+                Toast.makeText(context, service.getType(), Toast.LENGTH_LONG).show();
 
             } catch (Exception exception) {
                 Toast.makeText(context, exception.getMessage(), Toast.LENGTH_SHORT);

@@ -6,8 +6,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptSmsMessageException;
@@ -35,17 +39,29 @@ public class SendSmsMessageService extends SecureSmsService {
                 Contact contact = ContactManager.retrieveContactByPhoneNumber(phoneNumber);
                 SmsMessage sms = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
 
-                SmsManager manager = SmsManager.getDefault();
-                manager.sendDataMessage(phoneNumber,
-                        null, // TODO: define scAddress if needed
-                        SMS_PORT,
-                        sms.getEncryptedContent(),
-                        null,  // TODO: define sentIntent if needed
-                        null); // TODO: define deliveryIntent if needed
+                switch(SessionManager.checkSessionStatus(contact) ){
+                    case NonExistent:
+                        SessionManager.create(contact);
+                        SmsMessageManager.sendSessionRequest(contact);
+                        break;
+                    case Established:
+                        SmsManager smsManager = SmsManager.getDefault();
+                        smsManager.sendDataMessage(phoneNumber,
+                                null, // TODO: define scAddress if needed
+                                SMS_PORT,
+                                sms.getEncryptedContent(),
+                                null,  // TODO: define sentIntent if needed
+                                null); // TODO: define deliveryIntent if needed
+                        break;
+                }
+
+
             }
         } catch ( IllegalArgumentException
                 | FailedToRetrieveContactException
                 | FailedToCreateSmsMessageException
+                | FailedToSendSessionRequestException
+                | FailedToCreateSessionException
                 | FailedToEncryptSmsMessageException exception) {
             throw new FailedServiceException("send sms message", exception);
         }

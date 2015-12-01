@@ -12,9 +12,13 @@ import javax.crypto.SecretKey;
  * Created by lribeirogomes on 23/11/15.
  */
 public class Session {
+    public static enum Status{
+        NonExistent, PartialReqReceived, AwaitingAck, Established
+    }
+
     private final int SESSION_DURATION = 1;
 
-    private boolean _awaitingAck;
+    private Status _status;
     private Date _expirationDate;
     private int _timestamp;
     private SecretKey _sessionKey;
@@ -33,19 +37,28 @@ public class Session {
 
         _sessionKey = sessionKey;
         _ownSeqNumber = sequenceNumber[0];
-        _awaitingAck = true;
+        _status = Status.AwaitingAck;
         _contactSeqNumber = -1;
     }
 
     //Constructor to be used when building a Session from storage
-    public Session(SecretKey sessionKey, byte ownSeqNumber, byte contactSeqNumber, int timestamp,  boolean status){
+    public Session(SecretKey sessionKey, byte ownSeqNumber, byte contactSeqNumber, int timestamp,  Status status){
         _sessionKey = sessionKey;
         _ownSeqNumber = ownSeqNumber;
         _contactSeqNumber = contactSeqNumber;
         _timestamp = timestamp;
-        _awaitingAck = status;
+        _status = status;
 
         setExpirationDate();
+    }
+
+    //Constructor to be used when getting the first part of the KEK
+    public Session(){
+        _status = Status.PartialReqReceived;
+        _sessionKey = null;
+        _ownSeqNumber = -1;
+        _contactSeqNumber = -1;
+        _timestamp = 0;
     }
 
     //Construtctor to be used when creating a session from a KEK
@@ -58,7 +71,7 @@ public class Session {
 
         _sessionKey = sessionKey;
         _ownSeqNumber = sequenceNumber[0];
-        _awaitingAck = false;
+        _status = Status.Established;
         _contactSeqNumber = contactSeqNumber;
         _timestamp = timestamp;
 
@@ -113,12 +126,12 @@ public class Session {
         return _sessionKey;
     }
 
-    public boolean getStatus(){
-        return _awaitingAck;
+    public Status getStatus(){
+        return _status;
     }
 
     public void setEstablished(){
-        _awaitingAck = false;
+        _status = Status.Established;
     }
 
     public int getTimestamp(){
