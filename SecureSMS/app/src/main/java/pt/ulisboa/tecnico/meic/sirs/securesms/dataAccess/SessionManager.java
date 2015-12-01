@@ -1,11 +1,17 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
+import org.spongycastle.util.Arrays;
+
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 import javax.crypto.SecretKey;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToDeleteSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateKeyException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveKeyException;
@@ -15,7 +21,13 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStor
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSignException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToVerifySignatureException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignatureException;
 
 /**
  * Created by Ana Beatriz on 26/11/2015.
@@ -24,6 +36,7 @@ public class SessionManager {
     private final String SESSION = "SESSION";
     private final String MY_SEQUENCE_NUMBER = "mySeqNum";
     private final String CONTACT_SEQUENCE_NUMBER = "contactSeqNum";
+    private final String AWAITING_ACK = "awaitingAck";
 
     public Session create(Contact contact)throws FailedToCreateSessionException{
         try {
@@ -51,6 +64,7 @@ public class SessionManager {
         String contactId = contact.getId();
         dm.setAttribute(contactId + SESSION, MY_SEQUENCE_NUMBER, Byte.toString(session.getMySequenceNumber()));
         dm.setAttribute(contactId + SESSION, CONTACT_SEQUENCE_NUMBER, Byte.toString(session.getContactSequenceNumber()));
+        dm.setAttribute(contactId + SESSION, AWAITING_ACK, Boolean.toString(session.getStatus()));
         //TODO: Add the timestamp
     }
     public Session retrieve(Contact contact)throws FailedToRetrieveSessionException{
@@ -63,9 +77,10 @@ public class SessionManager {
             String contactId = contact.getId();
             byte mySequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, MY_SEQUENCE_NUMBER));
             byte contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
+            boolean status = Boolean.parseBoolean(dm.getAttributeString(contactId + SESSION, AWAITING_ACK));
             //TODO: Add the timestamp
 
-            Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber);
+            Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, status);
 
             return newSession;
         }catch(KeyStoreIsLockedException
@@ -95,5 +110,87 @@ public class SessionManager {
                 | FailedToLoadDataBaseException e){
             throw new FailedToDeleteSessionException("Failed to delete a session");
         }
+    }
+
+    public byte[] generateSessionRequest(Contact contact)throws FailedToGenerateSessionRequestException{
+        try{
+            Session session = retrieve(contact);
+
+            //Generate the message that goes in the KEK
+            //TODO:Add the timestamp
+            byte[] sessionKey = session.getSessionKey().getEncoded();
+            byte[] mySeqNumber = new byte[1];
+            mySeqNumber[0] = session.getMySequenceNumber();
+            byte[] message = Arrays.concatenate(sessionKey, mySeqNumber);
+
+            //Sign that data
+            KeyManager km = KeyManager.getInstance();
+            PrivateKey myPrivateKey = km.getMySigningPrivateKey();
+            byte[] signature = Cryptography.sign(message, myPrivateKey);
+
+            //Join the data and the signature
+            if (message.length > Byte.MAX_VALUE)//Check if the length fits in one byte
+                throw new FailedToGenerateSessionRequestException("Message is too long");
+            byte[] messageSize = new byte[1];
+            messageSize[0] = (byte)message.length;
+            byte[] plaintext = Arrays.concatenate(messageSize, message, signature);
+
+            //Cipher it with the contacts public key
+            PublicKey contactsPublicKey = km.getContactEncryptionPublicKey(contact.getPhoneNumber());
+            byte[] kek = Cryptography.asymmetricCipher(plaintext, contactsPublicKey);
+
+            return kek;
+
+        }catch (FailedToRetrieveSessionException
+                | KeyStoreIsLockedException
+                | FailedToRetrieveKeyException
+                | FailedToEncryptException
+                |FailedToSignException e){
+            throw new FailedToGenerateSessionRequestException("Failed to generate the session request message");
+        }
+
+    }
+
+    public Session processSessionRequest(Contact contact, byte[] kek)throws FailedToCreateSessionException{
+        try{
+            final int SEQ_NUM_LENGTH = 1;
+            final int TIMESTAMPT_LENGTH = -1; //TODO:Add timestamps
+
+            //Decipher the kek
+            KeyManager km = KeyManager.getInstance();
+            PrivateKey myPrivateKey = km.getMyEncryptionPrivateKey();
+            byte[] plaintext = Cryptography.asymmetricDecipher(kek, myPrivateKey);
+
+            //Split it up
+            byte messageLength = plaintext[0];
+            byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength+1);
+            byte[] signature = Arrays.copyOfRange(plaintext, messageLength+1, plaintext.length);
+
+            //Verify the signature
+            PublicKey contactsPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
+            Cryptography.verifySignature(message, signature, contactsPublicKey);
+
+            //Extract the session key
+            byte[] encodedSessionKey = Arrays.copyOfRange(message, 0, messageLength-SEQ_NUM_LENGTH);
+            SecretKey sessionKey = km.importSessionKey(encodedSessionKey, contact.getPhoneNumber());
+
+            //Create the session
+            byte sequenceNumber = message[messageLength-SEQ_NUM_LENGTH];
+            Session session = new Session(sessionKey, sequenceNumber);
+            storeSession(session, contact);
+
+            return session;
+
+        }catch(KeyStoreIsLockedException
+                | FailedToRetrieveKeyException
+                | FailedToDecryptException
+                | FailedToVerifySignatureException
+                | InvalidSignatureException
+                | FailedToLoadDataBaseException
+                | FailedToAddAttributeException
+                | FailedToStoreException e){
+            throw new FailedToCreateSessionException("Failed to create a session from the request");
+        }
+
     }
 }

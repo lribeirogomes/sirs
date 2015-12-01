@@ -52,6 +52,7 @@ import java.util.Set;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
@@ -203,6 +204,25 @@ public class KeyManager {
         }
     }
 
+    public SecretKey importSessionKey(byte[] encodedKey, String sessionId)throws FailedToStoreException{
+        try{
+            SecretKey sessionKey = new SecretKeySpec(encodedKey, "AES");
+
+            KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
+            KeyStore.SecretKeyEntry secretKeyEntry = new KeyStore.SecretKeyEntry(sessionKey);
+            _ks.setEntry(sessionId + SECRET_KEY, secretKeyEntry, protParam);
+            saveKeyStore();
+
+            return sessionKey;
+        }catch(IllegalArgumentException
+                | KeyStoreException
+                | NoSuchAlgorithmException
+                | CertificateException
+                |IOException e){
+            throw new FailedToStoreException("Failed to import the session key");
+        }
+    }
+
     public SecretKey getSessionKey(String sessionId)throws FailedToRetrieveKeyException{
         KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(_keyStorePassword);
         try {
@@ -256,19 +276,30 @@ public class KeyManager {
                 if(validate)
                     checkCertificateValidity(cert);
                 String name;
-                if(own)
+
+                /*FIXME HACKED TO TEST WITH YOURSELF AS A CONTACT PLEASE REVERT TO ORIGINAL CODE!!*/
+                /*if(own)
                      name = OWN;
-                else {
+                else {*/
                     //Get the CN of the subject
                     X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
                     RDN cnRdn = x500name.getRDNs(BCStyle.CN)[0];
                     name = IETFUtils.valueToString(cnRdn.getFirst().getValue());
-                }
+                    name = name.replaceAll("[^\\d.]", ""); //Strip everything that is not a digit
+                    name = "+" + name;
+                //}
 
-                if(cert.getPublicKey().getAlgorithm().equals("EC"))
+                if(cert.getPublicKey().getAlgorithm().equals("EC")) {
                     _ks.setCertificateEntry(name + SIGNING_CERT, cert);
-                if(cert.getPublicKey().getAlgorithm().equals("RSA"))
+                    if(own)
+                        _ks.setCertificateEntry(OWN + SIGNING_CERT, cert);
+
+                }
+                if(cert.getPublicKey().getAlgorithm().equals("RSA")) {
                     _ks.setCertificateEntry(name + ENCRYPTION_CERT, cert);
+                    if(own)
+                        _ks.setCertificateEntry(OWN + ENCRYPTION_CERT, cert);
+                }
             }
             saveKeyStore();
         }catch(CertificateExpiredException e){
