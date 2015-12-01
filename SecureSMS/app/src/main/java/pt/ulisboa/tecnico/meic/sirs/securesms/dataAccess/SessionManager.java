@@ -3,11 +3,14 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 import org.spongycastle.util.Arrays;
 
 import java.nio.ByteBuffer;
+import java.security.Key;
+import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import javax.crypto.SecretKey;
 
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToDeleteSessionException;
@@ -166,14 +169,14 @@ public class SessionManager {
             //Split it up
             byte messageLength = plaintext[0];
             byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength+1);
-            byte[] signature = Arrays.copyOfRange(plaintext, messageLength+1, plaintext.length);
+            byte[] signature = Arrays.copyOfRange(plaintext, messageLength + 1, plaintext.length);
 
             //Verify the signature
             PublicKey contactsPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
             Cryptography.verifySignature(message, signature, contactsPublicKey);
 
             //Extract the session key
-            byte[] encodedSessionKey = Arrays.copyOfRange(message, 0, messageLength-SEQ_NUM_LENGTH-TIMESTAMPT_LENGTH);
+            byte[] encodedSessionKey = Arrays.copyOfRange(message, 0, messageLength - SEQ_NUM_LENGTH - TIMESTAMPT_LENGTH);
             SecretKey sessionKey = km.importSessionKey(encodedSessionKey, contact.getPhoneNumber());
 
             //Create the session
@@ -202,4 +205,65 @@ public class SessionManager {
         }
 
     }
+
+    public byte[] generateSessionAcknowledge(Contact contact)throws FailedToAcknowledgeSessionException{
+        try{
+            Session session = retrieve(contact);
+
+            byte[] mySequenceNumber = new byte[1];
+            mySequenceNumber[0] = session.getMySequenceNumber();
+
+            KeyManager km = KeyManager.getInstance();
+            PrivateKey myPrivateKey = km.getMySigningPrivateKey();
+
+            byte[] signature = Cryptography.sign(mySequenceNumber, myPrivateKey);
+
+            byte[] message = Arrays.concatenate(mySequenceNumber, signature);
+
+            byte[] cipheredMessage = Cryptography.symmetricCipher(message, session.getSessionKey());
+
+            return  cipheredMessage;
+        }catch(FailedToRetrieveSessionException
+                | KeyStoreIsLockedException
+                | FailedToRetrieveKeyException
+                | FailedToSignException
+                | FailedToEncryptException e){
+            throw new FailedToAcknowledgeSessionException("Failed to generate a session acknowlegdement");
+        }
+    }
+
+    public Session processSessionAcknowledge(Contact contact, byte[] ack)throws FailedToAcknowledgeSessionException{
+        try{
+            Session session = retrieve(contact);
+
+            //Decipher it
+            byte[] message = Cryptography.symmetricDecipher(ack, session.getSessionKey());
+
+            //Split it
+            byte[] sequenceNumber = Arrays.copyOfRange(message, 0, 1);
+            byte[] signature = Arrays.copyOfRange(message, 1, message.length);
+
+            //Validate its signature
+            KeyManager km = KeyManager.getInstance();
+            PublicKey contactPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
+            Cryptography.verifySignature(sequenceNumber, signature, contactPublicKey);
+
+
+            //Update the session
+            session.setContactSequenceNumber(sequenceNumber[0]);
+            session.setEstablished();
+            update(contact, session);
+
+            return session;
+        }catch (FailedToRetrieveSessionException
+                | FailedToDecryptException
+                | KeyStoreIsLockedException
+                | FailedToRetrieveKeyException
+                | FailedToVerifySignatureException
+                | InvalidSignatureException
+                | FailedToUpdateSessionException e){
+            throw new FailedToAcknowledgeSessionException("Failed to process the received session acknowlodgement");
+        }
+    }
+
 }

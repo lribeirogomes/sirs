@@ -93,6 +93,10 @@ public class Session {
         return _contactSeqNumber;
     }
 
+    public void setContactSequenceNumber(byte seqNum){
+        _contactSeqNumber = seqNum;
+    }
+
     public void incrementMySequenceNumber(){
         _ownSeqNumber++;
         if(_ownSeqNumber < 0) //Check for overflow
@@ -111,6 +115,10 @@ public class Session {
 
     public boolean getStatus(){
         return _awaitingAck;
+    }
+
+    public void setEstablished(){
+        _awaitingAck = false;
     }
 
     public int getTimestamp(){
