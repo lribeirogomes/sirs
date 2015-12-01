@@ -7,10 +7,15 @@
     android:fitsSystemWindows="true"
     tools:context=".presentation.AddContactActivity">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:id="@+id/view">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -22,24 +27,21 @@
 
 
 
-        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:context=".presentation.AddContactActivity"
-            tools:showIn="@layout/activity_add_contact">
+
             <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_below="@+id/view"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true">
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:paddingBottom="@dimen/activity_vertical_margin"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior">
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
@@ -75,12 +77,11 @@
                 android:id="@+id/tvName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignLeft="@+id/etContactName"
-                android:layout_alignStart="@+id/etContactName"
-                android:layout_below="@+id/linearLayout"
-                android:layout_marginTop="30dp"
                 android:text="Name"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_below="@+id/space30"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
 
             <EditText
                 android:id="@+id/etContactName"
@@ -97,12 +98,11 @@
                 android:id="@+id/tvPhoneNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/etContactName"
-                android:layout_marginTop="14dp"
                 android:text="Phone Number"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_below="@+id/space28"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
 
             <EditText
                 android:id="@+id/etContactPhoneNumber"
@@ -118,25 +118,107 @@
                 android:id="@+id/tvCertificate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/etContactPhoneNumber"
-                android:layout_marginTop="24dp"
                 android:text="Certificate"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
-
-            <Spinner
-                android:id="@+id/spCertificate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_below="@+id/space29"
                 android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/tvCertificate" />
+                android:layout_alignParentStart="true" />
+
+                <EditText
+                    android:id="@+id/etContactCertificate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:inputType="textUri"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_below="@+id/tvCertificate"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_toLeftOf="@+id/bContactCertificate"
+                    android:layout_toStartOf="@+id/bContactCertificate" />
+
+                <ImageButton
+                    android:id="@+id/bContactCertificate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_text_box_mini"
+                    android:gravity="center"
+                    android:src="@drawable/ic_browse_files"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_below="@+id/tvContactCertificateValid"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true" />
+
+                <Space
+                    android:id="@+id/space28"
+                    android:layout_width="10dp"
+                    android:layout_height="20dp"
+                    android:layout_below="@+id/etContactName"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true" />
+
+                <Space
+                    android:id="@+id/space29"
+                    android:layout_width="10dp"
+                    android:layout_height="20dp"
+                    android:layout_below="@+id/etContactPhoneNumber"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true" />
+
+                <Space
+                    android:id="@+id/space30"
+                    android:layout_width="10dp"
+                    android:layout_height="20dp"
+                    android:layout_below="@+id/linearLayout"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true" />
+
+                <Space
+                    android:id="@+id/space32"
+                    android:layout_width="10dp"
+                    android:layout_height="20dp"
+                    android:layout_below="@+id/etContactCertificate"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true" />
+
+                <CheckBox
+                    android:id="@+id/cbSelfSignedContact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:text="Self-signed"
+                    android:layout_below="@+id/space32"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvContactCertificateValid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Valid"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/teal"
+                    android:visibility="invisible"
+                    android:layout_alignTop="@+id/tvCertificate"
+                    android:layout_toLeftOf="@+id/bContactCertificate"
+                    android:layout_toStartOf="@+id/bContactCertificate" />
+
+                <TextView
+                    android:id="@+id/tvContactCertificateInvalid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Invalid"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/coral"
+                    android:visibility="invisible"
+                    android:layout_alignTop="@+id/tvContactCertificateValid"
+                    android:layout_toLeftOf="@+id/bContactCertificate"
+                    android:layout_toStartOf="@+id/bContactCertificate" />
 
 
+            </RelativeLayout>
+</ScrollView>
         </RelativeLayout>
-    </ScrollView>
-</RelativeLayout>
 
 
     <android.support.design.widget.FloatingActionButton
