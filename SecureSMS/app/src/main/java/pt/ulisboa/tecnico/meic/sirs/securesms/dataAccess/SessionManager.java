@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
 import org.spongycastle.util.Arrays;
 
+import java.nio.ByteBuffer;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -37,6 +38,7 @@ public class SessionManager {
     private final String MY_SEQUENCE_NUMBER = "mySeqNum";
     private final String CONTACT_SEQUENCE_NUMBER = "contactSeqNum";
     private final String AWAITING_ACK = "awaitingAck";
+    private final String TIMESTAMP = "timestamp";
 
     public Session create(Contact contact)throws FailedToCreateSessionException{
         try {
@@ -65,7 +67,7 @@ public class SessionManager {
         dm.setAttribute(contactId + SESSION, MY_SEQUENCE_NUMBER, Byte.toString(session.getMySequenceNumber()));
         dm.setAttribute(contactId + SESSION, CONTACT_SEQUENCE_NUMBER, Byte.toString(session.getContactSequenceNumber()));
         dm.setAttribute(contactId + SESSION, AWAITING_ACK, Boolean.toString(session.getStatus()));
-        //TODO: Add the timestamp
+        dm.setAttribute(contactId + SESSION, TIMESTAMP, session.getTimestamp());
     }
     public Session retrieve(Contact contact)throws FailedToRetrieveSessionException{
         try {
@@ -78,9 +80,9 @@ public class SessionManager {
             byte mySequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, MY_SEQUENCE_NUMBER));
             byte contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
             boolean status = Boolean.parseBoolean(dm.getAttributeString(contactId + SESSION, AWAITING_ACK));
-            //TODO: Add the timestamp
+            int timestamp = dm.getAttributeInt(contactId + SESSION, TIMESTAMP);
 
-            Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, status);
+            Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status);
 
             return newSession;
         }catch(KeyStoreIsLockedException
@@ -117,11 +119,11 @@ public class SessionManager {
             Session session = retrieve(contact);
 
             //Generate the message that goes in the KEK
-            //TODO:Add the timestamp
             byte[] sessionKey = session.getSessionKey().getEncoded();
             byte[] mySeqNumber = new byte[1];
             mySeqNumber[0] = session.getMySequenceNumber();
-            byte[] message = Arrays.concatenate(sessionKey, mySeqNumber);
+            byte[] timestamp = ByteBuffer.allocate(4).putInt(session.getTimestamp()).array();
+            byte[] message = Arrays.concatenate(sessionKey, timestamp, mySeqNumber);
 
             //Sign that data
             KeyManager km = KeyManager.getInstance();
@@ -154,7 +156,7 @@ public class SessionManager {
     public Session processSessionRequest(Contact contact, byte[] kek)throws FailedToCreateSessionException{
         try{
             final int SEQ_NUM_LENGTH = 1;
-            final int TIMESTAMPT_LENGTH = -1; //TODO:Add timestamps
+            final int TIMESTAMPT_LENGTH = 4;
 
             //Decipher the kek
             KeyManager km = KeyManager.getInstance();
@@ -171,12 +173,19 @@ public class SessionManager {
             Cryptography.verifySignature(message, signature, contactsPublicKey);
 
             //Extract the session key
-            byte[] encodedSessionKey = Arrays.copyOfRange(message, 0, messageLength-SEQ_NUM_LENGTH);
+            byte[] encodedSessionKey = Arrays.copyOfRange(message, 0, messageLength-SEQ_NUM_LENGTH-TIMESTAMPT_LENGTH);
             SecretKey sessionKey = km.importSessionKey(encodedSessionKey, contact.getPhoneNumber());
 
             //Create the session
             byte sequenceNumber = message[messageLength-SEQ_NUM_LENGTH];
-            Session session = new Session(sessionKey, sequenceNumber);
+            byte[] timestamp = Arrays.copyOfRange(message, messageLength-SEQ_NUM_LENGTH-TIMESTAMPT_LENGTH, messageLength-SEQ_NUM_LENGTH);
+            Session session = new Session(sessionKey, sequenceNumber, ByteBuffer.wrap(timestamp).getInt());
+
+            //Check if it is valid
+            if(session.hasExpired())
+                throw new FailedToCreateSessionException("This session is not valid (timestamps)");
+
+            //Store it
             storeSession(session, contact);
 
             return session;
