@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.widget.Toast;
 
 import java.nio.charset.Charset;
 
@@ -16,6 +17,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 
 
 /**
@@ -40,14 +42,15 @@ public class SmsReceiver extends BroadcastReceiver {
                 address = androidSms.getOriginatingAddress();
                 data = androidSms.getUserData();
 
-                Contact contact = ContactManager.retrieveContactByPhoneNumber(address);
-                SmsMessage sms = SmsMessageManager.createSmsMessage(contact, data);
+                ReceiveSmsMessageService service = new ReceiveSmsMessageService(address, data);
+                service.execute();
+                SmsMessage sms = service.getResult();
 
-                showNotification(context, contact, new String(data, Charset.defaultCharset()));
+                showNotification(context, sms.getContact(), new String(data, Charset.defaultCharset()));
 
 
             } catch (Exception exception) {
-                // TODO:Integrate interface with exception handling
+                Toast.makeText(context, exception.getMessage(), Toast.LENGTH_SHORT);
             }
         }
     }

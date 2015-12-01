@@ -15,28 +15,28 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResu
 public class DecryptSmsMessageService extends SecureSmsService {
     private String _phoneNumber;
     private byte[] _encryptedSms;
-    private String _result;
+    private SmsMessage _sms;
 
     public DecryptSmsMessageService(String phoneNumber, byte[] data) {
         _phoneNumber = phoneNumber;
         _encryptedSms = data;
-        _result = null;
-    }
-
-    public String getResult() throws FailedToGetResultException {
-        if (_result == null) {
-            throw new FailedToGetResultException();
-        }
-        return _result;
+        _sms = null;
     }
 
     public void execute() throws FailedServiceException {
         try {
             Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
-            SmsMessage smsMessage = SmsMessageManager.createSmsMessage(contact, _encryptedSms);
-            _result = smsMessage.getContent();
+            _sms = SmsMessageManager.createSmsMessage(contact, _encryptedSms);
         } catch (FailedToCreateSmsMessageException | FailedToRetrieveContactException exception) {
             throw new FailedServiceException("decrypt sms message", exception);
         }
     }
+
+    public SmsMessage getResult() throws FailedToGetResultException {
+        if (_sms == null) {
+            throw new FailedToGetResultException();
+        }
+        return _sms;
+    }
+
 }

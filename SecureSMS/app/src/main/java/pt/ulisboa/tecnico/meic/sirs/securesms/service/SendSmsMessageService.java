@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptSmsMessageException;
@@ -38,16 +39,14 @@ public class SendSmsMessageService extends SecureSmsService {
                 manager.sendDataMessage(phoneNumber,
                         null, // TODO: define scAddress if needed
                         SMS_PORT,
-                        _plainTextSms.getBytes("UTF-8"),
-                        //sms.getEncryptedContent(),
+                        sms.getEncryptedContent(),
                         null,  // TODO: define sentIntent if needed
                         null); // TODO: define deliveryIntent if needed
             }
         } catch ( IllegalArgumentException
-                | UnsupportedEncodingException
                 | FailedToRetrieveContactException
-                | FailedToCreateSmsMessageException exception) {
-                //| FailedToEncryptSmsMessageException exception) {
+                | FailedToCreateSmsMessageException
+                | FailedToEncryptSmsMessageException exception) {
             throw new FailedServiceException("send sms message", exception);
         }
     }
