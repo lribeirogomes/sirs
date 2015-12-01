@@ -228,7 +228,7 @@ public class SessionManager {
                 | FailedToRetrieveKeyException
                 | FailedToSignException
                 | FailedToEncryptException e){
-            throw new FailedToAcknowledgeSessionException("Failed to generate a session acknowlegdement");
+            throw new FailedToAcknowledgeSessionException("Failed to generate a session acknowledgement");
         }
     }
 
@@ -262,7 +262,7 @@ public class SessionManager {
                 | FailedToVerifySignatureException
                 | InvalidSignatureException
                 | FailedToUpdateSessionException e){
-            throw new FailedToAcknowledgeSessionException("Failed to process the received session acknowlodgement");
+            throw new FailedToAcknowledgeSessionException("Failed to process the received session acknowledgement");
         }
     }
 
