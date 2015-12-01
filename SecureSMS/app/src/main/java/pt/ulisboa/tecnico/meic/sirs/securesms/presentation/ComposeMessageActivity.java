@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
@@ -103,7 +105,6 @@ public class ComposeMessageActivity extends AppCompatActivity {
         String message = etMessage.getText().toString();
         try {
             if (!message.equals("")) {
-                _contactsToSendNumbers.add("+351927519814");
                 SendSmsMessageService service = new SendSmsMessageService(_contactsToSendNumbers, message);
                 service.execute();
                 etMessage.setText("");

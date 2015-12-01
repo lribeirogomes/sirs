@@ -51,9 +51,11 @@ public class SessionManager {
 
     public static Session create(Contact contact)throws FailedToCreateSessionException{
         try {
+            //delete any previous sessions
+            delete(contact);
+
             KeyManager km = KeyManager.getInstance();
             SecretKey sessionKey = km.generateNewSessionKey(contact.getPhoneNumber());
-
 
             Session newSession = new Session(sessionKey);
 
@@ -65,6 +67,7 @@ public class SessionManager {
                 | FailedToGenerateKeyException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
+                | FailedToDeleteSessionException
                 | FailedToStoreException e){
             throw new FailedToCreateSessionException("Failed to create a new session");
         }
@@ -201,7 +204,7 @@ public class SessionManager {
             //Store it
             storeSession(session, contact);
 
-            SmsMessageManager.sendSessionAcknowledge(contact);
+            //SmsMessageManager.sendSessionAcknowledge(contact);
 
             return session;
 
@@ -212,7 +215,7 @@ public class SessionManager {
                 | InvalidSignatureException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
-                | FailedToSendSessionAcknowledgeException
+                /*| FailedToSendSessionAcknowledgeException*/
                 | FailedToStoreException e){
             throw new FailedToCreateSessionException("Failed to create a session from the request");
         }

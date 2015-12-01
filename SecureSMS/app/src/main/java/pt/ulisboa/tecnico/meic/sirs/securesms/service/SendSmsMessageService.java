@@ -37,22 +37,19 @@ public class SendSmsMessageService extends SecureSmsService {
         try {
             for (String phoneNumber : _phoneNumbers) {
                 Contact contact = ContactManager.retrieveContactByPhoneNumber(phoneNumber);
-                SmsMessage sms = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
 
-                switch(SessionManager.checkSessionStatus(contact) ){
-                    case NonExistent:
-                        SessionManager.create(contact);
-                        SmsMessageManager.sendSessionRequest(contact);
-                        break;
-                    case Established:
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendDataMessage(phoneNumber,
-                                null, // TODO: define scAddress if needed
-                                SMS_PORT,
-                                sms.getEncryptedContent(),
-                                null,  // TODO: define sentIntent if needed
-                                null); // TODO: define deliveryIntent if needed
-                        break;
+                if(SessionManager.checkSessionStatus(contact) == Session.Status.Established ) {
+                    SmsMessage sms = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendDataMessage(phoneNumber,
+                            null, // TODO: define scAddress if needed
+                            SMS_PORT,
+                            sms.getEncryptedContent(),
+                            null,  // TODO: define sentIntent if needed
+                            null); // TODO: define deliveryIntent if needed
+                }else{
+                    SessionManager.create(contact);
+                    SmsMessageManager.sendSessionRequest(contact);
                 }
 
 

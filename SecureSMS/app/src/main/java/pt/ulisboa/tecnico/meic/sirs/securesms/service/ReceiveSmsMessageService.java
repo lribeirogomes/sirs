@@ -26,6 +26,7 @@ public class ReceiveSmsMessageService extends SecureSmsService {
     private SmsMessage _sms;
 
     private SmsMessageType _gotType;
+    private Contact _contact;
 
     public ReceiveSmsMessageService(String phoneNumber, byte[] data) {
         _phoneNumber = phoneNumber;
@@ -38,6 +39,7 @@ public class ReceiveSmsMessageService extends SecureSmsService {
         try {
             Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
             SmsMessageType messageType = SmsMessageType.values()[_encryptedSms[0]];
+            _contact = contact;
             _gotType = messageType;
             switch(messageType) {
                 case RequestFirstSMS:
@@ -83,6 +85,9 @@ public class ReceiveSmsMessageService extends SecureSmsService {
                 return "Got a session Ack!";
         }
         return "Something went wrong!";
+    }
+    public Contact getContact(){
+        return _contact;
     }
 }
 
