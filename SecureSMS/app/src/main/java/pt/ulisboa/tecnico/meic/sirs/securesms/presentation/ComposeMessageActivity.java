@@ -14,7 +14,6 @@ import android.widget.TableRow;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -27,11 +26,13 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
 public class ComposeMessageActivity extends AppCompatActivity {
     //request code so this activity knows when the ChooseContactActivity is ready to return
     private static final int CHOOSE_CONTACT_REQ = 1;
+    private ArrayList<String> _contactsToSendNumbers;
+    private ArrayList<String> _contactsToSendNames;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_write_message);
+        setContentView(R.layout.activity_write_new_message);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -58,9 +59,27 @@ public class ComposeMessageActivity extends AppCompatActivity {
         startActivityForResult(chooseContactIntent, CHOOSE_CONTACT_REQ);
     }
 
-    public void displayContactsToSend(ArrayList<String> contactsToSend) {
+
+    /*receive result from activity - choose contacts*/
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent chooseContactIntent) {
+
+        if (requestCode == CHOOSE_CONTACT_REQ) {
+            if(resultCode == RESULT_OK){
+                //put returned contacts in the list
+                _contactsToSendNames = chooseContactIntent.getExtras().getStringArrayList("contactsToSendNames");
+                _contactsToSendNumbers = chooseContactIntent.getExtras().getStringArrayList("contactsToSendNumbers");
+                showContactsToSend();
+            }
+            if (resultCode == RESULT_CANCELED) {
+                //if there's no result
+            }
+        }
+    }
+
+    public void showContactsToSend() {
         final TableRow rowReceivers = (TableRow) findViewById(R.id.trReceivers);
-        for (String contactName: contactsToSend) {
+        for (String contactName: _contactsToSendNames) {
             //create contact to display
             Button bReceiver = (Button) LayoutInflater.from(this).inflate(R.layout.button, null);
             bReceiver.setText(contactName);
@@ -76,32 +95,16 @@ public class ComposeMessageActivity extends AppCompatActivity {
         }
     }
 
-    /*receive result from activity - choose contacts*/
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent chooseContactIntent) {
-
-        if (requestCode == CHOOSE_CONTACT_REQ) {
-            if(resultCode == RESULT_OK){
-                //put returned contacts in the list
-                displayContactsToSend(chooseContactIntent.getExtras().getStringArrayList("contactsToSendNames"));
-            }
-            if (resultCode == RESULT_CANCELED) {
-                //if there's no result
-            }
-        }
-    }
-
+    //Todo:refactor this, it's all over the place.
     public void sendMessage(View view) {
         EditText etMessage = (EditText) findViewById(R.id.etMessage);
         String message = etMessage.getText().toString();
         try {
             if (!message.equals("")) {
-                //service.execute();
-                etMessage.setText("");
 
-                //SendMessageService
-                //StoreMessageService
-                sendSms();
+                SendSmsMessageService service = new SendSmsMessageService(_contactsToSendNumbers, message);
+                service.execute();
+                etMessage.setText("");
 
                 getMessages.add(message);
                 showMessages();
@@ -109,21 +112,6 @@ public class ComposeMessageActivity extends AppCompatActivity {
                 InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 im.hideSoftInputFromWindow(etMessage.getWindowToken(), 0);
             }
-        }catch (Exception exception) {
-                //show exception
-        }
-    }
-
-    public void sendSms() {
-        ArrayList<String> contacts = new ArrayList<String>();
-        contacts.add("+351927519814");
-        try {
-
-            SendSmsMessageService service = new SendSmsMessageService(contacts, "Hello World 2.0");
-            service.execute();
-
-            Toast toast = Toast.makeText(getApplicationContext(), "sent", Toast.LENGTH_SHORT);
-            toast.show();
         } catch (FailedServiceException exception) {
             Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
             toast.show();

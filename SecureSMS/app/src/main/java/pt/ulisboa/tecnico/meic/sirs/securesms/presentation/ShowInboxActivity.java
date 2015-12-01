@@ -1,17 +1,20 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.content.Intent;
 import android.widget.Toast;
 
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
@@ -19,8 +22,8 @@ import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import java.security.Security;
 import java.util.ArrayList;
 
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.GetAllLastMessagesService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
@@ -74,7 +77,6 @@ public class ShowInboxActivity extends AppCompatActivity {
     }
 
     private void showInbox() {
-
         try {
             GetAllLastMessagesService service = new GetAllLastMessagesService();
             service.execute();
@@ -84,20 +86,10 @@ public class ShowInboxActivity extends AppCompatActivity {
             //show list
             ListView inbox = (ListView) findViewById(R.id.lvInbox);
 
-            ArrayAdapter adapter = new ArrayAdapter(this,
-                    android.R.layout.simple_list_item_2, android.R.id.text1, messages) {
-                @Override
-                public View getView(int position, View convertView, ViewGroup parent) {
-                    View view = super.getView(position, convertView, parent);
-                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-                    TextView text2 = (TextView) view.findViewById(android.R.id.text2);
-
-                    text1.setText(messages.get(position).getContact().getName());
-                    text2.setText(messages.get(position).getContent());
-                    return view;
-                }
-            };
+            MessagePreviewAdapter adapter = new MessagePreviewAdapter(this,
+                    R.layout.list_item_message_preview, service.getResult());
             inbox.setAdapter(adapter);
+
         } catch (FailedServiceException | FailedToGetResultException exception) {
             Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
             toast.show();
@@ -116,4 +108,40 @@ public class ShowInboxActivity extends AppCompatActivity {
         startActivity(addContactIntent);
     }
 
+    /*allows to populate an item list with a SmsMessage object*/
+    private class MessagePreviewAdapter extends ArrayAdapter<SmsMessage> {
+        private ArrayList<SmsMessage> _messages;
+
+        public MessagePreviewAdapter(Context context, int textViewResourceId, ArrayList<SmsMessage> messages) {
+            super(context, textViewResourceId, messages);
+            _messages = new ArrayList<SmsMessage>();
+            _messages.addAll(messages);
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            //duplicate item so it doesn't get the same view
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_message_preview, null);
+
+            //Show contactMessagesActivity should start when item is clicked
+            convertView.setOnClickListener(new View.OnClickListener() {
+                public void onClick(final View v) {
+                    SmsMessage sms =  _messages.get(position);
+                    Intent showContactMessagesIntent = new Intent(getApplicationContext(), ShowContactMessagesActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("contactToShowNumber", sms.getContact().getPhoneNumber());
+                    showContactMessagesIntent.putExtras(bundle);
+                    startActivity(showContactMessagesIntent);
+                }});
+
+            TextView tvContactName = (TextView) convertView.findViewById(R.id.tvContactName);
+            TextView tvMessagePreview = (TextView) convertView.findViewById(R.id.tvMessagePreview);
+
+            //write the attributes of each contact
+            tvContactName.setText(_messages.get(position).getContact().getName());
+            tvMessagePreview.setText(_messages.get(position).getContent());
+            //TODO:truncate content
+            return convertView;
+        }
+    }
 }

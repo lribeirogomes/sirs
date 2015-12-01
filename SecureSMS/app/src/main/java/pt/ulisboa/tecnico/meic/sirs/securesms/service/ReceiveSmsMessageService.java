@@ -6,7 +6,6 @@ import android.content.Intent;
 import java.nio.charset.Charset;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.presentation.ShowSMSActivity;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 

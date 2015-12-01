@@ -90,12 +90,12 @@ public class SmsMessageManager {
         }
     }
 
-    public static List<SmsMessage> retrieveAllSmsMessages(Contact contact) throws
+    public static ArrayList<SmsMessage> retrieveAllSmsMessages(Contact contact) throws
             FailedToRetrieveAllSmsMessagesException {
         // TODO: Implement message content encryption after fixing encoding issue
         // User user;
         // String passwordHash;
-        List<SmsMessage> messages;
+        ArrayList<SmsMessage> messages;
         Set<String> messageIds;
         DataManager dm;
         long dateNumber;

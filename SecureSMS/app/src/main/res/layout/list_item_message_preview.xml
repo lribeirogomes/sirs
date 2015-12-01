@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Contact Name"
-        android:id="@+id/textView2"
+        android:id="@+id/tvContactName"
         android:layout_below="@+id/tvSpace"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="dd-mm-yyyy hh:mm"
-        android:id="@+id/textView3"
+        android:id="@+id/tvDate"
         android:layout_below="@+id/tvSpace"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
@@ -35,8 +35,8 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Lorem ipsum blabalbla message...."
-        android:id="@+id/textView4"
-        android:layout_below="@+id/textView2"
+        android:id="@+id/tvMessagePreview"
+        android:layout_below="@+id/tvContactName"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:id="@+id/textView5"
-        android:layout_below="@+id/textView4"
+        android:layout_below="@+id/tvMessagePreview"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 

@@ -53,6 +53,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private EditText etPasswordRegister;
     private EditText etCACertificate;
     private EditText etUserCertificate;
+    private EditText etPasswordKeys;
     private EditText etPrivateKeys;
     private TextView tvCACertificateValid;
     private TextView tvCACertificateInvalid;
@@ -74,6 +75,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private FloatingActionButton fabRegister1;
     private FloatingActionButton fabRegister2;
     private FloatingActionButton fabRegister3;
+
 
 
     @Override
@@ -157,6 +159,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
 
         //step3
         View vStep3 = LayoutInflater.from(this).inflate(R.layout.activity_register3, viewFlipper, true);
+        etPasswordKeys = (EditText) vStep3.findViewById(R.id.etPasswordKeys);
 
         tvPrivateKeysValid = (TextView) vStep3.findViewById(R.id.tvPrivateKeysValid);
         tvPrivateKeysInvalid = (TextView) vStep3.findViewById(R.id.tvPrivateKeysInvalid);
@@ -348,10 +351,12 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     @Override
     public void onFileSelected(FileDialog dialog, File file) {
         ImportFileType type = ImportFileType.values()[dialog.getArguments().getInt("type")];
+        String userPassword = etPasswordRegister.getText().toString();
+        String keysPassword = etPasswordKeys.getText().toString();
         switch (type) {
             case CA_CERTIFICATE: {
                 try {
-                    ImportCACertificateService service = new ImportCACertificateService(file.getPath(), "storagePassword");
+                    ImportCACertificateService service = new ImportCACertificateService(file.getPath(), userPassword);
                     service.execute();
                     etCACertificate.setText(file.getPath());
                     tvCACertificateValid.setVisibility(View.VISIBLE);
@@ -364,11 +369,11 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
             }
             case USER_CERTIFICATE: {
                 try {
-                    ImportUserCertificateService service = new ImportUserCertificateService(file.getPath(), true, "storagePassword");
+                    ImportUserCertificateService service = new ImportUserCertificateService(file.getPath(), true, userPassword);
                     service.execute();
                     if (!service.getResult()) {
                         //prompt user to accept
-                        service = new ImportUserCertificateService(file.getPath(), false, "password");
+                        service = new ImportUserCertificateService(file.getPath(), false, userPassword);
                         service.execute();
                         tvUserCertificateValid.setVisibility(View.INVISIBLE);
                         tvUserCertificateInvalid.setVisibility(View.VISIBLE);
@@ -387,7 +392,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
             }
             case PRIVATE_KEY: {
                 try {
-                    ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), "password12345", "storagePassword");
+                    ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), keysPassword, userPassword);
                     service.execute();
                     tvPrivateKeysValid.setVisibility(View.VISIBLE);
                     tvPrivateKeysInvalid.setVisibility(View.INVISIBLE);

@@ -43,7 +43,7 @@ public class SmsReceiver extends BroadcastReceiver {
                 Contact contact = ContactManager.retrieveContactByPhoneNumber(address);
                 SmsMessage sms = SmsMessageManager.createSmsMessage(contact, data);
 
-                showNotification(context, contact.getName(), new String(data, Charset.defaultCharset()));
+                showNotification(context, contact, new String(data, Charset.defaultCharset()));
 
 
             } catch (Exception exception) {
@@ -52,19 +52,23 @@ public class SmsReceiver extends BroadcastReceiver {
         }
     }
 
-    public void showNotification(Context context, String address, String data) {
+    public void showNotification(Context context, Contact contact, String data) {
         // Sets an ID for the notification, so it can be updated
         int notifyID = 1;
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.ic_decrypt)
-                        .setContentTitle(address)
+                        .setContentTitle(contact.getName())
                         .setContentText(data);
         // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(context, ShowSMSActivity.class);
+        Intent resultIntent = new Intent(context, ShowContactMessagesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("contactToShowNumber", contact.getPhoneNumber());
+        resultIntent.putExtras(bundle);
+
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-        stackBuilder.addParentStack(ShowSMSActivity.class);
+        stackBuilder.addParentStack(ShowContactMessagesActivity.class);
         stackBuilder.addNextIntent(resultIntent);
         PendingIntent resultPendingIntent =
                 stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);

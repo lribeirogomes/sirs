@@ -25,8 +25,8 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResu
 
 public class ChooseContactActivity extends AppCompatActivity {
 
-    private ArrayList<String> contactsToSendNames = new ArrayList<String>();
-    private ArrayList<String> contactsToSendNumbers = new ArrayList<String>();
+    private ArrayList<String> _contactsToSendNames = new ArrayList<String>();
+    private ArrayList<String> _contactsToSendNumbers = new ArrayList<String>();
 
     private ListView lvContacts;
 
@@ -38,15 +38,6 @@ public class ChooseContactActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         populateItemList();
-
-        //getContacts.add(new Contact("Ana", "+351927519814"));
-        //getContacts.add(new Contact("Ana", "+351927519814"));
-        //getContacts.add(new Contact("Ana", "+351927519814"));
-        //getContacts.add(new Contact("Ana", "+351927519814"));
-        //getContacts.add(new Contact("Ana", "+351927519814"));
-        //getContacts.add(new Contact("Ana", "+351927519814"));
-
-
     }
 
     private void populateItemList() {
@@ -58,7 +49,7 @@ public class ChooseContactActivity extends AppCompatActivity {
             ArrayList<Contact> contacts = service.getResult();
 
             ContactAdapter adapter = new ContactAdapter(this,
-                    R.layout.list_item_contact, service.getResult());
+                    R.layout.list_item_contact, contacts);
             lvContacts.setAdapter(adapter);
         } catch(FailedServiceException  |FailedToGetResultException exception) {
             Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(),Toast.LENGTH_SHORT);
@@ -69,7 +60,8 @@ public class ChooseContactActivity extends AppCompatActivity {
     public void confirmChooseContact(View view) {
         //make array with chosen contacts
         Intent outputIntent = new Intent();
-        outputIntent.putStringArrayListExtra("contactsToSendNames", contactsToSendNames);
+        outputIntent.putStringArrayListExtra("contactsToSendNames", _contactsToSendNames);
+        outputIntent.putStringArrayListExtra("contactsToSendNumbers", _contactsToSendNumbers);
         setResult(getParent().RESULT_OK, outputIntent);
         finish();
     }
@@ -102,9 +94,13 @@ public class ChooseContactActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     cbContact.setChecked(!cbContact.isChecked());
                     if (cbContact.isChecked()) {
-                        contactsToSendNames.add(_contacts.get(position).getName());
+                        _contactsToSendNames.add(_contacts.get(position).getName());
+                        _contactsToSendNumbers.add(_contacts.get(position).getPhoneNumber());
                     }
-                    else contactsToSendNames.remove(_contacts.get(position).getName());
+                    else {
+                        _contactsToSendNames.remove(_contacts.get(position).getName());
+                        _contactsToSendNumbers.remove(_contacts.get(position).getPhoneNumber());
+                    }
                 }
             });
             return convertView;

@@ -52,7 +52,7 @@
         android:label="@string/title_activity_choose_contact"
         android:windowSoftInputMode="stateHidden" />
     <activity
-        android:name=".presentation.ShowSMSActivity"
+        android:name=".presentation.ShowContactMessagesActivity"
         android:label="@string/title_activity_choose_contact"
         android:windowSoftInputMode="stateHidden" />
 
