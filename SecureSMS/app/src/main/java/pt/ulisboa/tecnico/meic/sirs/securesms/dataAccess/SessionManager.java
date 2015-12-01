@@ -19,7 +19,6 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 
 /**
  * Created by Ana Beatriz on 26/11/2015.
- * WARNING: THIS CLASS HAS NOT BEEN TESTED
  */
 public class SessionManager {
     private final String SESSION = "SESSION";
@@ -51,7 +50,7 @@ public class SessionManager {
         DataManager dm = DataManager.getInstance();
         String contactId = contact.getId();
         dm.setAttribute(contactId + SESSION, MY_SEQUENCE_NUMBER, Byte.toString(session.getMySequenceNumber()));
-        dm.addAttribute(contactId + SESSION, CONTACT_SEQUENCE_NUMBER, Byte.toString(session.getContactSequenceNumber()));
+        dm.setAttribute(contactId + SESSION, CONTACT_SEQUENCE_NUMBER, Byte.toString(session.getContactSequenceNumber()));
         //TODO: Add the timestamp
     }
     public Session retrieve(Contact contact)throws FailedToRetrieveSessionException{

@@ -2,6 +2,8 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import android.content.Context;
 
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.KeyManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.UserManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
@@ -25,8 +27,10 @@ public class AuthenticateUserService extends SecureSmsService {
             User user = UserManager.retrieveUser(_phoneNumber);
 
             user.validatePassword(_password);
+            KeyManager.getInstance("storagePassword");
         } catch ( FailedToRetrieveUserException
-                | FailedToValidatePasswordException exception ) {
+                | FailedToValidatePasswordException
+                | FailedToLoadKeyStoreException exception ) {
             throw new FailedServiceException("authenticate user", exception);
         }
     }
