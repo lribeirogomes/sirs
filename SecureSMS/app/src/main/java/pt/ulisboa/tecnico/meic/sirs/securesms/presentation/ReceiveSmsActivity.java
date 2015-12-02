@@ -19,6 +19,7 @@ import java.io.File;
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.CheckSessionEstablishedService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 
 /**
@@ -41,16 +42,22 @@ public class ReceiveSmsActivity extends AppCompatActivity {
 
         //Figure out where to deliver it
         try {
-            ReceiveSmsMessageService service = new ReceiveSmsMessageService(senderAddress, completeData);
-            service.execute();
+            ReceiveSmsMessageService receiveService = new ReceiveSmsMessageService(senderAddress, completeData);
+            receiveService.execute();
+            CheckSessionEstablishedService checkService = new CheckSessionEstablishedService(senderAddress);
+            checkService.execute();
+            boolean sessionEstablished = checkService.getResult();
 
 
             if (completeData[0] == SmsMessageType.Text.ordinal()) {
-                SmsMessage sms = service.getResult();
+                SmsMessage sms = receiveService.getResult();
                 String contactName = sms.getContact().getName();
                 showNotification(getApplicationContext(), contactName, sms.getContent(), senderAddress, false);
-            }else {
+            }else if (sessionEstablished) {
                 showNotification(getApplicationContext(), "You have a new request", "Click here for more details", senderAddress, true);
+            }
+            else {
+                Toast.makeText(getApplicationContext(), "Someone tried to send you a message without your approval", Toast.LENGTH_SHORT);
             }
 
         } catch (Exception exception) {

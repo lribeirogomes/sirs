@@ -28,8 +28,10 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.DeleteSessionService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.GetMessagesByContactService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSessionAcknowledgmentService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
@@ -147,13 +149,22 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
 
 
     public void confirmRequest(View view) {
-        //ACK SESSION SERVICE
+        try {
+            SendSessionAcknowledgmentService service = new SendSessionAcknowledgmentService(_contactPhoneNumber);
+            service.execute();
+        }catch (FailedServiceException exception) {
+            Toast.makeText(ShowContactMessagesActivity.this, exception.getMessage(), Toast.LENGTH_SHORT);
+        }
         ackDialog.dismiss();
-
     }
 
     public void declineRequest(View view) {
-        //CANCEL SESSION
+        try {
+            DeleteSessionService service = new DeleteSessionService(_contactPhoneNumber);
+            service.execute();
+        }catch (FailedServiceException exception) {
+            Toast.makeText(ShowContactMessagesActivity.this, exception.getMessage(), Toast.LENGTH_SHORT);
+        }
         finish();
     }
 
