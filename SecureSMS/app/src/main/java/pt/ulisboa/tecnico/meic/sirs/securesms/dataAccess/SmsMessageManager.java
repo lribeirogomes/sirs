@@ -6,13 +6,9 @@ import org.spongycastle.util.Arrays;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
-
-import javax.crypto.SecretKey;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
@@ -23,11 +19,10 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemo
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDeleteSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllSmsMessagesException;
 
@@ -37,25 +32,10 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieve
 public class SmsMessageManager {
 
     public static SmsMessage createSmsMessage(Contact contact, byte[] cipherText) throws FailedToCreateSmsMessageException {
-        KeyManager keyManager;
-        SecretKey key;
-        byte[] decipheredData;
-        String plainText;
-
         try {
-            // TODO: Reimplement decryption
-            // Decrypt message content
-            // keyManager = KeyManager.getInstance("dummy");
-            // key = keyManager.getSessionKey(sender);
-            // decipheredData = Cryptography.symmetricDecipher(cipherText, key);
-            // plainText = Cryptography.decode(decipheredData);
-            plainText = Cryptography.decode(cipherText);
-
-            return createSmsMessage(contact, plainText);
-        } catch //( FailedToLoadKeyStoreException
-                //| FailedToRetrieveKeyException
-                //| FailedToDecryptException exception ) {
-                (Exception exception) {
+            String content = SmsMessage.decrytpContent(contact, cipherText);
+            return createSmsMessage(contact, content);
+        } catch(FailedToDecryptSmsMessageException exception) {
             throw new FailedToCreateSmsMessageException(exception);
         }
     }
