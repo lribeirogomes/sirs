@@ -211,8 +211,6 @@ public class SessionManager {
             //Store it
             storeSession(session, contact);
 
-            //SmsMessageManager.sendSessionAcknowledge(contact);
-
             return session;
 
         }catch(KeyStoreIsLockedException
@@ -222,7 +220,6 @@ public class SessionManager {
                 | InvalidSignatureException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
-                /*| FailedToSendSessionAcknowledgeException*/
                 | FailedToStoreException e){
             throw new FailedToCreateSessionException("Failed to create a session from the request");
         }
