@@ -90,11 +90,18 @@ public class SessionManager {
             //retrieve the rest of the session
             DataManager dm = DataManager.getInstance();
             String contactId = contact.getId();
-            byte mySequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, MY_SEQUENCE_NUMBER));
-            byte contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
-            int storedStatus = dm.getAttributeInt(contactId + SESSION, STATUS);
-            int timestamp = dm.getAttributeInt(contactId + SESSION, TIMESTAMP);
-
+            byte mySequenceNumber;
+            byte contactSequenceNumber;
+            int storedStatus;
+            int timestamp;
+            try {
+                mySequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, MY_SEQUENCE_NUMBER));
+                contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
+                storedStatus = dm.getAttributeInt(contactId + SESSION, STATUS);
+                timestamp = dm.getAttributeInt(contactId + SESSION, TIMESTAMP);
+            }catch(NumberFormatException e){
+                throw new FailedToRetrieveSessionException("Not in storage");
+            }
             Session.Status status = Session.Status.values()[storedStatus];
             Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status);
 
@@ -283,34 +290,46 @@ public class SessionManager {
     }
 
     public static void receiveRequestSMS(Contact contact, byte[] sms)throws FailedToCreateSessionException{
-        try{
+        try {
             DataManager dm = DataManager.getInstance();
             String contactId = contact.getId();
             Session.Status status = checkSessionStatus(contact);
-            switch (status){
-                case NonExistent:
+
+            if (status == Session.Status.PartialReqReceived) {
+                try {
+
+                    byte[] completeMessage = {};
+
+                    byte[] previousPart = Base64.decode(dm.getAttributeString(contactId + SESSION, PARTIAL_REQUEST), Base64.DEFAULT);
+                    if ((int) previousPart[0] > Session.Status.values().length)
+                        throw new FailedToCreateSessionException("Bad previous message");
+                    SmsMessageType type = SmsMessageType.values()[previousPart[0]];
+
+                    previousPart = Arrays.copyOfRange(previousPart, 1, previousPart.length);
+
+                    byte[] newPart = Arrays.copyOfRange(sms, 1, sms.length);
+                    if (SmsMessageType.RequestFirstSMS == type)
+                        completeMessage = Arrays.concatenate(previousPart, newPart);
+                    else if (SmsMessageType.RequestSecondSMS == type)
+                        completeMessage = Arrays.concatenate(newPart, previousPart);
+
+
+                    processSessionRequest(contact, completeMessage);
+
+                }catch (FailedToCreateSessionException e){ //If it fails then one of the previous attemps failed to get through so store the new one
                     Session session = new Session();
                     storeSession(session, contact);
                     dm.setAttribute(contactId + SESSION, PARTIAL_REQUEST, Base64.encodeToString(sms, Base64.DEFAULT));
-                    break;
-                case PartialReqReceived:
-                    byte[] completeMessage = {};
-                    byte[] previousPart = Base64.decode(dm.getAttributeString(contactId + SESSION, PARTIAL_REQUEST), Base64.DEFAULT);
-                    SmsMessageType type = SmsMessageType.values()[previousPart[0]];
-                    previousPart = Arrays.copyOfRange(previousPart, 1, previousPart.length);
-                    sms = Arrays.copyOfRange(sms, 1, sms.length);
-                    if(SmsMessageType.RequestFirstSMS == type)
-                        completeMessage = Arrays.concatenate(previousPart, sms);
-                    else if(SmsMessageType.RequestSecondSMS == type)
-                        completeMessage = Arrays.concatenate(sms, previousPart);
-
-                    processSessionRequest(contact, completeMessage);
-                    break;
+                }
+            }else{
+                Session session = new Session();
+                storeSession(session, contact);
+                dm.setAttribute(contactId + SESSION, PARTIAL_REQUEST, Base64.encodeToString(sms, Base64.DEFAULT));
             }
+
         }catch(FailedToLoadDataBaseException
                 | FailedToAddAttributeException
-                | FailedToGetAttributeException
-                | FailedToCreateSessionException e){
+                | FailedToGetAttributeException e){
             throw new FailedToCreateSessionException("Failed to process the received session request");
         }
 
@@ -324,9 +343,14 @@ public class SessionManager {
         Session.Status status;
         try{
             Session session = retrieve(contact);
-            status = session.getStatus();
-            return status;
-        }catch(FailedToRetrieveSessionException e){
+            if(session.hasExpired()){
+                delete(contact);
+                return Session.Status.NonExistent;
+            }else {
+                status = session.getStatus();
+                return status;
+            }
+        }catch(FailedToRetrieveSessionException | FailedToDeleteSessionException e){
             status = Session.Status.NonExistent;
             return status;
         }

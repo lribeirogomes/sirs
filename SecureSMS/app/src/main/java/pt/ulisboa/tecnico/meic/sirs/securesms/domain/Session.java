@@ -12,7 +12,7 @@ import javax.crypto.SecretKey;
  * Created by lribeirogomes on 23/11/15.
  */
 public class Session {
-    public static enum Status{
+    public enum Status{
         NonExistent, PartialReqReceived, AwaitingAck, Established
     }
 
@@ -24,7 +24,7 @@ public class Session {
     private SecretKey _sessionKey;
     private byte _ownSeqNumber, _contactSeqNumber;
 
-    //Constructor to be used when making a new session
+    //Constructor to be used when initiating a new session
     public Session(SecretKey sessionKey){
         byte[] sequenceNumber = new byte[1];
         new Random().nextBytes(sequenceNumber);
@@ -61,7 +61,7 @@ public class Session {
         _timestamp = 0;
     }
 
-    //Construtctor to be used when creating a session from a KEK
+    //Construtctor to be used when creating a session from a full KEK
     public Session(SecretKey sessionKey, byte contactSeqNumber, int timestamp){
         byte[] sequenceNumber = new byte[1];
         new Random().nextBytes(sequenceNumber);

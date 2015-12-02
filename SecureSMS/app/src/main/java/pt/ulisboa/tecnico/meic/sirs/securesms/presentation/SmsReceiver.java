@@ -10,13 +10,17 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.widget.Toast;
 
+import org.spongycastle.util.Arrays;
+
 import java.nio.charset.Charset;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 
 
@@ -26,35 +30,45 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 public class SmsReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        // Get the SendSmsMessageService map from Intent
-        Bundle bundle = intent.getExtras();
 
-        // Get received SendSmsMessageService array
+        Bundle bundle = intent.getExtras();
         Object[] smsExtra = (Object[]) bundle.get("pdus");
 
-        byte[] data;
-        String address;
+
+        //Get the date from the SMS
+        byte[] completeData = {};
+        String address = "";
         android.telephony.SmsMessage androidSms;
-
         for (int i = 0; i < smsExtra.length; i++) {
-            try {
-                androidSms = android.telephony.SmsMessage.createFromPdu((byte[]) smsExtra[i]); //, "3gpp");
-                address = androidSms.getOriginatingAddress();
-                data = androidSms.getUserData();
+            androidSms = android.telephony.SmsMessage.createFromPdu((byte[]) smsExtra[i]); //, "3gpp"); //Deprecated in API 23 unfortunately the replacement is only available in API 23
 
-                ReceiveSmsMessageService service = new ReceiveSmsMessageService(address, data);
-                service.execute();
-                SmsMessage sms = service.getResult();
-
-                if(null != sms) //if it is than its a session establishment message so dont display anything
-                    showNotification(context, sms.getContact(), new String(data, Charset.defaultCharset()));
-                else
-                    showNotification(context, service.getContact(), service.getType());
-
-            } catch (Exception exception) {
-                Toast.makeText(context, exception.getMessage(), Toast.LENGTH_SHORT);
+            byte[] data = androidSms.getUserData();
+            if (data != null) {
+                completeData = Arrays.concatenate(completeData, data);
             }
+            address = androidSms.getOriginatingAddress();
         }
+
+        //Figure out where to deliver it
+        try {
+           if (completeData[0] == SmsMessageType.Text.ordinal()) {
+               ReceiveSmsMessageService service = new ReceiveSmsMessageService(address, completeData);
+               service.execute();
+               SmsMessage sms = service.getResult();
+               if (null != sms)
+                   showNotification(context, sms.getContact(), new String(completeData, Charset.defaultCharset()));
+           }else {
+                Intent result = new Intent(context, ComposeMessageActivity.class);
+                result.putExtra(ComposeMessageActivity.PHONE_NUMBER, address);
+                result.putExtra(ComposeMessageActivity.SESSION_MESSAGE, completeData);
+                result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(result);
+            }
+
+        } catch (Exception exception) {
+                Toast.makeText(context, exception.getMessage(), Toast.LENGTH_SHORT);
+        }
+
     }
 
     public void showNotification(Context context, Contact contact, String data) {
