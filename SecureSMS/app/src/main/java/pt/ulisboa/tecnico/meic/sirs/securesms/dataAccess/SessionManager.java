@@ -269,6 +269,8 @@ public class SessionManager {
             PublicKey contactPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
             Cryptography.verifySignature(sequenceNumbers, signature, contactPublicKey);
 
+            if(sequenceNumbers[1] != session.getMySequenceNumber())
+                throw new FailedToAcknowledgeSessionException("Sequence numbers dont match");
 
             //Update the session
             session.setContactSequenceNumber(sequenceNumbers[0]);
