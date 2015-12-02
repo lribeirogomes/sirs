@@ -44,17 +44,18 @@ public class ReceiveSmsActivity extends AppCompatActivity {
         try {
             ReceiveSmsMessageService receiveService = new ReceiveSmsMessageService(senderAddress, completeData);
             receiveService.execute();
-            CheckSessionEstablishedService checkService = new CheckSessionEstablishedService(senderAddress);
-            checkService.execute();
-            boolean sessionEstablished = checkService.getResult();
 
 
             if (completeData[0] == SmsMessageType.Text.ordinal()) {
                 SmsMessage sms = receiveService.getResult();
                 String contactName = sms.getContact().getName();
                 showNotification(getApplicationContext(), contactName, sms.getContent(), senderAddress, false);
-            }else if (sessionEstablished) {
-                showNotification(getApplicationContext(), "You have a new request", "Click here for more details", senderAddress, true);
+            }else if(completeData[0] == SmsMessageType.RequestFirstSMS.ordinal() || completeData[0] == SmsMessageType.RequestSecondSMS.ordinal()){
+                CheckSessionEstablishedService checkService = new CheckSessionEstablishedService(senderAddress);
+                checkService.execute();
+                if(checkService.getResult()) {
+                    showNotification(getApplicationContext(), "You have a new request", "Click here for more details", senderAddress, true);
+                }//else ignore
             }
             else {
                 Toast.makeText(getApplicationContext(), "Someone tried to send you a message without your approval", Toast.LENGTH_SHORT);
