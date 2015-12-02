@@ -4,7 +4,7 @@ Iniciar Sessao:
 
 A:--------{Ks,T,SeqA,SigA(Ks,T,SeqA)}PubB-------->B
 
-A:<-------{SeqB, SigB(SeqB)}Ks-----B
+A:<-------{SeqB, SeqA, SigB(SeqB, SeqA)}Ks--------B
 
 Envio SMSs:
 
