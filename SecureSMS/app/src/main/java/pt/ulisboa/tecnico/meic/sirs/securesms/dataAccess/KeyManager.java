@@ -277,28 +277,22 @@ public class KeyManager {
                     checkCertificateValidity(cert);
                 String name;
 
-                /*FIXME HACKED TO TEST WITH YOURSELF AS A CONTACT PLEASE REVERT TO ORIGINAL CODE!!*/
-                /*if(own)
+                if(own)
                      name = OWN;
-                else {*/
+                else {
                     //Get the CN of the subject
                     X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
                     RDN cnRdn = x500name.getRDNs(BCStyle.CN)[0];
                     name = IETFUtils.valueToString(cnRdn.getFirst().getValue());
                     name = name.replaceAll("[^\\d.]", ""); //Strip everything that is not a digit
                     name = "+" + name;
-                //}
+                }
 
                 if(cert.getPublicKey().getAlgorithm().equals("EC")) {
                     _ks.setCertificateEntry(name + SIGNING_CERT, cert);
-                    if(own)
-                        _ks.setCertificateEntry(OWN + SIGNING_CERT, cert);
-
                 }
                 if(cert.getPublicKey().getAlgorithm().equals("RSA")) {
                     _ks.setCertificateEntry(name + ENCRYPTION_CERT, cert);
-                    if(own)
-                        _ks.setCertificateEntry(OWN + ENCRYPTION_CERT, cert);
                 }
             }
             saveKeyStore();

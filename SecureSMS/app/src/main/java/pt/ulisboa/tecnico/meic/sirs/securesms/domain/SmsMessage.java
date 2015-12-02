@@ -54,30 +54,41 @@ public class SmsMessage {
             Session session = SessionManager.retrieve(_contact);
             session.incrementMySequenceNumber();
 
+            //Encode the text message
             byte[] encodedData = Cryptography.encode(_content);
 
+            //Prepare the message
             byte[] seqNum = new byte[1];
             seqNum[0] = session.getMySequenceNumber();
             byte[] messageToSign = Arrays.concatenate(seqNum, encodedData);
 
+            //Sign it
             KeyManager km = KeyManager.getInstance();
             PrivateKey myPrivateKey = km.getMySigningPrivateKey();
             byte[] signature = Cryptography.sign(messageToSign, myPrivateKey);
 
+            //Add the byte with structure info
             if(messageToSign.length > Byte.MAX_VALUE)
                 throw new FailedToEncryptSmsMessageException();
-
             byte[] messageLength = new byte[1];
             messageLength[0] = (byte)messageToSign.length;
 
+            //Concatenate the parts
             byte[] plaintext = Arrays.concatenate(messageLength, messageToSign, signature);
 
+            //Cipher it
             SecretKey sessionKey = session.getSessionKey();
             byte[] cipheredData = Cryptography.symmetricCipher(plaintext, sessionKey);
 
+            //Add the byte with message type
+            byte[] type = new byte[1];
+            type[0] = (byte)SmsMessageType.Text.ordinal();
+            byte[] finalMessage = Arrays.concatenate(type, cipheredData);
+
+            //Update the session
             SessionManager.update(_contact, session);
 
-            return cipheredData;
+            return finalMessage;
 
         }catch (FailedToRetrieveSessionException
                 | KeyStoreIsLockedException
@@ -95,25 +106,32 @@ public class SmsMessage {
             Session session = SessionManager.retrieve(contact);
             SecretKey sessionKey = session.getSessionKey();
 
+            //Get rid of the type byte
+            cipheredMessage = Arrays.copyOfRange(cipheredMessage, 1, cipheredMessage.length);
+
+            //Decipher with the session key
             byte[] plaintext = Cryptography.symmetricDecipher(cipheredMessage, sessionKey);
 
+            //Split it up
             byte messageLength = plaintext[0];
             byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength+1);
             byte[] signature = Arrays.copyOfRange(plaintext, messageLength+1, plaintext.length);
 
+            //Verify the signature
             KeyManager km = KeyManager.getInstance();
             PublicKey contactPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
-
             Cryptography.verifySignature(message, signature, contactPublicKey);
 
+            //Check the sequence number
             session.incrementContactSequenceNumber();
             if(message[0] != session.getContactSequenceNumber())
                 throw new FailedToDecryptSmsMessageException();
 
+            //Get the actual message and decode it
             byte[] content = Arrays.copyOfRange(message, 1, message.length);
-
             String textContent = Cryptography.decode(content);
 
+            //Update the session
             SessionManager.update(contact, session);
 
             return textContent;
