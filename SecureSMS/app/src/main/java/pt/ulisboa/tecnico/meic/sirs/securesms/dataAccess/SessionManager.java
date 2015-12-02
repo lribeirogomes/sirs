@@ -230,15 +230,16 @@ public class SessionManager {
         try{
             Session session = retrieve(contact);
 
-            byte[] mySequenceNumber = new byte[1];
-            mySequenceNumber[0] = session.getMySequenceNumber();
+            byte[] sequenceNumbers = new byte[2];
+            sequenceNumbers[0] = session.getMySequenceNumber();
+            sequenceNumbers[1] = session.getContactSequenceNumber();
 
             KeyManager km = KeyManager.getInstance();
             PrivateKey myPrivateKey = km.getMySigningPrivateKey();
 
-            byte[] signature = Cryptography.sign(mySequenceNumber, myPrivateKey);
+            byte[] signature = Cryptography.sign(sequenceNumbers, myPrivateKey);
 
-            byte[] message = Arrays.concatenate(mySequenceNumber, signature);
+            byte[] message = Arrays.concatenate(sequenceNumbers, signature);
 
             byte[] cipheredMessage = Cryptography.symmetricCipher(message, session.getSessionKey());
 
@@ -260,17 +261,17 @@ public class SessionManager {
             byte[] message = Cryptography.symmetricDecipher(ack, session.getSessionKey());
 
             //Split it
-            byte[] sequenceNumber = Arrays.copyOfRange(message, 0, 1);
-            byte[] signature = Arrays.copyOfRange(message, 1, message.length);
+            byte[] sequenceNumbers = Arrays.copyOfRange(message, 0, 2);
+            byte[] signature = Arrays.copyOfRange(message, 2, message.length);
 
             //Validate its signature
             KeyManager km = KeyManager.getInstance();
             PublicKey contactPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
-            Cryptography.verifySignature(sequenceNumber, signature, contactPublicKey);
+            Cryptography.verifySignature(sequenceNumbers, signature, contactPublicKey);
 
 
             //Update the session
-            session.setContactSequenceNumber(sequenceNumber[0]);
+            session.setContactSequenceNumber(sequenceNumbers[0]);
             session.setEstablished();
             update(contact, session);
 
