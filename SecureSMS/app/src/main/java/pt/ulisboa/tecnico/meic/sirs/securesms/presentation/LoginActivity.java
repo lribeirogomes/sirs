@@ -19,7 +19,6 @@ import java.security.Security;
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.AuthenticateUserService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.BeginApplicationService;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.ResetDataService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**

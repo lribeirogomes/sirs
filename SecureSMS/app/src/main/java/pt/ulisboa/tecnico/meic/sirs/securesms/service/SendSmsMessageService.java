@@ -38,6 +38,8 @@ public class SendSmsMessageService extends SecureSmsService {
             for (String phoneNumber : _phoneNumbers) {
                 Contact contact = ContactManager.retrieveContactByPhoneNumber(phoneNumber);
 
+
+
                 if(SessionManager.checkSessionStatus(contact) == Session.Status.Established ) {
                     SmsMessage sms = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
                     SmsManager smsManager = SmsManager.getDefault();
@@ -51,7 +53,6 @@ public class SendSmsMessageService extends SecureSmsService {
                     SessionManager.create(contact);
                     SmsMessageManager.sendSessionRequest(contact);
                 }
-
 
             }
         } catch ( IllegalArgumentException

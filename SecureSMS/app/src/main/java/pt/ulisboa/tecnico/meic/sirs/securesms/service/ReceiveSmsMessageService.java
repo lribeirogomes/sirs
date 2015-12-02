@@ -36,6 +36,8 @@ public class ReceiveSmsMessageService extends SecureSmsService {
 
         try {
             Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
+
+
             SmsMessageType messageType = SmsMessageType.values()[_encryptedSms[0]];
             switch(messageType) {
                 case RequestFirstSMS:

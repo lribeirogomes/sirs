@@ -49,55 +49,55 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/space21"
-            android:text="Private Keys"
+            android:text="Private RSA Key"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <TextView
-            android:id="@+id/tvPrivateKeysInvalid"
+            android:id="@+id/tvRsaPrivateKeyInvalid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/textView11"
-            android:layout_toLeftOf="@+id/bPrivateKeys"
-            android:layout_toStartOf="@+id/bPrivateKeys"
+            android:layout_toLeftOf="@+id/bPrivateRsaKey"
+            android:layout_toStartOf="@+id/bPrivateRsaKey"
             android:text="Invalid"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/coral"
             android:visibility="invisible" />
 
         <TextView
-            android:id="@+id/tvPrivateKeysValid"
+            android:id="@+id/tvRsaPrivateKeyValid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/etPrivateKeys"
-            android:layout_toLeftOf="@+id/bPrivateKeys"
-            android:layout_toStartOf="@+id/bPrivateKeys"
+            android:layout_above="@+id/etPrivateRsaKey"
+            android:layout_toLeftOf="@+id/bPrivateRsaKey"
+            android:layout_toStartOf="@+id/bPrivateRsaKey"
             android:text="Valid"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/teal"
             android:visibility="invisible" />
 
         <EditText
-            android:id="@+id/etPrivateKeys"
+            android:id="@+id/etPrivateRsaKey"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/textView11"
-            android:layout_toLeftOf="@+id/bPrivateKeys"
-            android:layout_toStartOf="@+id/bPrivateKeys"
+            android:layout_toLeftOf="@+id/bPrivateRsaKey"
+            android:layout_toStartOf="@+id/bPrivateRsaKey"
             android:gravity="center_vertical"
             android:hapticFeedbackEnabled="false"
             android:inputType="textUri"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <ImageButton
-            android:id="@+id/bPrivateKeys"
+            android:id="@+id/bPrivateRsaKey"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/etPrivateKeys"
+            android:layout_alignBottom="@+id/etPrivateRsaKey"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_alignTop="@+id/etPrivateKeys"
+            android:layout_alignTop="@+id/etPrivateRsaKey"
             android:background="@drawable/shape_text_box_mini"
 
             android:gravity="center"
@@ -162,9 +162,9 @@
             android:id="@+id/space10"
             android:layout_width="10dp"
             android:layout_height="20dp"
+            android:layout_below="@+id/etPrivateEcKey"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/checkBox" />
+            android:layout_alignParentStart="true" />
 
         <Space
             android:id="@+id/space11"
@@ -172,17 +172,67 @@
             android:layout_height="20dp"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_below="@+id/bPrivateKeys" />
+            android:layout_below="@+id/bPrivateRsaKey" />
 
-        <CheckBox
-            android:id="@+id/checkBox"
+        <TextView
+            android:id="@+id/textView18"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Private EC Key"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:layout_below="@+id/space11"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <EditText
+            android:id="@+id/etPrivateEcKey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:hapticFeedbackEnabled="false"
+            android:inputType="textUri"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_below="@+id/textView18"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_below="@+id/space11"
-            android:checked="false"
-            android:visibility="invisible" />
+            android:layout_toLeftOf="@+id/bPrivateEcKey"
+            android:layout_toStartOf="@+id/bPrivateEcKey" />
+
+        <ImageButton
+            android:id="@+id/bPrivateEcKey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/shape_text_box_mini"
+            android:gravity="center"
+            android:src="@drawable/ic_browse_files"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_above="@+id/space10"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:id="@+id/tvPrivateEcKeyValid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Valid"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/teal"
+            android:visibility="invisible"
+            android:layout_alignTop="@+id/textView18"
+            android:layout_toLeftOf="@+id/bPrivateEcKey"
+            android:layout_toStartOf="@+id/bPrivateEcKey" />
+
+        <TextView
+            android:id="@+id/tvPrivateEcKeyInalid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Invalid"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/coral"
+            android:visibility="invisible"
+            android:layout_alignTop="@+id/tvPrivateEcKeyValid"
+            android:layout_toLeftOf="@+id/bPrivateEcKey"
+            android:layout_toStartOf="@+id/bPrivateEcKey" />
 
     </RelativeLayout>
 </merge>

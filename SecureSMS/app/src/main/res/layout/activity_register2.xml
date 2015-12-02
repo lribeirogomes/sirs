@@ -187,7 +187,8 @@
             android:layout_alignParentStart="true"
             android:layout_below="@+id/space23"
             android:checked="false"
-            android:text="Self-signed" />
+            android:text="Self-signed"
+            android:visibility="invisible" />
 
 
         <Space

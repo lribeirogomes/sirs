@@ -39,35 +39,12 @@ public class ComposeMessageActivity extends AppCompatActivity {
     private ArrayList<String> _contactsToSendNumbers;
     private ArrayList<String> _contactsToSendNames;
 
-    public static final String PHONE_NUMBER = "pt.ulisboa.tecnico.meic.sirs.securesms.phonenumber";
-    public static final String SESSION_MESSAGE = "pt.ulisboa.tecnico.meic.sirs.securesms.sessionmessage";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_write_new_message);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
-        /*Handle the intent from SMSREceiver, @Ana not sure if we want this here or somewhere else
-         */
-        Intent intent = getIntent();
-        String phonenumber = intent.getStringExtra(PHONE_NUMBER);
-        byte[] data = intent.getByteArrayExtra(SESSION_MESSAGE);
-
-        try {
-            if (phonenumber != null && data != null) {
-                ReceiveSmsMessageService service = new ReceiveSmsMessageService(phonenumber, data);
-                service.execute();
-                getMessages.add("Got part of the KEK, Session status:");
-                getMessages.add(Integer.toString(SessionManager.checkSessionStatus(ContactManager.retrieveContactByPhoneNumber(phonenumber)).ordinal()));
-            }
-        }catch(FailedServiceException | FailedToRetrieveContactException e){
-            Toast toast = Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT);
-            toast.show();
-        }
-
 
         showMessages();
     }

@@ -54,16 +54,20 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private EditText etCACertificate;
     private EditText etUserCertificate;
     private EditText etPasswordKeys;
-    private EditText etPrivateKeys;
+    private EditText etPrivateRsaKey;
+    private EditText etPrivateEcKey;
     private TextView tvCACertificateValid;
     private TextView tvCACertificateInvalid;
     private TextView tvUserCertificateValid;
     private TextView tvUserCertificateInvalid;
-    private TextView tvPrivateKeysValid;
-    private TextView tvPrivateKeysInvalid;
+    private TextView tvRsaPrivateKeyValid;
+    private TextView tvRsaPrivateKeyInvalid;
+    private TextView tvEcPrivateKeyValid;
+    private TextView tvEcPrivateKeyInvalid;
     private ImageButton bCACertificate;
     private ImageButton bUserCertificate;
-    private ImageButton bPrivateKeys;
+    private ImageButton bPrivateRsaKey;
+    private ImageButton bPrivateEcKey;
     private Button bBackRegister1;
     private Button bNextRegister1;
     private Button bBackRegister2;
@@ -161,13 +165,13 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         View vStep3 = LayoutInflater.from(this).inflate(R.layout.activity_register3, viewFlipper, true);
         etPasswordKeys = (EditText) vStep3.findViewById(R.id.etPasswordKeys);
 
-        tvPrivateKeysValid = (TextView) vStep3.findViewById(R.id.tvPrivateKeysValid);
-        tvPrivateKeysInvalid = (TextView) vStep3.findViewById(R.id.tvPrivateKeysInvalid);
-        etPrivateKeys = (EditText) vStep3.findViewById(R.id.etPrivateKeys);
-        etPrivateKeys.setKeyListener(null);
+        tvRsaPrivateKeyValid = (TextView) vStep3.findViewById(R.id.tvRsaPrivateKeyValid);
+        tvRsaPrivateKeyInvalid = (TextView) vStep3.findViewById(R.id.tvRsaPrivateKeyInvalid);
+        etPrivateRsaKey = (EditText) vStep3.findViewById(R.id.etPrivateRsaKey);
+        etPrivateRsaKey.setKeyListener(null);
 
-        bPrivateKeys = (ImageButton) vStep3.findViewById(R.id.bPrivateKeys);
-        bPrivateKeys.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_KEY));
+        bPrivateRsaKey = (ImageButton) vStep3.findViewById(R.id.bPrivateRsaKey);
+        bPrivateRsaKey.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_KEY));
 
         bBackRegister3 = (Button) vStep3.findViewById(R.id.bBackRegister3);
         bNextRegister3 = (Button) vStep3.findViewById(R.id.bNextRegister3);
@@ -394,13 +398,13 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
                 try {
                     ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), keysPassword, userPassword);
                     service.execute();
-                    tvPrivateKeysValid.setVisibility(View.VISIBLE);
-                    tvPrivateKeysInvalid.setVisibility(View.INVISIBLE);
+                    tvRsaPrivateKeyValid.setVisibility(View.VISIBLE);
+                    tvRsaPrivateKeyInvalid.setVisibility(View.INVISIBLE);
                 } catch (SecureSmsException exception) {
-                    tvPrivateKeysValid.setVisibility(View.INVISIBLE);
-                    tvPrivateKeysInvalid.setVisibility(View.VISIBLE);
+                    tvRsaPrivateKeyValid.setVisibility(View.INVISIBLE);
+                    tvRsaPrivateKeyInvalid.setVisibility(View.VISIBLE);
                 }
-                etPrivateKeys.setText(file.getPath());
+                etPrivateRsaKey.setText(file.getPath());
                 break;
             }
         }

@@ -46,13 +46,6 @@ public class ShowInboxActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         fabMenu = (FloatingActionsMenu) findViewById(R.id.fabMenu);
         showInbox();
-
-        //show custom dialog
-                /*final Dialog dialog = new Dialog(context);
-//tell the Dialog to use the dialog.xml as it's layout description
-                dialog.setContentView(R.layout.activity_configure_application);
-                dialog.setTitle("Configure Application");
-                dialog.show();*/
     }
 
     @Override

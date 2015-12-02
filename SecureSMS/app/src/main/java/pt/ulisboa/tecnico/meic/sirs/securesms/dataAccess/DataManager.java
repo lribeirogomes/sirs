@@ -184,41 +184,4 @@ public class DataManager {
         editor.clear();
         editor.commit();
     }
-
-
-
-    public void createTable(String spTableName, String spEntryName) {
-        SharedPreferences sp =  _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE);
-        Editor editor = sp.edit();
-        Set<String> dataSet = sp.getStringSet(spTableName, new LinkedHashSet<String>());
-        dataSet.add(spEntryName);
-
-        editor.putStringSet(spTableName, dataSet);
-        editor.commit();
-    }
-
-    public Set<String> getTable(String spTableName) {
-        SharedPreferences sp =  _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE);
-        return sp.getStringSet(spTableName, new LinkedHashSet<String>());
-    }
-
-    public void dropTable(String spTableName) {
-        Set<String> table = getTable(spTableName);
-        Editor editor;
-
-        for (String entry : table) {
-            editor = _context.getSharedPreferences(entry, Context.MODE_PRIVATE).edit();
-            editor.clear();
-            editor.commit();
-        }
-        editor = _context.getSharedPreferences(DATABASE, Context.MODE_PRIVATE).edit();
-        editor.clear();
-        editor.commit();
-    }
-
-    public void dropAllTables() {
-        dropTable(USER_TABLE);
-        dropTable(CONTACT_TABLE);
-        dropTable(MESSAGE_TABLE);
-    }
 }

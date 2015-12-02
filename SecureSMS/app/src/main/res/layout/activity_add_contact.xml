@@ -189,7 +189,8 @@
                     android:text="Self-signed"
                     android:layout_below="@+id/space32"
                     android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true" />
+                    android:layout_alignParentStart="true"
+                    android:visibility="invisible" />
 
                 <TextView
                     android:id="@+id/tvContactCertificateValid"

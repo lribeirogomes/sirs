@@ -62,14 +62,13 @@ public class SmsMessageManager {
             //setup message id
             contactId = contact.getId();
             messageCount = dm.getAttributeInt(contactId, dm.MESSAGE_COUNT);
-            messageId = contactId + dm.MESSAGE_CLASS + messageCount;
+            messageId = contactId + dm.MESSAGE_CLASS + String.format("%04d", messageCount);
+            messageCount++;
             //set attributes
-            dm.setAttribute(contactId, dm.MESSAGE_COUNT, ++messageCount);
+            dm.setAttribute(contactId, dm.MESSAGE_COUNT, messageCount);
             dm.addAttribute(contactId, dm.MESSAGE_TABLE, messageId);
             dm.setAttribute(messageId, dm.MESSAGE_DATE_NUMBER, dateNumber);
             dm.setAttribute(messageId, dm.MESSAGE_CONTENT, content);
-
-            dm.createTable(dm.MESSAGE_TABLE, contactId);
 
             smsMessage = new SmsMessage(messageId, contact, dateNumber, content);
             return smsMessage;

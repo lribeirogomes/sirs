@@ -34,8 +34,6 @@ public class UserManager {
             DataManager dm = DataManager.getInstance();
             dm.setCurrentUser(phoneNumber);
 
-            dm.createTable(dm.USER_TABLE, phoneNumber);
-
             dm.setAttribute(dm.USER, dm.USER_ID, phoneNumber);
             dm.setAttribute(dm.USER, dm.PASSWORD_HASH, passwordHash);
             dm.setAttribute(dm.USER, dm.CONTACT_COUNT, 0);

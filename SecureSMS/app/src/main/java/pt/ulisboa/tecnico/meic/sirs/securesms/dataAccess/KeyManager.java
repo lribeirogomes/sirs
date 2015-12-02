@@ -278,7 +278,7 @@ public class KeyManager {
                 String name;
 
                 if(own)
-                     name = OWN;
+                    name = OWN;
                 else {
                     //Get the CN of the subject
                     X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();

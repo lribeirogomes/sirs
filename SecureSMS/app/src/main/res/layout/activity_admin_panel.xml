@@ -38,7 +38,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Reset data"
             android:id="@+id/tvResetData"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
@@ -50,7 +49,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Inspect tables"
+            android:text="......................"
             android:id="@+id/tvInspectTables"
             android:layout_marginTop="67dp"
             android:layout_below="@+id/tvResetData"
@@ -81,29 +80,6 @@
                 android:layout_alignEnd="@+id/tvResetData"
                 android:layout_weight="0.49" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Contacts"
-                android:id="@+id/tvContactList"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@+id/tvUserList"
-                android:layout_weight="0.27" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Messages"
-                android:id="@+id/tvMessageList"
-                android:layout_alignTop="@+id/tvContactList"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"
-                android:layout_toRightOf="@+id/tvContactList"
-                android:layout_toEndOf="@+id/tvContactList"
-                android:layout_alignParentBottom="true"
-                android:layout_weight="0.35" />
         </LinearLayout>
 
     </RelativeLayout>

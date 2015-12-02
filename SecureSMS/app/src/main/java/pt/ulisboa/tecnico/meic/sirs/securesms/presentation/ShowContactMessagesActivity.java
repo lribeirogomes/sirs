@@ -1,16 +1,21 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -19,8 +24,12 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.GetMessagesByContactService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
@@ -29,8 +38,14 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResu
  * Created by Ana Beatriz on 30/11/2015.
  */
 public class ShowContactMessagesActivity extends AppCompatActivity {
+    public static final String CONTACT_NUMBER_TO_SHOW = "pt.ulisboa.tecnico.meic.sirs.securesms.contactnumbertoshow";
+    public static final String SHOW_ACK_DIALOG = "pt.ulisboa.tecnico.meic.sirs.securesms.showackdialog";
 
     private String _contactPhoneNumber;
+
+    private AlertDialog ackDialog;
+    private Button bConfirmRequest;
+    private Button bDeclineRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +57,22 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Bundle bundle = getIntent().getExtras();
-        _contactPhoneNumber = bundle.getString("contactToShowNumber");
-        showMessages();
+        _contactPhoneNumber = bundle.getString(CONTACT_NUMBER_TO_SHOW);
+        boolean showAckDialog = bundle.getBoolean(SHOW_ACK_DIALOG);
 
+        if (showAckDialog) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(ShowContactMessagesActivity.this);
+
+            LayoutInflater factory = LayoutInflater.from(this);
+            builder.setView(factory.inflate(R.layout.dialog_session_request, null));
+            ackDialog = builder.create();
+            ackDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            bConfirmRequest = (Button) findViewById(R.id.bConfirmRequest);
+            bDeclineRequest = (Button) findViewById(R.id.bDeclineRequest);
+            ackDialog.show();
+        }
+
+        showMessages();
     }
 
     @Override
@@ -102,7 +130,6 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
         contactsToSend.add(_contactPhoneNumber);
         try {
             if (!message.equals("")) {
-
                 SendSmsMessageService service = new SendSmsMessageService(contactsToSend, etMessage.getText().toString());
                 service.execute();
                 etMessage.setText("");
@@ -117,4 +144,17 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
             toast.show();
         }
     }
+
+
+    public void confirmRequest(View view) {
+        //ACK SESSION SERVICE
+        ackDialog.dismiss();
+
+    }
+
+    public void declineRequest(View view) {
+        //CANCEL SESSION
+        finish();
+    }
+
 }
