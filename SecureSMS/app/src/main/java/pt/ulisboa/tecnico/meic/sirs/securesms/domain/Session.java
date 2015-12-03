@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
-import java.security.Key;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
@@ -13,7 +12,10 @@ import javax.crypto.SecretKey;
  */
 public class Session {
     public enum Status{
-        NonExistent, PartialReqReceived, AwaitingAck, Established
+        NonExistent,
+        PartialReqReceived,
+        AwaitingAck,
+        Established
     }
 
     private final int SESSION_DURATION = 1;
@@ -88,6 +90,8 @@ public class Session {
     }
 
     public boolean hasExpired(){
+        //this validation is for established sessions only, otherwise everything depending on this check fails
+        if (_status != Status.Established) return false;
         Calendar cal = Calendar.getInstance();
         cal.setTimeZone(TimeZone.getTimeZone("GMT"));
         if(cal.getTime().after(_expirationDate)) //Check if is expired

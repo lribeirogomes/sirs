@@ -18,7 +18,6 @@ import java.io.File;
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.AddContactService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ImportContactCertificateService;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.ImportUserCertificateService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.SecureSmsException;
 

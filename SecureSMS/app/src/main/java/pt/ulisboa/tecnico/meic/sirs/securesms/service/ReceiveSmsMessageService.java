@@ -1,10 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
-import android.content.Context;
-import android.content.Intent;
-
-import java.nio.charset.Charset;
-
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
@@ -12,7 +7,6 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCrea
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
@@ -21,10 +15,13 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResu
  * Created by lribeirogomes on 17/11/15.
  */
 
+//merged checkSessionService with this one because it invoked the same instructions again
+
 public class ReceiveSmsMessageService extends SecureSmsService {
     private String _phoneNumber;
     private byte[] _encryptedSms;
     private SmsMessage _sms;
+    private Session.Status _sessionStatus;
 
     public ReceiveSmsMessageService(String phoneNumber, byte[] data) {
         _phoneNumber = phoneNumber;
@@ -35,25 +32,45 @@ public class ReceiveSmsMessageService extends SecureSmsService {
     public void execute() throws FailedServiceException {
 
         try {
+            //TODO: check in contact exists and prompt user to add it + throw exceptions below + delete session when exceptions are caught
             Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
+            SmsMessage.Type messageType = SmsMessage.Type.values()[_encryptedSms[0]];
+            _sessionStatus = SessionManager.checkSessionStatus(contact);
 
-
-            SmsMessageType messageType = SmsMessageType.values()[_encryptedSms[0]];
-            switch(messageType) {
-                case RequestFirstSMS:
-                    SessionManager.receiveRequestSMS(contact, _encryptedSms);
+            switch (_sessionStatus) {
+                case Established: {
+                    if (messageType == SmsMessage.Type.Text) {
+                        DecryptSmsMessageService service = new DecryptSmsMessageService(_phoneNumber, _encryptedSms);
+                        service.execute();
+                        _sms = service.getResult();
+                        return;
+                    }
                     break;
-                case RequestSecondSMS:
-                    SessionManager.receiveRequestSMS(contact, _encryptedSms);
+                }
+                case AwaitingAck: {
+                    if (messageType == SmsMessage.Type.Acknowledge) {
+                        SessionManager.receiveAcknowledgeSMS(contact, _encryptedSms);
+                        return;
+                    }
                     break;
-                case Acknowledge:
-                    SessionManager.receiveAcknowledgeSMS(contact, _encryptedSms);
+                }
+                case NonExistent: {
+                    if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
+                        SessionManager.createSession(contact, _encryptedSms);
+                        return;
+                    }
                     break;
-                case Text:
-                    DecryptSmsMessageService service = new DecryptSmsMessageService(_phoneNumber, _encryptedSms);
-                    service.execute();
-                    _sms = service.getResult();
+                }
+                case PartialReqReceived: {
+                    if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
+                        SessionManager.receiveRequestSMS(contact, _encryptedSms);
+                        return;
+                    }
+                    break;
+                }
             }
+            //if none of the above apply, reject
+            throw new FailedServiceException("Rejected incoming message");
         } catch (FailedServiceException
                 | FailedToGetResultException
                 | FailedToCreateSessionException
@@ -64,11 +81,15 @@ public class ReceiveSmsMessageService extends SecureSmsService {
     }
 
 
-    public SmsMessage getResult() throws FailedToGetResultException {
+    public SmsMessage getResultSms() throws FailedToGetResultException {
         if (_sms == null) {
             throw new FailedToGetResultException();
         }
         return _sms;
+    }
+
+    public Session.Status getResultStatus() throws FailedToGetResultException {
+        return _sessionStatus;
     }
 
 }

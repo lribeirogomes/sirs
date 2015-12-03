@@ -2,20 +2,19 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import android.telephony.SmsManager;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
@@ -24,38 +23,42 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceEx
  */
 
 public class SendSmsMessageService extends SecureSmsService {
-    private final short SMS_PORT= 8998;
-    private ArrayList<String> _phoneNumbers;
+    private String _phoneNumber;
     private String _plainTextSms;
 
-    public SendSmsMessageService(ArrayList<String> phoneNumbers, String plainTextSms) {
-        _phoneNumbers = phoneNumbers;
+    public SendSmsMessageService(String phoneNumber, String plainTextSms) {
+        _phoneNumber = phoneNumber;
         _plainTextSms = plainTextSms;
     }
 
+
     public void execute() throws FailedServiceException {
         try {
-            for (String phoneNumber : _phoneNumbers) {
-                Contact contact = ContactManager.retrieveContactByPhoneNumber(phoneNumber);
+            Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
+            Session.Status sessionStatus = SessionManager.checkSessionStatus(contact);
 
-
-
-                if(SessionManager.checkSessionStatus(contact) == Session.Status.Established ) {
-                    SmsMessage sms = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendDataMessage(phoneNumber,
-                            null, // TODO: define scAddress if needed
-                            SMS_PORT,
-                            sms.getEncryptedContent(),
-                            null,  // TODO: define sentIntent if needed
-                            null); // TODO: define deliveryIntent if needed
-                }else{
-                    SessionManager.create(contact);
-                    SmsMessageManager.sendSessionRequest(contact);
+            switch (sessionStatus) {
+                case Established: {
+                    SmsMessage smsMessage = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
+                    SmsMessageManager.sendSms(_phoneNumber, smsMessage.getEncryptedContent());
+                    break;
                 }
-
+                case AwaitingAck: {
+                    //TODO: THROW EXCEPTION
+                    return;
+                }
+                case NonExistent: {
+                    SessionManager.create(contact);
+                    ArrayList<byte[]> partialSessionRequests = SmsMessageManager.createReqSmsMessage(contact);
+                    for (byte[] partialSessionRequest : partialSessionRequests) {
+                        SmsMessageManager.sendSms(_phoneNumber, partialSessionRequest);
+                    }
+                    //TODO: PUT SMS IN A PENDING BUFFER TO SEND AFTER ACK
+                }
+                default:
+                    return; //never happens
             }
-        } catch ( IllegalArgumentException
+        } catch (IllegalArgumentException
                 | FailedToRetrieveContactException
                 | FailedToCreateSmsMessageException
                 | FailedToSendSessionRequestException
@@ -64,4 +67,5 @@ public class SendSmsMessageService extends SecureSmsService {
             throw new FailedServiceException("send sms message", exception);
         }
     }
+
 }

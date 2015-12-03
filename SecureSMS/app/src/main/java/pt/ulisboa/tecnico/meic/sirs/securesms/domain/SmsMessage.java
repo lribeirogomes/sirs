@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
+import android.telephony.SmsManager;
+
 import org.spongycastle.util.Arrays;
 
 import java.security.PrivateKey;
@@ -10,7 +12,6 @@ import javax.crypto.SecretKey;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.KeyManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
@@ -27,6 +28,18 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignature
  * Created by lribeirogomes on 17/11/15.
  */
 public class SmsMessage {
+    public enum Type {
+        RequestFirstSMS,
+        RequestSecondSMS,
+        Acknowledge,
+        Text
+    }
+
+    public enum Direction {
+        SENT,
+        RECEIVED
+    }
+
     private String _id;
     private long _dateNumber;
     private Contact _contact;
@@ -82,7 +95,7 @@ public class SmsMessage {
 
             //Add the byte with message type
             byte[] type = new byte[1];
-            type[0] = (byte)SmsMessageType.Text.ordinal();
+            type[0] = (byte)Type.Text.ordinal();
             byte[] finalMessage = Arrays.concatenate(type, cipheredData);
 
             //Update the session

@@ -10,17 +10,14 @@ import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.CheckSessionEstablishedService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
 
 /**
  * Created by Ana Beatriz on 27/11/2015.
@@ -40,29 +37,33 @@ public class ReceiveSmsActivity extends AppCompatActivity {
         byte[] completeData = bundle.getByteArray(DATA);
 
 
-        //Figure out where to deliver it
+        //@johnny - had to return status in the service because we were already doing if chains anyway
+        //TODO: allow to renew a session on receive if it has expired (are we already doing that?)
         try {
-            ReceiveSmsMessageService receiveService = new ReceiveSmsMessageService(senderAddress, completeData);
-            receiveService.execute();
+            ReceiveSmsMessageService service = new ReceiveSmsMessageService(senderAddress, completeData);
+            service.execute();
+            Session.Status sessionStatus = service.getResultStatus();
 
-
-            if (completeData[0] == SmsMessageType.Text.ordinal()) {
-                SmsMessage sms = receiveService.getResult();
-                String contactName = sms.getContact().getName();
-                showNotification(getApplicationContext(), contactName, sms.getContent(), senderAddress, false);
-            }else if(completeData[0] == SmsMessageType.RequestFirstSMS.ordinal() || completeData[0] == SmsMessageType.RequestSecondSMS.ordinal()){
-                CheckSessionEstablishedService checkService = new CheckSessionEstablishedService(senderAddress);
-                checkService.execute();
-                if(checkService.getResult()) {
+            switch (sessionStatus) {
+                case Established: {
+                    SmsMessage sms = service.getResultSms();
+                    String contactName = sms.getContact().getName();
+                    showNotification(getApplicationContext(), contactName, sms.getContent(), senderAddress, false);
+                    break;
+                }
+                case PartialReqReceived: {
                     showNotification(getApplicationContext(), "You have a new request", "Click here for more details", senderAddress, true);
-                }//else ignore
-            }
-            else {
-                Toast.makeText(getApplicationContext(), "Someone tried to send you a message without your approval", Toast.LENGTH_SHORT);
-            }
+                    break;
+                }
+                default: {
+                    //Toast.makeText(getApplicationContext(), "Someone tried to send you a message without your approval", Toast.LENGTH_SHORT).show();
+                    break;
+                }
 
-        } catch (Exception exception) {
-            Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
+            }
+        } catch (FailedServiceException
+                | FailedToGetResultException exception) {
+            Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

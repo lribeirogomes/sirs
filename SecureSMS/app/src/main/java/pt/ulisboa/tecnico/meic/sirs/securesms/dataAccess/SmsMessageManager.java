@@ -20,7 +20,6 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSend
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDeleteSmsMessageException;
@@ -155,63 +154,57 @@ public class SmsMessageManager {
             throw new FailedToDeleteSmsMessageException(exception);
         }
     }
-    public static void sendSessionRequest(Contact contact)throws FailedToSendSessionRequestException{
+
+    public static ArrayList<byte[]> createReqSmsMessage(Contact contact)throws FailedToSendSessionRequestException{
         final int MAX_REQUEST_LENGTH = 256;
         final int REQUEST_SMS_LENGTH = 128;
-        final short SMS_PORT= 8998;
 
         try {
             byte[] request = SessionManager.generateSessionRequest(contact);
 
             if(request.length != MAX_REQUEST_LENGTH)
-                throw new FailedToSendSessionRequestException("Request lenght is not standard");
+                throw new FailedToSendSessionRequestException("Request length is not standard");
 
             byte[] firstMessage = Arrays.copyOfRange(request, 0, REQUEST_SMS_LENGTH);
             byte[] secondMessage = Arrays.copyOfRange(request, REQUEST_SMS_LENGTH, request.length);
 
             byte[] firstType = new byte[1];
-            firstType[0] = (byte) SmsMessageType.RequestFirstSMS.ordinal();
+            firstType[0] = (byte) SmsMessage.Type.RequestFirstSMS.ordinal();
             byte[] secondType = new byte[1];
-            secondType[0] = (byte) SmsMessageType.RequestSecondSMS.ordinal();
+            secondType[0] = (byte) SmsMessage.Type.RequestSecondSMS.ordinal();
 
-            firstMessage = Arrays.concatenate(firstType, firstMessage);
-            secondMessage = Arrays.concatenate(secondType, secondMessage);
+            ArrayList<byte[]> partialRequests = new ArrayList<byte[]>(2);
+            partialRequests.add(Arrays.concatenate(firstType, firstMessage));
+            partialRequests.add(Arrays.concatenate(secondType, secondMessage));
 
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendDataMessage(contact.getPhoneNumber(),
-                    null, // TODO: define scAddress if needed
-                    SMS_PORT,
-                    firstMessage,
-                    null,  // TODO: define sentIntent if needed
-                    null); // TODO: define deliveryIntent if needed
-
-            smsManager.sendDataMessage(contact.getPhoneNumber(),
-                    null, // TODO: define scAddress if needed
-                    SMS_PORT,
-                    secondMessage,
-                    null,  // TODO: define sentIntent if needed
-                    null); // TODO: define deliveryIntent if needed
+            return partialRequests;
 
         }catch(FailedToGenerateSessionRequestException e){
             throw new FailedToSendSessionRequestException("Failed to send the session request sms");
         }
     }
 
-    public static void sendSessionAcknowledge(Contact contact)throws FailedToSendSessionAcknowledgeException{
-        final short SMS_PORT= 8998;
-
+    public static byte[] createAckSmsMessage(Contact contact)throws FailedToSendSessionAcknowledgeException{
         try {
             byte[] ack = SessionManager.generateSessionAcknowledge(contact);
             byte[] type = new byte[1];
-            type[0] = (byte)SmsMessageType.Acknowledge.ordinal();
-            byte[] message = Arrays.concatenate(type, ack);
-
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendDataMessage(contact.getPhoneNumber(), null, SMS_PORT, message, null, null);
+            type[0] = (byte)SmsMessage.Type.Acknowledge.ordinal();
+            return Arrays.concatenate(type, ack);
 
         }catch(FailedToAcknowledgeSessionException e){
             throw new FailedToSendSessionAcknowledgeException("Failed to respond to the session request");
         }
 
+    }
+
+    public static void sendSms(String address, byte[] data) {
+        short SMS_PORT = 8998;
+        SmsManager smsManager = SmsManager.getDefault();
+        smsManager.sendDataMessage(address,
+                null, // TODO: define scAddress if needed
+                SMS_PORT,
+                data,
+                null,  // TODO: define sentIntent if needed
+                null); // TODO: define deliveryIntent if needed
     }
 }

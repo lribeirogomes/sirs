@@ -1,18 +1,12 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
-import android.content.Context;
-import android.widget.Toast;
-
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateUserException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToUpdateUserException;
 
 /**
  * Created by Ana Beatriz on 26/11/2015.

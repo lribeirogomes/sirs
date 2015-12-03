@@ -1,9 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -24,13 +22,9 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.R;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.DeleteSessionService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.GetMessagesByContactService;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSessionAcknowledgmentService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.SendSmsMessageService;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
@@ -128,11 +122,9 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
     public void sendMessage(View view) {
         EditText etMessage = (EditText) findViewById(R.id.etMessage);
         String message = etMessage.getText().toString();
-        ArrayList<String> contactsToSend = new ArrayList<String>();
-        contactsToSend.add(_contactPhoneNumber);
         try {
             if (!message.equals("")) {
-                SendSmsMessageService service = new SendSmsMessageService(contactsToSend, etMessage.getText().toString());
+                SendSmsMessageService service = new SendSmsMessageService(_contactPhoneNumber, etMessage.getText().toString());
                 service.execute();
                 etMessage.setText("");
 
@@ -142,8 +134,7 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
                 im.hideSoftInputFromWindow(etMessage.getWindowToken(), 0);
             }
         } catch (FailedServiceException exception) {
-            Toast toast = Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
-            toast.show();
+            Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -153,7 +144,7 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
             SendSessionAcknowledgmentService service = new SendSessionAcknowledgmentService(_contactPhoneNumber);
             service.execute();
         }catch (FailedServiceException exception) {
-            Toast.makeText(ShowContactMessagesActivity.this, exception.getMessage(), Toast.LENGTH_SHORT);
+            Toast.makeText(ShowContactMessagesActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
         }
         ackDialog.dismiss();
     }
@@ -163,8 +154,9 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
             DeleteSessionService service = new DeleteSessionService(_contactPhoneNumber);
             service.execute();
         }catch (FailedServiceException exception) {
-            Toast.makeText(ShowContactMessagesActivity.this, exception.getMessage(), Toast.LENGTH_SHORT);
+            Toast.makeText(ShowContactMessagesActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
         }
+        ackDialog.cancel();
         finish();
     }
 

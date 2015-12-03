@@ -53,7 +53,7 @@
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <TextView
-            android:id="@+id/tvRsaPrivateKeyInvalid"
+            android:id="@+id/tvPrivateRsaKeyInvalid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/textView11"
@@ -65,7 +65,7 @@
             android:visibility="invisible" />
 
         <TextView
-            android:id="@+id/tvRsaPrivateKeyValid"
+            android:id="@+id/tvPrivateRsaKeyValid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_above="@+id/etPrivateRsaKey"
@@ -223,7 +223,7 @@
             android:layout_toStartOf="@+id/bPrivateEcKey" />
 
         <TextView
-            android:id="@+id/tvPrivateEcKeyInalid"
+            android:id="@+id/tvPrivateEcKeyInvalid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Invalid"

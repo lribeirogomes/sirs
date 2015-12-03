@@ -7,4 +7,8 @@ public class SecureSmsException extends Exception {
     public SecureSmsException(String message, Throwable throwable){
         super(message, throwable);
     }
+
+    public SecureSmsException(String message){
+        super(message);
+    }
 }

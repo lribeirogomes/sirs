@@ -1,11 +1,10 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
+import android.content.Context;
+import android.content.SharedPreferences.Editor;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateDataBaseException;

@@ -1,27 +1,11 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
-import android.widget.Toast;
 
 import org.spongycastle.util.Arrays;
-
-import java.nio.charset.Charset;
-
-import pt.ulisboa.tecnico.meic.sirs.securesms.R;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
-import pt.ulisboa.tecnico.meic.sirs.securesms.service.ReceiveSmsMessageService;
 
 
 /**

@@ -21,7 +21,9 @@ public class SendSessionAcknowledgmentService extends SecureSmsService {
     public void execute() throws FailedServiceException {
         try {
             Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
-            SmsMessageManager.sendSessionAcknowledge(contact);
+            byte[] ackSmsMessage = SmsMessageManager.createAckSmsMessage(contact);
+            SmsMessageManager.sendSms(_phoneNumber, ackSmsMessage);
+
         } catch ( IllegalArgumentException
                 | FailedToRetrieveContactException
                 | FailedToSendSessionAcknowledgeException exception){

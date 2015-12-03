@@ -7,4 +7,9 @@ public class FailedServiceException extends SecureSmsException {
     public FailedServiceException(String message, Throwable throwable){
         super("Failed to " + message + ".", throwable);
     }
+
+    //lazy custom exception
+    public FailedServiceException(String message){
+        super(message);
+    }
 }

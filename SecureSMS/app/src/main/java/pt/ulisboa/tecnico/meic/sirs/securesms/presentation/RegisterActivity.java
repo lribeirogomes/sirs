@@ -44,7 +44,8 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private enum ImportFileType {
         CA_CERTIFICATE,
         USER_CERTIFICATE,
-        PRIVATE_KEY
+        PRIVATE_RSA_KEY,
+        PRIVATE_EC_KEY,
     }
 
     private float lastX;
@@ -60,10 +61,10 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private TextView tvCACertificateInvalid;
     private TextView tvUserCertificateValid;
     private TextView tvUserCertificateInvalid;
-    private TextView tvRsaPrivateKeyValid;
-    private TextView tvRsaPrivateKeyInvalid;
-    private TextView tvEcPrivateKeyValid;
-    private TextView tvEcPrivateKeyInvalid;
+    private TextView tvPrivateRsaKeyValid;
+    private TextView tvPrivateRsaKeyInvalid;
+    private TextView tvPrivateEcKeyValid;
+    private TextView tvPrivateEcKeyInvalid;
     private ImageButton bCACertificate;
     private ImageButton bUserCertificate;
     private ImageButton bPrivateRsaKey;
@@ -165,13 +166,22 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         View vStep3 = LayoutInflater.from(this).inflate(R.layout.activity_register3, viewFlipper, true);
         etPasswordKeys = (EditText) vStep3.findViewById(R.id.etPasswordKeys);
 
-        tvRsaPrivateKeyValid = (TextView) vStep3.findViewById(R.id.tvRsaPrivateKeyValid);
-        tvRsaPrivateKeyInvalid = (TextView) vStep3.findViewById(R.id.tvRsaPrivateKeyInvalid);
+        tvPrivateRsaKeyValid = (TextView) vStep3.findViewById(R.id.tvPrivateRsaKeyValid);
+        tvPrivateRsaKeyInvalid = (TextView) vStep3.findViewById(R.id.tvPrivateRsaKeyInvalid);
         etPrivateRsaKey = (EditText) vStep3.findViewById(R.id.etPrivateRsaKey);
         etPrivateRsaKey.setKeyListener(null);
 
         bPrivateRsaKey = (ImageButton) vStep3.findViewById(R.id.bPrivateRsaKey);
-        bPrivateRsaKey.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_KEY));
+        bPrivateRsaKey.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_RSA_KEY));
+
+        tvPrivateEcKeyValid = (TextView) vStep3.findViewById(R.id.tvPrivateEcKeyValid);
+        tvPrivateEcKeyInvalid = (TextView) vStep3.findViewById(R.id.tvPrivateEcKeyInvalid);
+        etPrivateEcKey = (EditText) vStep3.findViewById(R.id.etPrivateEcKey);
+        etPrivateEcKey.setKeyListener(null);
+
+        bPrivateEcKey = (ImageButton) vStep3.findViewById(R.id.bPrivateEcKey);
+        bPrivateEcKey.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_EC_KEY));
+
 
         bBackRegister3 = (Button) vStep3.findViewById(R.id.bBackRegister3);
         bNextRegister3 = (Button) vStep3.findViewById(R.id.bNextRegister3);
@@ -394,17 +404,30 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
                 etUserCertificate.setText(file.getPath());
                 break;
             }
-            case PRIVATE_KEY: {
+            case PRIVATE_RSA_KEY: {
                 try {
                     ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), keysPassword, userPassword);
                     service.execute();
-                    tvRsaPrivateKeyValid.setVisibility(View.VISIBLE);
-                    tvRsaPrivateKeyInvalid.setVisibility(View.INVISIBLE);
+                    tvPrivateRsaKeyValid.setVisibility(View.VISIBLE);
+                    tvPrivateRsaKeyInvalid.setVisibility(View.INVISIBLE);
                 } catch (SecureSmsException exception) {
-                    tvRsaPrivateKeyValid.setVisibility(View.INVISIBLE);
-                    tvRsaPrivateKeyInvalid.setVisibility(View.VISIBLE);
+                    tvPrivateRsaKeyValid.setVisibility(View.INVISIBLE);
+                    tvPrivateRsaKeyInvalid.setVisibility(View.VISIBLE);
                 }
                 etPrivateRsaKey.setText(file.getPath());
+                break;
+            }
+            case PRIVATE_EC_KEY: {
+                try {
+                    ImportPrivateKeysService service = new ImportPrivateKeysService(file.getPath(), keysPassword, userPassword);
+                    service.execute();
+                    tvPrivateEcKeyValid.setVisibility(View.VISIBLE);
+                    tvPrivateEcKeyInvalid.setVisibility(View.INVISIBLE);
+                } catch (SecureSmsException exception) {
+                    tvPrivateEcKeyValid.setVisibility(View.INVISIBLE);
+                    tvPrivateEcKeyInvalid.setVisibility(View.VISIBLE);
+                }
+                etPrivateEcKey.setText(file.getPath());
                 break;
             }
         }

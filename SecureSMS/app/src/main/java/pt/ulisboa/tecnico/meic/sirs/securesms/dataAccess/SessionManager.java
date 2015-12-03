@@ -1,13 +1,10 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
-import android.provider.ContactsContract;
 import android.util.Base64;
 
 import org.spongycastle.util.Arrays;
 
 import java.nio.ByteBuffer;
-import java.security.Key;
-import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -24,14 +21,13 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoad
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveSessionException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessageType;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSignException;
@@ -49,7 +45,7 @@ public class SessionManager {
     private static final String TIMESTAMP = "timestamp";
     private static final String PARTIAL_REQUEST = "partialRequest";
 
-    public static Session create(Contact contact)throws FailedToCreateSessionException{
+    public static Session create(Contact contact) throws FailedToCreateSessionException {
         try {
             //delete any previous sessions
             delete(contact);
@@ -63,17 +59,17 @@ public class SessionManager {
             storeSession(newSession, contact);
 
             return newSession;
-        }catch(KeyStoreIsLockedException
+        } catch (KeyStoreIsLockedException
                 | FailedToGenerateKeyException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
                 | FailedToDeleteSessionException
-                | FailedToStoreException e){
+                | FailedToStoreException e) {
             throw new FailedToCreateSessionException("Failed to create a new session");
         }
     }
 
-    private static void storeSession(Session session, Contact contact)throws FailedToLoadDataBaseException, FailedToAddAttributeException{
+    private static void storeSession(Session session, Contact contact) throws FailedToLoadDataBaseException, FailedToAddAttributeException {
         DataManager dm = DataManager.getInstance();
         String contactId = contact.getId();
         dm.setAttribute(contactId + SESSION, MY_SEQUENCE_NUMBER, Byte.toString(session.getMySequenceNumber()));
@@ -82,7 +78,7 @@ public class SessionManager {
         dm.setAttribute(contactId + SESSION, TIMESTAMP, session.getTimestamp());
     }
 
-    public static Session retrieve(Contact contact)throws FailedToRetrieveSessionException{
+    public static Session retrieve(Contact contact) throws FailedToRetrieveSessionException {
         try {
             KeyManager km = KeyManager.getInstance();
             SecretKey sessionKey = km.getSessionKey(contact.getPhoneNumber());
@@ -99,46 +95,46 @@ public class SessionManager {
                 contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
                 storedStatus = dm.getAttributeInt(contactId + SESSION, STATUS);
                 timestamp = dm.getAttributeInt(contactId + SESSION, TIMESTAMP);
-            }catch(NumberFormatException e){
+            } catch (NumberFormatException e) {
                 throw new FailedToRetrieveSessionException("Not in storage");
             }
             Session.Status status = Session.Status.values()[storedStatus];
             Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status);
 
             return newSession;
-        }catch(KeyStoreIsLockedException
+        } catch (KeyStoreIsLockedException
                 | FailedToLoadDataBaseException
                 | FailedToGetAttributeException
-                | FailedToRetrieveKeyException e){
+                | FailedToRetrieveKeyException e) {
             throw new FailedToRetrieveSessionException("Failed to retrieve the session");
         }
     }
 
-    public static void update(Contact contact, Session session)throws FailedToUpdateSessionException{
-        try{
+    public static void update(Contact contact, Session session) throws FailedToUpdateSessionException {
+        try {
             storeSession(session, contact);
-        }catch(FailedToAddAttributeException
-                | FailedToLoadDataBaseException e){
+        } catch (FailedToAddAttributeException
+                | FailedToLoadDataBaseException e) {
             throw new FailedToUpdateSessionException("Failed to update session");
         }
     }
 
-    public static void delete(Contact contact)throws FailedToDeleteSessionException {
+    public static void delete(Contact contact) throws FailedToDeleteSessionException {
         try {
             KeyManager km = KeyManager.getInstance();
             km.removeSessionKey(contact.getPhoneNumber());
 
             DataManager dm = DataManager.getInstance();
             dm.cleanAttribute(contact.getId() + SESSION);
-        }catch(KeyStoreIsLockedException
-                |FailedToRemoveKeyException
-                | FailedToLoadDataBaseException e){
+        } catch (KeyStoreIsLockedException
+                | FailedToRemoveKeyException
+                | FailedToLoadDataBaseException e) {
             throw new FailedToDeleteSessionException("Failed to delete a session");
         }
     }
 
-    public static byte[] generateSessionRequest(Contact contact)throws FailedToGenerateSessionRequestException{
-        try{
+    public static byte[] generateSessionRequest(Contact contact) throws FailedToGenerateSessionRequestException {
+        try {
             Session session = retrieve(contact);
 
             //Generate the message that goes in the KEK
@@ -157,7 +153,7 @@ public class SessionManager {
             if (message.length > Byte.MAX_VALUE)//Check if the length fits in one byte
                 throw new FailedToGenerateSessionRequestException("Message is too long");
             byte[] messageSize = new byte[1];
-            messageSize[0] = (byte)message.length;
+            messageSize[0] = (byte) message.length;
             byte[] plaintext = Arrays.concatenate(messageSize, message, signature);
 
             //Cipher it with the contacts public key
@@ -166,18 +162,18 @@ public class SessionManager {
 
             return kek;
 
-        }catch (FailedToRetrieveSessionException
+        } catch (FailedToRetrieveSessionException
                 | KeyStoreIsLockedException
                 | FailedToRetrieveKeyException
                 | FailedToEncryptException
-                |FailedToSignException e){
+                | FailedToSignException e) {
             throw new FailedToGenerateSessionRequestException("Failed to generate the session request message");
         }
 
     }
 
-    private static Session processSessionRequest(Contact contact, byte[] kek)throws FailedToCreateSessionException{
-        try{
+    private static Session processSessionRequest(Contact contact, byte[] kek) throws FailedToCreateSessionException {
+        try {
             final int SEQ_NUM_LENGTH = 1;
             final int TIMESTAMPT_LENGTH = 4;
 
@@ -188,7 +184,7 @@ public class SessionManager {
 
             //Split it up
             byte messageLength = plaintext[0];
-            byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength+1);
+            byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength + 1);
             byte[] signature = Arrays.copyOfRange(plaintext, messageLength + 1, plaintext.length);
 
             //Verify the signature
@@ -200,12 +196,12 @@ public class SessionManager {
             SecretKey sessionKey = km.importSessionKey(encodedSessionKey, contact.getPhoneNumber());
 
             //Create the session
-            byte sequenceNumber = message[messageLength-SEQ_NUM_LENGTH];
-            byte[] timestamp = Arrays.copyOfRange(message, messageLength-SEQ_NUM_LENGTH-TIMESTAMPT_LENGTH, messageLength-SEQ_NUM_LENGTH);
+            byte sequenceNumber = message[messageLength - SEQ_NUM_LENGTH];
+            byte[] timestamp = Arrays.copyOfRange(message, messageLength - SEQ_NUM_LENGTH - TIMESTAMPT_LENGTH, messageLength - SEQ_NUM_LENGTH);
             Session session = new Session(sessionKey, sequenceNumber, ByteBuffer.wrap(timestamp).getInt());
 
             //Check if it is valid
-            if(session.hasExpired())
+            if (session.hasExpired())
                 throw new FailedToCreateSessionException("This session is not valid (timestamps)");
 
             //Store it
@@ -213,21 +209,21 @@ public class SessionManager {
 
             return session;
 
-        }catch(KeyStoreIsLockedException
+        } catch (KeyStoreIsLockedException
                 | FailedToRetrieveKeyException
                 | FailedToDecryptException
                 | FailedToVerifySignatureException
                 | InvalidSignatureException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
-                | FailedToStoreException e){
+                | FailedToStoreException e) {
             throw new FailedToCreateSessionException("Failed to create a session from the request");
         }
 
     }
 
-    public static byte[] generateSessionAcknowledge(Contact contact)throws FailedToAcknowledgeSessionException{
-        try{
+    public static byte[] generateSessionAcknowledge(Contact contact) throws FailedToAcknowledgeSessionException {
+        try {
             Session session = retrieve(contact);
 
             byte[] sequenceNumbers = new byte[2];
@@ -243,18 +239,18 @@ public class SessionManager {
 
             byte[] cipheredMessage = Cryptography.symmetricCipher(message, session.getSessionKey());
 
-            return  cipheredMessage;
-        }catch(FailedToRetrieveSessionException
+            return cipheredMessage;
+        } catch (FailedToRetrieveSessionException
                 | KeyStoreIsLockedException
                 | FailedToRetrieveKeyException
                 | FailedToSignException
-                | FailedToEncryptException e){
+                | FailedToEncryptException e) {
             throw new FailedToAcknowledgeSessionException("Failed to generate a session acknowledgement");
         }
     }
 
-    private static Session processSessionAcknowledge(Contact contact, byte[] ack)throws FailedToAcknowledgeSessionException{
-        try{
+    private static Session processSessionAcknowledge(Contact contact, byte[] ack) throws FailedToAcknowledgeSessionException {
+        try {
             Session session = retrieve(contact);
 
             //Decipher it
@@ -269,7 +265,7 @@ public class SessionManager {
             PublicKey contactPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
             Cryptography.verifySignature(sequenceNumbers, signature, contactPublicKey);
 
-            if(sequenceNumbers[1] != session.getMySequenceNumber())
+            if (sequenceNumbers[1] != session.getMySequenceNumber())
                 throw new FailedToAcknowledgeSessionException("Sequence numbers dont match");
 
             //Update the session
@@ -278,79 +274,81 @@ public class SessionManager {
             update(contact, session);
 
             return session;
-        }catch (FailedToRetrieveSessionException
+        } catch (FailedToRetrieveSessionException
                 | FailedToDecryptException
                 | KeyStoreIsLockedException
                 | FailedToRetrieveKeyException
                 | FailedToVerifySignatureException
                 | InvalidSignatureException
-                | FailedToUpdateSessionException e){
+                | FailedToUpdateSessionException e) {
             throw new FailedToAcknowledgeSessionException("Failed to process the received session acknowledgement");
         }
     }
 
-    public static void receiveRequestSMS(Contact contact, byte[] sms)throws FailedToCreateSessionException{
+    public static void receiveRequestSMS(Contact contact, byte[] sms) throws FailedToCreateSessionException {
         try {
             DataManager dm = DataManager.getInstance();
             String contactId = contact.getId();
-            Session.Status status = checkSessionStatus(contact);
 
-            if (status == Session.Status.PartialReqReceived) {
-                try {
+            try {
+                byte[] completeMessage = {};
 
-                    byte[] completeMessage = {};
+                byte[] previousPart = Base64.decode(dm.getAttributeString(contactId + SESSION, PARTIAL_REQUEST), Base64.DEFAULT);
+                if ((int) previousPart[0] > Session.Status.values().length)
+                    throw new FailedToCreateSessionException("Bad previous message");
+                SmsMessage.Type type = SmsMessage.Type.values()[previousPart[0]];
 
-                    byte[] previousPart = Base64.decode(dm.getAttributeString(contactId + SESSION, PARTIAL_REQUEST), Base64.DEFAULT);
-                    if ((int) previousPart[0] > Session.Status.values().length)
-                        throw new FailedToCreateSessionException("Bad previous message");
-                    SmsMessageType type = SmsMessageType.values()[previousPart[0]];
+                previousPart = Arrays.copyOfRange(previousPart, 1, previousPart.length);
 
-                    previousPart = Arrays.copyOfRange(previousPart, 1, previousPart.length);
+                byte[] newPart = Arrays.copyOfRange(sms, 1, sms.length);
+                if (SmsMessage.Type.RequestFirstSMS == type)
+                    completeMessage = Arrays.concatenate(previousPart, newPart);
+                else if (SmsMessage.Type.RequestSecondSMS == type)
+                    completeMessage = Arrays.concatenate(newPart, previousPart);
 
-                    byte[] newPart = Arrays.copyOfRange(sms, 1, sms.length);
-                    if (SmsMessageType.RequestFirstSMS == type)
-                        completeMessage = Arrays.concatenate(previousPart, newPart);
-                    else if (SmsMessageType.RequestSecondSMS == type)
-                        completeMessage = Arrays.concatenate(newPart, previousPart);
+                processSessionRequest(contact, completeMessage);
 
-
-                    processSessionRequest(contact, completeMessage);
-
-                }catch (FailedToCreateSessionException e){ //If it fails then one of the previous attemps failed to get through so store the new one
-                    Session session = new Session();
-                    storeSession(session, contact);
-                    dm.setAttribute(contactId + SESSION, PARTIAL_REQUEST, Base64.encodeToString(sms, Base64.DEFAULT));
-                }
-            }else{
-                Session session = new Session();
-                storeSession(session, contact);
-                dm.setAttribute(contactId + SESSION, PARTIAL_REQUEST, Base64.encodeToString(sms, Base64.DEFAULT));
+            } catch (FailedToCreateSessionException e) { //If it fails then one of the previous attempts failed to get through so store the new one
+                createSession(contact, sms);
             }
 
-        }catch(FailedToLoadDataBaseException
-                | FailedToAddAttributeException
-                | FailedToGetAttributeException e){
+        } catch (FailedToLoadDataBaseException
+                | FailedToGetAttributeException e) {
             throw new FailedToCreateSessionException("Failed to process the received session request");
         }
 
     }
-    public static void receiveAcknowledgeSMS(Contact contact, byte[] sms)throws FailedToAcknowledgeSessionException{
+
+    //creating session with partial request
+    //TODO: probably delete session before??
+    public static void createSession(Contact contact, byte[] sms) {
+        try {
+            DataManager dm = DataManager.getInstance();
+            String contactId = contact.getId();
+            Session session = new Session();
+            storeSession(session, contact);
+            dm.setAttribute(contactId + SESSION, PARTIAL_REQUEST, Base64.encodeToString(sms, Base64.DEFAULT));
+        } catch (FailedToLoadDataBaseException
+                | FailedToAddAttributeException e) {
+            //throw exception
+        }
+    }
+
+    public static void receiveAcknowledgeSMS(Contact contact, byte[] sms) throws FailedToAcknowledgeSessionException {
         byte[] message = Arrays.copyOfRange(sms, 1, sms.length);
         processSessionAcknowledge(contact, message);
     }
 
-    public static Session.Status checkSessionStatus(Contact contact){
+    public static Session.Status checkSessionStatus(Contact contact) {
         Session.Status status;
-        try{
+        try {
             Session session = retrieve(contact);
-            if(session.hasExpired()){
+            if (session.hasExpired()) {
                 delete(contact);
                 return Session.Status.NonExistent;
-            }else {
-                status = session.getStatus();
-                return status;
             }
-        }catch(FailedToRetrieveSessionException | FailedToDeleteSessionException e){
+            return  session.getStatus();
+        } catch (FailedToRetrieveSessionException | FailedToDeleteSessionException e) {
             status = Session.Status.NonExistent;
             return status;
         }
