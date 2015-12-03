@@ -11,6 +11,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCrea
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
@@ -41,7 +42,7 @@ public class SendSmsMessageService extends SecureSmsService {
             switch (sessionStatus) {
                 case Established: {
                     SmsMessage smsMessage = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
-                    SmsMessageManager.sendSms(_phoneNumber, smsMessage.getEncryptedContent());
+                    SmsMessageManager.sendSms(_phoneNumber, smsMessage.encryptToSend());
                     //TODO Catch size exceeded exception and split the sms
                     break;
                 }
@@ -55,7 +56,7 @@ public class SendSmsMessageService extends SecureSmsService {
                     for (byte[] partialSessionRequest : partialSessionRequests) {
                         SmsMessageManager.sendSms(_phoneNumber, partialSessionRequest);
                     }
-                    //TODO: PUT SMS IN A PENDING BUFFER TO SEND AFTER ACK
+                    //set pending message
                 }
                 default:
                     return; //never happens

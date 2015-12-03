@@ -37,6 +37,6 @@ public class SmsReceiver extends BroadcastReceiver {
         result.putExtra(ReceiveSmsActivity.ADDRESS, address);
         result.putExtra(ReceiveSmsActivity.DATA, completeData);
         result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(result);
+        context.startService(result);
     }
 }

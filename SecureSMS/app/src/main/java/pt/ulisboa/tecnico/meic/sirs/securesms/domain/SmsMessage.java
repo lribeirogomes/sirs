@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
-import android.telephony.SmsManager;
-
 import org.spongycastle.util.Arrays;
 
 import java.security.PrivateKey;
@@ -45,7 +43,10 @@ public class SmsMessage {
     private long _dateNumber;
     private Contact _contact;
     private String _content;
+    private byte[] _cipheredMessage;
+    private String _cipheredEncodedMessage;
 
+    //normal sms
     public SmsMessage(String id, Contact contact, long dateNumber, String content) {
         _id = id;
         _contact = contact;
@@ -53,15 +54,57 @@ public class SmsMessage {
         _content = content;
     }
 
-    public String getId() { return _id; }
+    //to decrypt when its received
+    public SmsMessage(Contact contact, byte[] cipheredMessage) {
+        _contact = contact;
+        _cipheredMessage = cipheredMessage;
+    }
 
-    public Contact getContact() {return _contact; }
+    //to decrypt when it comes from storage
+    public SmsMessage(Contact contact, String cipheredMessage) {
+        _contact = contact;
+        _cipheredEncodedMessage = cipheredMessage;
+    }
 
-    public Date getDate() { return new Date(_dateNumber * 1000); }
+    public String getId() {
+        return _id;
+    }
 
-    public String getContent() { return _content; }
+    public Contact getContact() {
+        return _contact;
+    }
 
-    public byte[] getEncryptedContent() throws FailedToEncryptSmsMessageException, SMSSizeExceededException {
+    public Date getDate() {
+        return new Date(_dateNumber * 1000);
+    }
+
+    public String getContent() {
+        return _content;
+    }
+
+    public String encryptToStore(SecretKey key, byte[] iv) throws FailedToEncryptSmsMessageException {
+        try {
+            return Cryptography.encodeForStorage(Cryptography.symmetricCipherWithPKCS5(
+                    Cryptography.encode(_content),
+                    key,
+                    iv));
+        } catch (Exception exception) {
+            throw new FailedToEncryptSmsMessageException();
+        }
+    }
+
+    public String decryptFromStorage(SecretKey key, byte[] iv) throws FailedToDecryptSmsMessageException {
+        try {
+            return Cryptography.decode(Cryptography.symmetricDecipherWithPKCS5(
+                    Cryptography.decodeFromStorage(_cipheredEncodedMessage),
+                    key,
+                    iv));
+        } catch (Exception exception) {
+            throw new FailedToDecryptSmsMessageException();
+        }
+    }
+
+    public byte[] encryptToSend() throws FailedToEncryptSmsMessageException, SMSSizeExceededException{
         /*Reminder: we are doing sign and then cipher so unfortunately surreptitious forwarding can happen*/
         final int DATA_SMS_MAX_LENGTH = 133;
         try {
@@ -82,21 +125,21 @@ public class SmsMessage {
             byte[] signature = Cryptography.sign(messageToSign, myPrivateKey);
 
             //Add the byte with structure info
-            if(messageToSign.length > Byte.MAX_VALUE)
+            if (messageToSign.length > Byte.MAX_VALUE)
                 throw new FailedToEncryptSmsMessageException();
             byte[] messageLength = new byte[1];
-            messageLength[0] = (byte)messageToSign.length;
+            messageLength[0] = (byte) messageToSign.length;
 
             //Concatenate the parts
             byte[] plaintext = Arrays.concatenate(messageLength, messageToSign, signature);
 
             //Cipher it
             SecretKey sessionKey = session.getSessionKey();
-            byte[] cipheredData = Cryptography.symmetricCipher(plaintext, sessionKey);
+            byte[] cipheredData = Cryptography.symmetricCipherWithCTS(plaintext, sessionKey);
 
             //Add the byte with message type
             byte[] type = new byte[1];
-            type[0] = (byte)Type.Text.ordinal();
+            type[0] = (byte) Type.Text.ordinal();
             byte[] finalMessage = Arrays.concatenate(type, cipheredData);
 
             if(finalMessage.length > DATA_SMS_MAX_LENGTH)
@@ -107,41 +150,41 @@ public class SmsMessage {
 
             return finalMessage;
 
-        }catch (FailedToRetrieveSessionException
+        } catch (FailedToRetrieveSessionException
                 | KeyStoreIsLockedException
                 | FailedToRetrieveKeyException
                 | FailedToSignException
                 | FailedToEncryptException
-                |FailedToUpdateSessionException e){
+                | FailedToUpdateSessionException e) {
             throw new FailedToEncryptSmsMessageException();
 
         }
     }
 
-    public static String decrytpContent(Contact contact, byte[] cipheredMessage)throws FailedToDecryptSmsMessageException{
-        try{
-            Session session = SessionManager.retrieve(contact);
+    public String decryptFromReceive() throws FailedToDecryptSmsMessageException {
+        try {
+            Session session = SessionManager.retrieve(_contact);
             SecretKey sessionKey = session.getSessionKey();
 
             //Get rid of the type byte
-            cipheredMessage = Arrays.copyOfRange(cipheredMessage, 1, cipheredMessage.length);
+            _cipheredMessage = Arrays.copyOfRange(_cipheredMessage, 1, _cipheredMessage.length);
 
             //Decipher with the session key
-            byte[] plaintext = Cryptography.symmetricDecipher(cipheredMessage, sessionKey);
+            byte[] plaintext = Cryptography.symmetricDecipherWithCTS(_cipheredMessage, sessionKey);
 
             //Split it up
             byte messageLength = plaintext[0];
-            byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength+1);
-            byte[] signature = Arrays.copyOfRange(plaintext, messageLength+1, plaintext.length);
+            byte[] message = Arrays.copyOfRange(plaintext, 1, messageLength + 1);
+            byte[] signature = Arrays.copyOfRange(plaintext, messageLength + 1, plaintext.length);
 
             //Verify the signature
             KeyManager km = KeyManager.getInstance();
-            PublicKey contactPublicKey = km.getContactSigningPublicKey(contact.getPhoneNumber());
+            PublicKey contactPublicKey = km.getContactSigningPublicKey(_contact.getPhoneNumber());
             Cryptography.verifySignature(message, signature, contactPublicKey);
 
             //Check the sequence number
             session.incrementContactSequenceNumber();
-            if(message[0] != session.getContactSequenceNumber())
+            if (message[0] != session.getContactSequenceNumber())
                 throw new FailedToDecryptSmsMessageException();
 
             //Get the actual message and decode it
@@ -149,16 +192,16 @@ public class SmsMessage {
             String textContent = Cryptography.decode(content);
 
             //Update the session
-            SessionManager.update(contact, session);
+            SessionManager.update(_contact, session);
 
             return textContent;
-        }catch (FailedToRetrieveSessionException
+        } catch (FailedToRetrieveSessionException
                 | FailedToDecryptException
                 | KeyStoreIsLockedException
                 | FailedToRetrieveKeyException
                 | FailedToVerifySignatureException
                 | InvalidSignatureException
-                | FailedToUpdateSessionException e){
+                | FailedToUpdateSessionException e) {
             throw new FailedToDecryptSmsMessageException();
         }
     }

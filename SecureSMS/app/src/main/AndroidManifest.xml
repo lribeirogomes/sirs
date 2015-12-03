@@ -55,10 +55,8 @@
         android:name=".presentation.ShowContactMessagesActivity"
         android:label="@string/title_activity_choose_contact"
         android:windowSoftInputMode="stateHidden" />
-    <activity
-        android:name=".presentation.ReceiveSmsActivity"
-        android:label="@string/title_activity_choose_contact"
-        android:windowSoftInputMode="stateHidden" />
+    <service android:enabled="true"
+        android:name=".presentation.ReceiveSmsActivity"/>
 
 
     <receiver android:name=".presentation.SmsReceiver" >

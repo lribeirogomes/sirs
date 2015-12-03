@@ -97,8 +97,8 @@ public class CryptographyTest extends TestCase {
 
     @Test
     public void testSymmetricEncryption()throws Exception{
-        byte[] cipheredData = Cryptography.symmetricCipher(_plaintext, _aesKey);
-        byte[] plainText = Cryptography.symmetricDecipher(cipheredData, _aesKey);
+        byte[] cipheredData = Cryptography.symmetricCipherWithCTS(_plaintext, _aesKey);
+        byte[] plainText = Cryptography.symmetricDecipherWithCTS(cipheredData, _aesKey);
 
         assertEquals(new String(_plaintext, Charset.defaultCharset()), new String(plainText, Charset.defaultCharset()));
     }

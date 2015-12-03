@@ -47,8 +47,10 @@ public class SessionManager {
 
     public static Session create(Contact contact) throws FailedToCreateSessionException {
         try {
-            //delete any previous sessions
-            delete(contact);
+            //delete any previous sessions TODO:FIXME
+            try {
+                delete(contact);
+            }catch (FailedToDeleteSessionException e) {}
 
             KeyManager km = KeyManager.getInstance();
             SecretKey sessionKey = km.generateNewSessionKey(contact.getPhoneNumber());
@@ -63,7 +65,6 @@ public class SessionManager {
                 | FailedToGenerateKeyException
                 | FailedToLoadDataBaseException
                 | FailedToAddAttributeException
-                | FailedToDeleteSessionException
                 | FailedToStoreException e) {
             throw new FailedToCreateSessionException("Failed to create a new session");
         }
@@ -237,7 +238,7 @@ public class SessionManager {
 
             byte[] message = Arrays.concatenate(sequenceNumbers, signature);
 
-            byte[] cipheredMessage = Cryptography.symmetricCipher(message, session.getSessionKey());
+            byte[] cipheredMessage = Cryptography.symmetricCipherWithCTS(message, session.getSessionKey());
 
             return cipheredMessage;
         } catch (FailedToRetrieveSessionException
@@ -254,7 +255,7 @@ public class SessionManager {
             Session session = retrieve(contact);
 
             //Decipher it
-            byte[] message = Cryptography.symmetricDecipher(ack, session.getSessionKey());
+            byte[] message = Cryptography.symmetricDecipherWithCTS(ack, session.getSessionKey());
 
             //Split it
             byte[] sequenceNumbers = Arrays.copyOfRange(message, 0, 2);

@@ -74,13 +74,13 @@ public class ShowInboxActivity extends AppCompatActivity {
             GetAllLastMessagesService service = new GetAllLastMessagesService();
             service.execute();
 
-            final ArrayList<SmsMessage> messages = service.getResult();
+            ArrayList<SmsMessage> messages = service.getResult();
 
             //show list
             ListView inbox = (ListView) findViewById(R.id.lvInbox);
 
             MessagePreviewAdapter adapter = new MessagePreviewAdapter(this,
-                    R.layout.list_item_message_preview, service.getResult());
+                    R.layout.list_item_message_preview, messages);
             inbox.setAdapter(adapter);
 
         } catch (FailedServiceException | FailedToGetResultException exception) {

@@ -21,6 +21,8 @@ public class DataManager {
     public static final String DATABASE = "Database";
     public static final String USER_TABLE = "Users";
     public static final String USER = "";
+    public static final String SALT = "Salt";
+    public static final String IV = "IV";
     //user file and attributes
     private static final String USER_CLASS = "User";
     public static final String USER_ID = "UserId";
@@ -39,10 +41,11 @@ public class DataManager {
     public static final String MESSAGE_CLASS = "Message";
     public static final String MESSAGE_DIRECTION = "MessageDirection";
     public static final String MESSAGE_DATE_NUMBER = "MessageDate";
-    public static final String MESSAGE_CONTENT = "MessageContent";
+    public static final String ENCRYPTED_CONTENT = "MessageContent";
 
     //session file and attributes
     public static final String SESSION_CLASS = "Session";
+    public static final String PENDING_MESSAGE = "PendingMessage";
 
 
     private DataManager() {}
@@ -182,6 +185,5 @@ public class DataManager {
 
         editor.clear();
         editor.apply();
-        int x = 1;
     }
 }

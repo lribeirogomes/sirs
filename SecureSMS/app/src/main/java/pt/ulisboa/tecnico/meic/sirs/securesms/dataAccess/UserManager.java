@@ -1,7 +1,10 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess;
 
+import java.security.SecureRandom;
+
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateUserException;
@@ -32,8 +35,19 @@ public class UserManager {
             dm.setAttribute(dm.USER, dm.PASSWORD_HASH, passwordHash);
             dm.setAttribute(dm.USER, dm.CONTACT_COUNT, 0);
 
+            //generate salt and iv
+            int maxLen = 16;
+            SecureRandom random = new SecureRandom();//TODO: SecureRandom.getInstance("SHA1PRNG"); use this for all
+            byte[] salt = new byte[maxLen];
+            byte[] iv = new byte[maxLen];
+            random.nextBytes(salt);
+            random.nextBytes(iv);
+            dm.setAttribute(dm.USER, dm.SALT, Cryptography.encodeForStorage(salt));
+            dm.setAttribute(dm.USER, dm.IV, Cryptography.encodeForStorage(iv));
 
-        } catch ( FailedToHashException | FailedToLoadDataBaseException exception) {
+
+        } catch ( FailedToHashException
+                | FailedToLoadDataBaseException exception) {
             throw new FailedToCreateUserException(exception);
         }
     }

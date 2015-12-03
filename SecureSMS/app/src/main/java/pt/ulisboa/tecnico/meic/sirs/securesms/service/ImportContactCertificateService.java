@@ -2,16 +2,11 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
 import java.security.cert.CertPathValidatorException;
 
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.DataManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.KeyManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.UserManager;
-import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadKeyStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.InvalidCertificateException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.User;
-import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveUserException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
@@ -34,7 +29,8 @@ public class ImportContactCertificateService extends SecureSmsService {
         try {
             KeyManager km = KeyManager.getInstance();
             _phonenumber = km.importUserCertificates(_filename, false, _validate);
-        } catch ( KeyStoreIsLockedException
+            km.importUserCertificates(_filename, false, _validate);
+        } catch (KeyStoreIsLockedException
                 | FailedToStoreException
                 | InvalidCertificateException
                 | FailedToRetrieveKeyException exception) {
@@ -49,7 +45,7 @@ public class ImportContactCertificateService extends SecureSmsService {
         return _isValid;
     }
 
-    public String getPhonenumber(){
+    public String getPhoneNumber() {
         return _phonenumber;
     }
 }

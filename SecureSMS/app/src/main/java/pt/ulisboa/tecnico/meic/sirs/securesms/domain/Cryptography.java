@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.domain;
 
+import android.provider.ContactsContract;
 import android.util.Base64;
 
 import org.spongycastle.crypto.BufferedBlockCipher;
@@ -36,6 +37,13 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.DataManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.KeyManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateKeyException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToHashException;
@@ -49,15 +57,12 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignature
 public class Cryptography {
     private static final int IV_SIZE = 16;
 
-    public static byte[] symmetricCipher(byte[] plainText, SecretKey key)throws FailedToEncryptException{
+    public static byte[] symmetricCipher(byte[] plainText, SecretKey key, String algorithm, byte[] iv) throws FailedToEncryptException {
         //Should we really use CBC? It will cost 16 extra characters
         try{
-            SecureRandom random = new SecureRandom();
-            byte iv[] = new byte[IV_SIZE];
-            random.nextBytes(iv);
             IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-            Cipher aesCipher = Cipher.getInstance("AES/CBC/withCTS", "BC");
+            Cipher aesCipher = Cipher.getInstance(algorithm, "BC");
             aesCipher.init(Cipher.ENCRYPT_MODE, key, ivspec);
             byte[] cipherText = aesCipher.doFinal(plainText);
 
@@ -77,8 +82,19 @@ public class Cryptography {
         }
     }
 
-    public static byte[] symmetricDecipher(byte[] cipheredData, SecretKey key)throws FailedToDecryptException{
-        byte[] iv = new byte[IV_SIZE];
+    public static byte[] symmetricCipherWithCTS(byte[] plainText, SecretKey key)throws FailedToEncryptException{
+        SecureRandom random = new SecureRandom();
+        byte iv[] = new byte[IV_SIZE];
+        random.nextBytes(iv);
+        return symmetricCipher(plainText, key, "AES/CBC/withCTS", iv);
+    }
+
+    public static byte[] symmetricCipherWithPKCS5(byte[] plainText, SecretKey key, byte[] iv)throws FailedToEncryptException{
+        return symmetricCipher(plainText, key, "AES/CBC/PKCS5Padding", iv);
+    }
+
+
+    public static byte[] symmetricDecipher(byte[] cipheredData, SecretKey key, String algorithm, byte[] iv)throws FailedToDecryptException{
         System.arraycopy(cipheredData,0, iv, 0, IV_SIZE);
         IvParameterSpec ivspec = new IvParameterSpec(iv);
 
@@ -86,7 +102,7 @@ public class Cryptography {
         System.arraycopy(cipheredData, IV_SIZE, cipheredMessage, 0, cipheredData.length-IV_SIZE);
 
         try{
-            Cipher aesCipher = Cipher.getInstance("AES/CBC/withCTS", "BC");
+            Cipher aesCipher = Cipher.getInstance(algorithm, "BC");
             aesCipher.init(Cipher.DECRYPT_MODE, key, ivspec);
             return aesCipher.doFinal(cipheredMessage);
         } catch (InvalidKeyException
@@ -98,6 +114,15 @@ public class Cryptography {
                 | BadPaddingException exception){
             throw new FailedToDecryptException(exception);
         }
+    }
+
+    public static byte[] symmetricDecipherWithCTS(byte[] plainText, SecretKey key)throws FailedToDecryptException{
+        byte[] iv = new byte[IV_SIZE];
+        return symmetricDecipher(plainText, key, "AES/CBC/withCTS", iv);
+    }
+
+    public static byte[] symmetricDecipherWithPKCS5(byte[] plainText, SecretKey key, byte[] iv)throws FailedToDecryptException{
+        return symmetricDecipher(plainText, key, "AES/CBC/PKCS5Padding", iv);
     }
 
     public static byte[] asymmetricCipher(byte[] plainText, PublicKey key)throws FailedToEncryptException{
@@ -130,90 +155,37 @@ public class Cryptography {
         }
     }
 
-    private static byte[] passwordCipher(byte[] data, String password, byte[] salt, byte[] iv, boolean encrypt) throws
-            NullPointerException,
-            NoSuchAlgorithmException,
-            InvalidKeySpecException,
-            InvalidCipherTextException {
-        String algorithm = "PBKDF2WithHmacSHA1";
 
-        // TODO: move this block into key manager
-        // Define secret key
-        PBEKeySpec pbeKeySpec = new PBEKeySpec(
-                password.toCharArray(),
-                salt,
-                1000,
-                128);
-        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(algorithm);
-        SecretKey secretKey = keyFactory.generateSecret(pbeKeySpec);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+    public static byte[] passwordCipher (byte[] plainText, byte[] salt, byte[] iv) throws FailedToEncryptException {
 
-        // Define cipher parameters with key and IV
-        KeyParameter keyParam = new KeyParameter(secretKeySpec.getEncoded());
-        CipherParameters params = new ParametersWithIV(keyParam, iv);
-
-        // Define AES cipher in CBC mode with PKCS7 padding
-        BlockCipherPadding padding = new PKCS7Padding();
-        CBCBlockCipher cbcBlockCipher = new CBCBlockCipher(new AESEngine());
-        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(cbcBlockCipher, padding);
-        cipher.reset();
-        cipher.init(encrypt, params);
-
-        // Update data
-        byte[] newData = new byte[cipher.getOutputSize(data.length)];
-        int dataLen = cipher.processBytes(data, 0, data.length, newData, 0);
-        cipher.doFinal(newData, dataLen);
-
-        return newData;
-    }
-
-    public static byte[] passwordCipher (byte[] plainText, String password) throws FailedToEncryptException {
-        return plainText;
-        /*int saltLen = 32, ivLen = 16;
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[saltLen],
-                iv = new byte[ivLen],
-                data = plainText;
         try {
-            // Get salt and IV
-            random.nextBytes(salt);
-            random.nextBytes(iv);
-            // Encrypt data
-            byte[] encryptedData = passwordCipher(data ,password, salt, iv, true);
-            // Add salt and IV
-            byte[] result = new byte[saltLen + ivLen + encryptedData.length];
-            System.arraycopy(salt, 0, result, 0, saltLen);
-            System.arraycopy(iv, 0, result, saltLen, ivLen);
-            System.arraycopy(encryptedData, 0, result, saltLen + ivLen, encryptedData.length);
-            return result;
+            //generate key
+            KeyManager km = KeyManager.getInstance();
+            SecretKey secretKey = km.generateStorageKey(salt);
+            //encrypt data
+            return Cryptography.symmetricCipherWithPKCS5(plainText, secretKey, iv);
         } catch (NullPointerException
-                | NoSuchAlgorithmException
-                | InvalidKeySpecException
-                | InvalidCipherTextException exception){
+                | KeyStoreIsLockedException
+                | FailedToGenerateKeyException
+                | FailedToStoreException exception){
             throw new FailedToEncryptException(exception);
-        }*/
+        }
     }
-    public static byte[] passwordDecipher(byte[] cipherData, String password) throws FailedToDecryptException {
-        return cipherData;
-        /*int saltLen = 32, ivLen = 16;
-        byte[] salt = new byte[saltLen],
-                iv = new byte[ivLen],
-                data = new byte[cipherData.length - saltLen - ivLen];
+
+    public static byte[] passwordDecipher(byte[] cipherData, byte[] salt, byte[] iv) throws FailedToDecryptException {
         try {
-            // Get salt and IV
-            System.arraycopy(cipherData, 0, salt, 0, saltLen);
-            System.arraycopy(cipherData, saltLen, iv, 0, ivLen);
-            System.arraycopy(cipherData, saltLen + ivLen, data, 0, data.length);
-            // Decrypt data
-            byte[] decryptedData = passwordCipher(data, password, salt, iv, false);
-            return decryptedData;
+            KeyManager km = KeyManager.getInstance();
+            SecretKey secretKey = km.generateStorageKey(salt);
+            //encrypt data
+            return Cryptography.symmetricDecipherWithPKCS5(cipherData, secretKey, iv); // or use algorithm "AES/ECB/PKCS5Padding"
         } catch (NullPointerException
-                | NoSuchAlgorithmException
-                | InvalidKeySpecException
-                | InvalidCipherTextException exception){
+                | KeyStoreIsLockedException
+                | FailedToGenerateKeyException
+                | FailedToStoreException exception){
             throw new FailedToDecryptException(exception);
-        }*/
+        }
     }
+
 
     public static byte[] sign(byte[] message, PrivateKey key)throws FailedToSignException{
         try{

@@ -52,6 +52,8 @@ import java.util.Set;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateKeyException;
@@ -182,6 +184,22 @@ public class KeyManager {
             return signCert.getPublicKey();
         }catch (KeyStoreException e){
             throw new FailedToRetrieveKeyException("KeyStore failed");
+        }
+    }
+
+    public SecretKey generateStorageKey(byte[] salt) throws FailedToGenerateKeyException, FailedToStoreException{
+        try {
+            PBEKeySpec pbeKeySpec = new PBEKeySpec(
+                    _keyStorePassword,
+                    salt,
+                    1000,
+                    128);
+            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            SecretKey storageKey = keyFactory.generateSecret(pbeKeySpec);
+
+            return storageKey;
+        }catch (NoSuchAlgorithmException | InvalidKeySpecException e){
+            throw new FailedToGenerateKeyException("Failed to generate key");
         }
     }
 

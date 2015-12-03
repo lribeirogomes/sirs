@@ -10,19 +10,26 @@ import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.crypto.SecretKey;
+
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAddAttributeException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGenerateSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToGetAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoadDataBaseException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveAttributeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDeleteSmsMessageException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllSmsMessagesException;
 
 /**
@@ -32,7 +39,8 @@ public class SmsMessageManager {
 
     public static SmsMessage createSmsMessage(Contact contact, byte[] cipherText) throws FailedToCreateSmsMessageException {
         try {
-            String content = SmsMessage.decrytpContent(contact, cipherText);
+            SmsMessage sms = new SmsMessage(contact, cipherText);
+            String content = sms.decryptFromReceive();
             return createSmsMessage(contact, content);
         } catch(FailedToDecryptSmsMessageException exception) {
             throw new FailedToCreateSmsMessageException(exception);
@@ -58,20 +66,33 @@ public class SmsMessageManager {
             // Create sms message into storage
             dm = DataManager.getInstance();
 
+            //get key to encrypt messages
+            byte[] salt = Cryptography.decodeFromStorage(dm.getAttributeString(dm.USER, dm.SALT));
+            byte[] iv = Cryptography.decodeFromStorage(dm.getAttributeString(dm.USER, dm.IV));
+            SecretKey key = KeyManager.getInstance().generateStorageKey(salt);
+
             //setup message id
             contactId = contact.getId();
             messageCount = dm.getAttributeInt(contactId, dm.MESSAGE_COUNT);
             messageId = contactId + dm.MESSAGE_CLASS + String.format("%04d", messageCount);
             messageCount++;
+
+            smsMessage = new SmsMessage(messageId, contact, dateNumber, content);
+            String encryptedContent = smsMessage.encryptToStore(key, iv);
+
             //set attributes
             dm.setAttribute(contactId, dm.MESSAGE_COUNT, messageCount);
             dm.addAttribute(contactId, dm.MESSAGE_TABLE, messageId);
             dm.setAttribute(messageId, dm.MESSAGE_DATE_NUMBER, dateNumber);
-            dm.setAttribute(messageId, dm.MESSAGE_CONTENT, content);
+            dm.setAttribute(messageId, dm.ENCRYPTED_CONTENT, encryptedContent);
 
-            smsMessage = new SmsMessage(messageId, contact, dateNumber, content);
+
             return smsMessage;
         } catch (FailedToLoadDataBaseException
+                | KeyStoreIsLockedException
+                | FailedToGenerateKeyException
+                | FailedToStoreException
+                | FailedToEncryptSmsMessageException
                 | FailedToGetAttributeException
                 | FailedToAddAttributeException exception) {
             throw new FailedToCreateSmsMessageException(exception);
@@ -80,32 +101,24 @@ public class SmsMessageManager {
 
     public static ArrayList<SmsMessage> retrieveAllSmsMessages(Contact contact) throws
             FailedToRetrieveAllSmsMessagesException {
-        // TODO: Implement message content encryption after fixing encoding issue
-        // User user;
-        // String passwordHash;
+
         ArrayList<SmsMessage> messages;
         Set<String> messageIds;
         DataManager dm;
         long dateNumber;
         String contactId;
-        String encryptedContent;
-        // TODO: Implement message content encryption after fixing encoding issue
-        // byte[] encodedData,
-        //        decryptedData;
-        // String content;
-        SmsMessage message;
+        String encryptedContent, decryptedContent;
+        SmsMessage sms;
 
         try {
-            // TODO: Implement message content encryption after fixing encoding issue
-            // Get password hash from user
-            // user = User.getInstance();
-            // passwordHash = user.getPasswordHash();
-
-            // Create sms messages array list
             messages = new ArrayList<>();
 
-            // Get all sms message id's from storage
             dm = DataManager.getInstance();
+
+            //get key to decrypt messages
+            byte[] salt = Cryptography.decodeFromStorage(dm.getAttributeString(dm.USER, dm.SALT));
+            byte[] iv = Cryptography.decodeFromStorage(dm.getAttributeString(dm.USER, dm.IV));
+            SecretKey key = KeyManager.getInstance().generateStorageKey(salt);
 
             contactId = contact.getId();
             messageIds = dm.getAttributeSet(contactId, dm.MESSAGE_TABLE);
@@ -114,28 +127,27 @@ public class SmsMessageManager {
             for (String messageId : messageIds) {
                 // Get sms message information from storage
                 dateNumber = dm.getAttributeLong(messageId, dm.MESSAGE_DATE_NUMBER);
-                encryptedContent = dm.getAttributeString(messageId, dm.MESSAGE_CONTENT);
-
-                // TODO: Implement message content encryption after fixing encoding issue
-                // Decrypt sms message content
-                // encodedData = Cryptography.encode(content);
-                // decryptedData = Cryptography.passwordDecipher(content, passwordHash);
-                // content = Cryptography.decode(content);
-
-                // Add sms message information into array list
-                message = new SmsMessage(messageId, contact, dateNumber, encryptedContent);
-                messages.add(message);
+                encryptedContent = dm.getAttributeString(messageId, dm.ENCRYPTED_CONTENT);
+                //decrypt
+                sms = new SmsMessage(contact, encryptedContent);
+                decryptedContent = sms.decryptFromStorage(key, iv);
+                sms = new SmsMessage(messageId, contact, dateNumber, decryptedContent);
+                messages.add(sms);
             }
 
             // Return array list of contacts
             return messages;
-        } catch (FailedToLoadDataBaseException
+        } catch (FailedToDecryptSmsMessageException
+                | FailedToGenerateKeyException
+                | FailedToStoreException
+                | KeyStoreIsLockedException
+                | FailedToLoadDataBaseException
                 | FailedToGetAttributeException exception) {
             throw new FailedToRetrieveAllSmsMessagesException(exception);
         }
     }
 
-    //TODO:implement method getContactById somewhere
+
     public static void deleteSmsMessage(Contact contact, SmsMessage message) throws FailedToDeleteSmsMessageException {
         String contactId;
         String messageId;
@@ -154,6 +166,20 @@ public class SmsMessageManager {
             throw new FailedToDeleteSmsMessageException(exception);
         }
     }
+
+  /*  public static void setPendingSmsMessage(Contact contact, String content) throws FailedToCreateSmsMessageException {
+        try {
+            //TODO:store date
+            DataManager dm = DataManager.getInstance();
+            SmsMessage sms = createSmsMessage(contact, content);
+            String encryptedContent = Cryptography.encodeForStorage(smsMessage.encryptToSend());
+            sms.encryptToStore();
+            dm.setAttribute(contactId, dm.PENDING_MESSAGE, messageCount);
+        } catch (FailedToLoadDataBaseException
+                |FailedToCreateSmsMessageException exception) {
+            throw new FailedToCreateSmsMessageException(exception);
+        }
+    }*/
 
     public static ArrayList<byte[]> createReqSmsMessage(Contact contact)throws FailedToSendSessionRequestException{
         final int MAX_REQUEST_LENGTH = 256;

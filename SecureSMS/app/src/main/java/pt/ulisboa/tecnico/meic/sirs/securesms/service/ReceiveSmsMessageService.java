@@ -1,12 +1,18 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.service;
 
+import java.io.UnsupportedEncodingException;
+
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedToGetResultException;
@@ -50,6 +56,7 @@ public class ReceiveSmsMessageService extends SecureSmsService {
                 case AwaitingAck: {
                     if (messageType == SmsMessage.Type.Acknowledge) {
                         SessionManager.receiveAcknowledgeSMS(contact, _encryptedSms);
+                        //send pending message
                         return;
                     }
                     break;
