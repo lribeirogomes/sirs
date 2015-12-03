@@ -10,6 +10,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Cryptography;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
@@ -51,12 +52,15 @@ public class SendSmsMessageService extends SecureSmsService {
                     return;
                 }
                 case NonExistent: {
-                    SessionManager.create(contact);
+                    Session session = SessionManager.create(contact);
                     ArrayList<byte[]> partialSessionRequests = SmsMessageManager.createReqSmsMessage(contact);
                     for (byte[] partialSessionRequest : partialSessionRequests) {
                         SmsMessageManager.sendSms(_phoneNumber, partialSessionRequest);
                     }
                     //set pending message
+                    SmsMessage pendingSmsMessage = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
+                    session.setPendingSmsId(pendingSmsMessage.getId());
+                    SessionManager.update(contact, session);
                 }
                 default:
                     return; //never happens
@@ -67,6 +71,7 @@ public class SendSmsMessageService extends SecureSmsService {
                 | FailedToSendSessionRequestException
                 | FailedToCreateSessionException
                 | SMSSizeExceededException
+                | FailedToUpdateSessionException
                 | FailedToEncryptSmsMessageException exception) {
             throw new FailedServiceException("send sms message", exception);
         }

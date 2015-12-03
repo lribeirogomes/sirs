@@ -7,6 +7,7 @@ import org.spongycastle.util.Arrays;
 import java.nio.ByteBuffer;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 
 import javax.crypto.SecretKey;
 
@@ -21,6 +22,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToLoad
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRemoveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveKeyException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveSessionException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrievePendingSmsException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToStoreException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.KeyStoreIsLockedException;
@@ -30,6 +32,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToDecryptException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveAllSmsMessagesException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSignException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToVerifySignatureException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignatureException;
@@ -43,14 +46,17 @@ public class SessionManager {
     private static final String CONTACT_SEQUENCE_NUMBER = "contactSeqNum";
     private static final String STATUS = "status";
     private static final String TIMESTAMP = "timestamp";
+    private static final String PENDING_SMS = "pendingSms";
     private static final String PARTIAL_REQUEST = "partialRequest";
 
     public static Session create(Contact contact) throws FailedToCreateSessionException {
         try {
-            //delete any previous sessions TODO:FIXME
+            //delete any previous sessions
             try {
                 delete(contact);
-            }catch (FailedToDeleteSessionException e) {}
+            }catch (FailedToDeleteSessionException e) {
+                //Empty on purpose (if they don exist then go on...)
+            }
 
             KeyManager km = KeyManager.getInstance();
             SecretKey sessionKey = km.generateNewSessionKey(contact.getPhoneNumber());
@@ -77,6 +83,7 @@ public class SessionManager {
         dm.setAttribute(contactId + SESSION, CONTACT_SEQUENCE_NUMBER, Byte.toString(session.getContactSequenceNumber()));
         dm.setAttribute(contactId + SESSION, STATUS, session.getStatus().ordinal());
         dm.setAttribute(contactId + SESSION, TIMESTAMP, session.getTimestamp());
+        dm.setAttribute(contactId + SESSION, PENDING_SMS, session.getPendingSmsId());
     }
 
     public static Session retrieve(Contact contact) throws FailedToRetrieveSessionException {
@@ -89,11 +96,13 @@ public class SessionManager {
             byte contactSequenceNumber;
             int storedStatus;
             int timestamp;
+            String pendingSmsId;
             try {
                 mySequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, MY_SEQUENCE_NUMBER));
                 contactSequenceNumber = Byte.parseByte(dm.getAttributeString(contactId + SESSION, CONTACT_SEQUENCE_NUMBER));
                 storedStatus = dm.getAttributeInt(contactId + SESSION, STATUS);
                 timestamp = dm.getAttributeInt(contactId + SESSION, TIMESTAMP);
+                pendingSmsId = dm.getAttributeString(contactId + SESSION, PENDING_SMS);
             } catch (NumberFormatException e) {
                 throw new FailedToRetrieveSessionException("Not in storage");
             }
@@ -107,7 +116,7 @@ public class SessionManager {
                 sessionKey = null;
             }
 
-            Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status);
+            Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status, pendingSmsId);
 
             return newSession;
         } catch (KeyStoreIsLockedException
@@ -346,6 +355,29 @@ public class SessionManager {
         byte[] message = Arrays.copyOfRange(sms, 1, sms.length);
         processSessionAcknowledge(contact, message);
     }
+
+    public static SmsMessage getPendingSms(Contact contact)throws FailedToRetrievePendingSmsException {
+        try {
+            Session session = retrieve(contact);
+            if (session.hasPendingSms()) {
+                ArrayList<SmsMessage> messages = SmsMessageManager.retrieveAllSmsMessages(contact);
+                for (SmsMessage message : messages) {
+                    if (message.getId().equals(session.getPendingSmsId())) {
+                        session.removePendingSms();
+                        update(contact, session);
+                        return message;
+                    }
+                }
+            }
+            return null;
+        }catch (FailedToRetrieveSessionException
+                | FailedToUpdateSessionException
+                | FailedToRetrieveAllSmsMessagesException e){
+            throw new FailedToRetrievePendingSmsException("Failed to retrieve the pending sms");
+        }
+
+    }
+
 
     public static Session.Status checkSessionStatus(Contact contact) {
         Session.Status status;

@@ -19,12 +19,14 @@ public class Session {
     }
 
     private final int SESSION_DURATION = 1;
+    private final String NO_PENDING_SMS = "NoPendingSms";
 
     private Status _status;
     private Date _expirationDate;
     private int _timestamp;
     private SecretKey _sessionKey;
     private byte _ownSeqNumber, _contactSeqNumber;
+    private String _pendingSmsId;
 
     //Constructor to be used when initiating a new session
     public Session(SecretKey sessionKey){
@@ -41,15 +43,17 @@ public class Session {
         _ownSeqNumber = sequenceNumber[0];
         _status = Status.AwaitingAck;
         _contactSeqNumber = -1;
+        _pendingSmsId = NO_PENDING_SMS;
     }
 
     //Constructor to be used when building a Session from storage
-    public Session(SecretKey sessionKey, byte ownSeqNumber, byte contactSeqNumber, int timestamp,  Status status){
+    public Session(SecretKey sessionKey, byte ownSeqNumber, byte contactSeqNumber, int timestamp,  Status status, String pendingSmsId){
         _sessionKey = sessionKey;
         _ownSeqNumber = ownSeqNumber;
         _contactSeqNumber = contactSeqNumber;
         _timestamp = timestamp;
         _status = status;
+        _pendingSmsId = pendingSmsId;
 
         setExpirationDate();
     }
@@ -61,6 +65,7 @@ public class Session {
         _ownSeqNumber = -1;
         _contactSeqNumber = -1;
         _timestamp = 0;
+        _pendingSmsId = NO_PENDING_SMS;
     }
 
     //Construtctor to be used when creating a session from a full KEK
@@ -76,6 +81,7 @@ public class Session {
         _status = Status.Established;
         _contactSeqNumber = contactSeqNumber;
         _timestamp = timestamp;
+        _pendingSmsId = NO_PENDING_SMS;
 
         setExpirationDate();
     }
@@ -141,4 +147,21 @@ public class Session {
     public int getTimestamp(){
         return _timestamp;
     }
+
+    public void setPendingSmsId(String id){
+        _pendingSmsId = id;
+    }
+
+    public void removePendingSms(){
+        _pendingSmsId = NO_PENDING_SMS;
+    }
+
+    public String getPendingSmsId(){
+        return _pendingSmsId;
+    }
+
+    public boolean hasPendingSms(){
+        return !(_pendingSmsId.equals(NO_PENDING_SMS));
+    }
+
 }
