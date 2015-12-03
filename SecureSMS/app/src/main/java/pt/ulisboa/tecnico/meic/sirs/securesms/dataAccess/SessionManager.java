@@ -81,8 +81,6 @@ public class SessionManager {
 
     public static Session retrieve(Contact contact) throws FailedToRetrieveSessionException {
         try {
-            KeyManager km = KeyManager.getInstance();
-            SecretKey sessionKey = km.getSessionKey(contact.getPhoneNumber());
 
             //retrieve the rest of the session
             DataManager dm = DataManager.getInstance();
@@ -99,7 +97,16 @@ public class SessionManager {
             } catch (NumberFormatException e) {
                 throw new FailedToRetrieveSessionException("Not in storage");
             }
+
             Session.Status status = Session.Status.values()[storedStatus];
+            SecretKey sessionKey;
+            if(status == Session.Status.Established || status == Session.Status.AwaitingAck) {
+                KeyManager km = KeyManager.getInstance();
+                sessionKey = km.getSessionKey(contact.getPhoneNumber());
+            }else{
+                sessionKey = null;
+            }
+
             Session newSession = new Session(sessionKey, mySequenceNumber, contactSequenceNumber, timestamp, status);
 
             return newSession;
