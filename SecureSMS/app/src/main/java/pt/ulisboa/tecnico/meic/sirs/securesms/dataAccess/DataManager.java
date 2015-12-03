@@ -130,21 +130,21 @@ public class DataManager {
         Editor editor = getEditor(spFilename);
 
         editor.putString(attributeName, value);
-        editor.commit();
+        editor.apply();
     }
 
     public void setAttribute(String spFilename, String attributeName, long value) {
         Editor editor = getEditor(spFilename);
 
         editor.putLong(attributeName, value);
-        editor.commit();
+        editor.apply();
     }
 
     public void setAttribute(String spFilename, String attributeName, int value) {
         Editor editor = getEditor(spFilename);
 
         editor.putInt(attributeName, value);
-        editor.commit();
+        editor.apply();
     }
 
     public void addAttribute(String spFilename, String attributeName, String value) throws
@@ -156,7 +156,7 @@ public class DataManager {
             dataSet.add(value);
 
             editor.putStringSet(attributeName, dataSet);
-            editor.commit();
+            editor.apply();
         } catch (FailedToGetAttributeException exception) {
             throw new FailedToAddAttributeException(exception);
         }
@@ -171,7 +171,7 @@ public class DataManager {
             dataSet.remove(value);
 
             editor.putStringSet(attributeName, dataSet);
-            editor.commit();
+            editor.apply();
         } catch (FailedToGetAttributeException exception) {
             throw new FailedToRemoveAttributeException(exception);
         }
@@ -181,6 +181,7 @@ public class DataManager {
         Editor editor = getEditor(spFilename);
 
         editor.clear();
-        editor.commit();
+        editor.apply();
+        int x = 1;
     }
 }
