@@ -49,6 +49,7 @@ public class SessionManager {
     private static final String PENDING_SMS = "pendingSms";
     private static final String PARTIAL_REQUEST = "partialRequest";
 
+
     public static Session create(Contact contact) throws FailedToCreateSessionException {
         try {
             //delete any previous sessions
@@ -391,6 +392,35 @@ public class SessionManager {
         } catch (FailedToRetrieveSessionException | FailedToDeleteSessionException e) {
             status = Session.Status.NonExistent;
             return status;
+        }
+    }
+
+
+    /******************* DEBUG METHODS **************************/
+    public static Session createDEBUG(Contact contact) throws FailedToCreateSessionException {
+        try {
+            //delete any previous sessions
+            try {
+                delete(contact);
+            }catch (FailedToDeleteSessionException e) {
+                //Empty on purpose (if they don exist then go on...)
+            }
+
+            KeyManager km = KeyManager.getInstance();
+            SecretKey sessionKey = km.generateNewSessionKey(contact.getPhoneNumber());
+
+            Session newSession = new Session(sessionKey, true);
+
+            //store the session
+            storeSession(newSession, contact);
+
+            return newSession;
+        } catch (KeyStoreIsLockedException
+                | FailedToGenerateKeyException
+                | FailedToLoadDataBaseException
+                | FailedToAddAttributeException
+                | FailedToStoreException e) {
+            throw new FailedToCreateSessionException("Failed to create a new session");
         }
     }
 }

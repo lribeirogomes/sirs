@@ -46,6 +46,7 @@ public class Session {
         _pendingSmsId = NO_PENDING_SMS;
     }
 
+
     //Constructor to be used when building a Session from storage
     public Session(SecretKey sessionKey, byte ownSeqNumber, byte contactSeqNumber, int timestamp,  Status status, String pendingSmsId){
         _sessionKey = sessionKey;
@@ -162,6 +163,27 @@ public class Session {
 
     public boolean hasPendingSms(){
         return !(_pendingSmsId.equals(NO_PENDING_SMS));
+    }
+
+
+
+    /******************* DEBUG METHODS **************************/
+    //Constructor to be used when initiating a new session while debugging
+    public Session(SecretKey sessionKey, boolean DEBUG){
+        byte[] sequenceNumber = new byte[1];
+        new Random().nextBytes(sequenceNumber);
+
+        if(sequenceNumber[0] < 0) //We need positive bytes
+            sequenceNumber[0] = (byte)( ((int)sequenceNumber[0]) * -1);
+
+        _timestamp = (int)(System.currentTimeMillis()/1000);
+        setExpirationDate();
+
+        _sessionKey = sessionKey;
+        _ownSeqNumber = sequenceNumber[0];
+        _status = Status.AwaitingAck;
+        _contactSeqNumber = sequenceNumber[0];
+        _pendingSmsId = NO_PENDING_SMS;
     }
 
 }

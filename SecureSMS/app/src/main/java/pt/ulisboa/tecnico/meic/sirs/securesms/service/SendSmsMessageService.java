@@ -77,4 +77,48 @@ public class SendSmsMessageService extends SecureSmsService {
         }
     }
 
+
+    /******************* DEBUG METHODS **************************/
+    public void executeDEBUG() throws FailedServiceException {
+        try {
+            Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
+            Session.Status sessionStatus = SessionManager.checkSessionStatus(contact);
+
+            switch (sessionStatus) {
+                case Established: {
+                    SmsMessage smsMessage = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
+                    SmsMessageManager.sendSms(_phoneNumber, smsMessage.encryptToSend());
+                    //TODO Catch size exceeded exception and split the sms
+                    break;
+                }
+                case AwaitingAck: {
+                    //TODO: THROW EXCEPTION
+                    return;
+                }
+                case NonExistent: {
+                    Session session = SessionManager.createDEBUG(contact);
+                    ArrayList<byte[]> partialSessionRequests = SmsMessageManager.createReqSmsMessage(contact);
+                    for (byte[] partialSessionRequest : partialSessionRequests) {
+                        SmsMessageManager.sendSms(_phoneNumber, partialSessionRequest);
+                    }
+                    //set pending message
+                    SmsMessage pendingSmsMessage = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
+                    session.setPendingSmsId(pendingSmsMessage.getId());
+                    SessionManager.update(contact, session);
+                }
+                default:
+                    return; //never happens
+            }
+        } catch (IllegalArgumentException
+                | FailedToRetrieveContactException
+                | FailedToCreateSmsMessageException
+                | FailedToSendSessionRequestException
+                | FailedToCreateSessionException
+                | SMSSizeExceededException
+                | FailedToUpdateSessionException
+                | FailedToEncryptSmsMessageException exception) {
+            throw new FailedServiceException("send sms message", exception);
+        }
+    }
+
 }

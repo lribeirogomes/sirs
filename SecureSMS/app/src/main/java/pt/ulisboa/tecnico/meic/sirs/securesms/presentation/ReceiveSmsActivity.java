@@ -51,7 +51,11 @@ public class ReceiveSmsActivity extends Service {
         //TODO: allow to renew a session on receive if it has expired (are we already doing that?)
         try {
             ReceiveSmsMessageService service = new ReceiveSmsMessageService(senderAddress, completeData);
-            service.execute();
+            //service.execute();
+
+            //TEST CODE
+            service.executeDEBUG();
+            //TEST CODE
 
             Session.Status sessionStatus = service.getResultStatus();
 

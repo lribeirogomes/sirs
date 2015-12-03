@@ -102,7 +102,11 @@ public class ComposeMessageActivity extends AppCompatActivity {
             try {
                 if (!message.equals("")) {
                     SendSmsMessageService service = new SendSmsMessageService(contact, message);
-                    service.execute();
+                    //service.execute();
+
+                    //TEST CODE
+                    service.executeDEBUG();
+                    //TEST CODE
                     etMessage.setText("");
 
                     getMessages.add(message);

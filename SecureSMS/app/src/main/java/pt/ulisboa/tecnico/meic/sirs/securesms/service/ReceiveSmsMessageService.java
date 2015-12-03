@@ -102,5 +102,71 @@ public class ReceiveSmsMessageService extends SecureSmsService {
         return _sessionStatus;
     }
 
+
+    /******************* DEBUG METHODS **************************/
+    public void executeDEBUG() throws FailedServiceException {
+
+        try {
+            //TODO: check in contact exists and prompt user to add it + throw exceptions below + delete session when exceptions are caught
+            Contact contact = ContactManager.retrieveContactByPhoneNumber(_phoneNumber);
+            SmsMessage.Type messageType = SmsMessage.Type.values()[_encryptedSms[0]];
+            _sessionStatus = SessionManager.checkSessionStatus(contact);
+
+            switch (_sessionStatus) {
+                case Established: {
+                    if (messageType == SmsMessage.Type.Text) {
+                        DecryptSmsMessageService service = new DecryptSmsMessageService(_phoneNumber, _encryptedSms);
+                        service.execute();
+                        _sms = service.getResult();
+                        return;
+                    }
+                    //we never get to the awating ack case, it's replaced by the established case by the receiving party
+                    else if (messageType == SmsMessage.Type.Acknowledge) {
+                        SessionManager.receiveAcknowledgeSMS(contact, _encryptedSms);
+                        SmsMessage pendingSms = SessionManager.getPendingSms(contact);
+                        if (null != pendingSms)
+                            SmsMessageManager.sendSms(contact.getPhoneNumber(), pendingSms.encryptToSend());
+                        return;
+                    }
+                    break;
+                }
+                //sessions are overlapped, so when we are awaiting ack, it means the one who received it has a non-existent session
+                case AwaitingAck: {
+                    if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
+                        SessionManager.createSession(contact, _encryptedSms);
+                        _sessionStatus = Session.Status.NonExistent;
+                        return;
+                    }
+                    break;
+                }
+                case NonExistent: {
+                    if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
+                        SessionManager.createSession(contact, _encryptedSms);
+                        return;
+                    }
+                    break;
+                }
+                case PartialReqReceived: {
+                    if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
+                        SessionManager.receiveRequestSMS(contact, _encryptedSms);
+                        return;
+                    }
+                    break;
+                }
+            }
+            //if none of the above apply, reject
+            throw new FailedServiceException("Rejected incoming message");
+        } catch (FailedServiceException
+                | FailedToGetResultException
+                | FailedToCreateSessionException
+                | FailedToAcknowledgeSessionException
+                | FailedToRetrievePendingSmsException
+                | FailedToEncryptSmsMessageException
+                | SMSSizeExceededException
+                | FailedToRetrieveContactException exception) {
+            throw new FailedServiceException("receive sms message", exception);
+        }
+    }
+
 }
 
