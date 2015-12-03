@@ -8,6 +8,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.ContactManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SessionManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToDeleteSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionAcknowledgeException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToSendSessionRequestException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
@@ -98,6 +99,7 @@ public class SendSmsMessageService extends SecureSmsService {
                 case NonExistent: {
                     Session session = SessionManager.createDEBUG(contact);
                     ArrayList<byte[]> partialSessionRequests = SmsMessageManager.createReqSmsMessage(contact);
+                    SessionManager.delete(contact);
                     for (byte[] partialSessionRequest : partialSessionRequests) {
                         SmsMessageManager.sendSms(_phoneNumber, partialSessionRequest);
                     }
@@ -114,6 +116,7 @@ public class SendSmsMessageService extends SecureSmsService {
                 | FailedToCreateSmsMessageException
                 | FailedToSendSessionRequestException
                 | FailedToCreateSessionException
+                | FailedToDeleteSessionException
                 | SMSSizeExceededException
                 | FailedToUpdateSessionException
                 | FailedToEncryptSmsMessageException exception) {

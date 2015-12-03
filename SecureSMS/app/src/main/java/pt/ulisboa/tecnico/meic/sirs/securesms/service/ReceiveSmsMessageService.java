@@ -6,6 +6,8 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.SmsMessageManager;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToAcknowledgeSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToCreateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrievePendingSmsException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToRetrieveSessionException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.dataAccess.exceptions.FailedToUpdateSessionException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Contact;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.Session;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
@@ -132,9 +134,11 @@ public class ReceiveSmsMessageService extends SecureSmsService {
                 }
                 //sessions are overlapped, so when we are awaiting ack, it means the one who received it has a non-existent session
                 case AwaitingAck: {
-                    if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
-                        SessionManager.createSession(contact, _encryptedSms);
-                        _sessionStatus = Session.Status.NonExistent;
+                    if (messageType == SmsMessage.Type.Acknowledge) {
+                        SessionManager.receiveAcknowledgeSMS(contact, _encryptedSms);
+                        SmsMessage pendingSms = SessionManager.getPendingSms(contact);
+                        if (null != pendingSms)
+                            SmsMessageManager.sendSms(contact.getPhoneNumber(), pendingSms.encryptToSend());
                         return;
                     }
                     break;
@@ -149,6 +153,9 @@ public class ReceiveSmsMessageService extends SecureSmsService {
                 case PartialReqReceived: {
                     if (messageType == SmsMessage.Type.RequestFirstSMS || messageType == SmsMessage.Type.RequestSecondSMS) {
                         SessionManager.receiveRequestSMS(contact, _encryptedSms);
+                        Session session = SessionManager.retrieve(contact);
+                        Session session2 = new Session(session.getSessionKey(), session.getContactSequenceNumber(), session.getContactSequenceNumber(), session.getTimestamp(), Session.Status.AwaitingAck, session.getPendingSmsId());
+                        SessionManager.update(contact, session2);
                         return;
                     }
                     break;
@@ -162,6 +169,8 @@ public class ReceiveSmsMessageService extends SecureSmsService {
                 | FailedToAcknowledgeSessionException
                 | FailedToRetrievePendingSmsException
                 | FailedToEncryptSmsMessageException
+                | FailedToRetrieveSessionException
+                | FailedToUpdateSessionException
                 | SMSSizeExceededException
                 | FailedToRetrieveContactException exception) {
             throw new FailedServiceException("receive sms message", exception);
