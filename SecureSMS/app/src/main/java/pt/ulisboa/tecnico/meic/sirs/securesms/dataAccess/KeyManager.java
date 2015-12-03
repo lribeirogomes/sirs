@@ -265,8 +265,10 @@ public class KeyManager {
         }
     }
 
-    public void importUserCertificates(String filename, boolean own, boolean validate) throws FailedToStoreException, InvalidCertificateException, FailedToRetrieveKeyException, CertPathValidatorException{
+    public String importUserCertificates(String filename, boolean own, boolean validate) throws FailedToStoreException, InvalidCertificateException, FailedToRetrieveKeyException, CertPathValidatorException{
         try{
+            String name = "";
+
             Collection col_crt = CertificateFactory.getInstance("X509").generateCertificates(new FileInputStream(filename));
             Iterator<X509Certificate> iter = col_crt.iterator();
             while(iter.hasNext()){
@@ -275,7 +277,6 @@ public class KeyManager {
                 //We might want to import a self-signed certificate that would otherwise fail validity checks
                 if(validate)
                     checkCertificateValidity(cert);
-                String name;
 
                 if(own)
                     name = OWN;
@@ -294,8 +295,10 @@ public class KeyManager {
                 if(cert.getPublicKey().getAlgorithm().equals("RSA")) {
                     _ks.setCertificateEntry(name + ENCRYPTION_CERT, cert);
                 }
+
             }
             saveKeyStore();
+            return name;
         }catch(CertificateExpiredException e){
             throw new InvalidCertificateException("Certificate has expired.");
         }catch (CertificateNotYetValidException e){

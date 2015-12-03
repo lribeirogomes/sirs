@@ -22,15 +22,18 @@ public class ImportContactCertificateService extends SecureSmsService {
     private boolean _validate;
     private boolean _isValid;
 
+    private String _phonenumber;
+
     public ImportContactCertificateService(String filename, boolean validate) {
         _filename = filename;
         _validate = validate;
+        _phonenumber = "";
     }
 
     public void execute() throws FailedServiceException {
         try {
             KeyManager km = KeyManager.getInstance();
-            km.importUserCertificates(_filename, false, _validate);
+            _phonenumber = km.importUserCertificates(_filename, false, _validate);
         } catch ( KeyStoreIsLockedException
                 | FailedToStoreException
                 | InvalidCertificateException
@@ -44,5 +47,9 @@ public class ImportContactCertificateService extends SecureSmsService {
 
     public boolean getResult() {
         return _isValid;
+    }
+
+    public String getPhonenumber(){
+        return _phonenumber;
     }
 }

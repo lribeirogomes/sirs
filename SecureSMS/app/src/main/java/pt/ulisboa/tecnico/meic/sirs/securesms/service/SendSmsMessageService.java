@@ -16,6 +16,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.SmsMessage;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToCreateSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptSmsMessageException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToRetrieveContactException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.SMSSizeExceededException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.service.exceptions.FailedServiceException;
 
 /**
@@ -41,6 +42,7 @@ public class SendSmsMessageService extends SecureSmsService {
                 case Established: {
                     SmsMessage smsMessage = SmsMessageManager.createSmsMessage(contact, _plainTextSms);
                     SmsMessageManager.sendSms(_phoneNumber, smsMessage.getEncryptedContent());
+                    //TODO Catch size exceeded exception and split the sms
                     break;
                 }
                 case AwaitingAck: {
@@ -63,6 +65,7 @@ public class SendSmsMessageService extends SecureSmsService {
                 | FailedToCreateSmsMessageException
                 | FailedToSendSessionRequestException
                 | FailedToCreateSessionException
+                | SMSSizeExceededException
                 | FailedToEncryptSmsMessageException exception) {
             throw new FailedServiceException("send sms message", exception);
         }

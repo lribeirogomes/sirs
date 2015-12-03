@@ -23,6 +23,7 @@ import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToEncryptS
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToSignException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.FailedToVerifySignatureException;
 import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.InvalidSignatureException;
+import pt.ulisboa.tecnico.meic.sirs.securesms.domain.exceptions.SMSSizeExceededException;
 
 /**
  * Created by lribeirogomes on 17/11/15.
@@ -60,9 +61,9 @@ public class SmsMessage {
 
     public String getContent() { return _content; }
 
-    public byte[] getEncryptedContent() throws FailedToEncryptSmsMessageException {
+    public byte[] getEncryptedContent() throws FailedToEncryptSmsMessageException, SMSSizeExceededException {
         /*Reminder: we are doing sign and then cipher so unfortunately surreptitious forwarding can happen*/
-        //TODO: Check the size of the message to see if it fits in an sms
+        final int DATA_SMS_MAX_LENGTH = 133;
         try {
             Session session = SessionManager.retrieve(_contact);
             session.incrementMySequenceNumber();
@@ -97,6 +98,9 @@ public class SmsMessage {
             byte[] type = new byte[1];
             type[0] = (byte)Type.Text.ordinal();
             byte[] finalMessage = Arrays.concatenate(type, cipheredData);
+
+            if(finalMessage.length > DATA_SMS_MAX_LENGTH)
+                throw new SMSSizeExceededException("Message is too long");
 
             //Update the session
             SessionManager.update(_contact, session);
