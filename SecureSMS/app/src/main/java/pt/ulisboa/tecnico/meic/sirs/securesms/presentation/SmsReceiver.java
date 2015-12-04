@@ -33,10 +33,9 @@ public class SmsReceiver extends BroadcastReceiver {
             address = androidSms.getOriginatingAddress();
         }
 
-        Intent result = new Intent(context, ReceiveSmsActivity.class);
-        result.putExtra(ReceiveSmsActivity.ADDRESS, address);
-        result.putExtra(ReceiveSmsActivity.DATA, completeData);
-        result.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent result = new Intent(context, NotifyIncomingMessageService.class);
+        result.putExtra(NotifyIncomingMessageService.ADDRESS, address);
+        result.putExtra(NotifyIncomingMessageService.DATA, completeData);
         context.startService(result);
     }
 }

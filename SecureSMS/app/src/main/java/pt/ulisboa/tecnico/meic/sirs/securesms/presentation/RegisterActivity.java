@@ -1,11 +1,14 @@
 package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,12 +17,14 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.ScaleAnimation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -82,7 +87,6 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private FloatingActionButton fabRegister3;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,9 +125,12 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         //step1
         View vStep1 = LayoutInflater.from(this).inflate(R.layout.activity_register1, viewFlipper, true);
         etPhoneNumberRegister = (EditText) vStep1.findViewById(R.id.etPhoneNumberRegister);
+        etPhoneNumberRegister.addTextChangedListener(textWatcherRegister1());
+
         etPasswordRegister = (EditText) vStep1.findViewById(R.id.etPasswordRegister);
+        etPasswordRegister.addTextChangedListener(textWatcherRegister1());
+
         cbShowPasswordRegister = (CheckBox) vStep1.findViewById(R.id.cbShowPasswordRegister);
-        //define listener
         cbShowPasswordRegister.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -154,9 +161,11 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         tvUserCertificateInvalid = (TextView) vStep2.findViewById(R.id.tvUserCertificateInvalid);
         etUserCertificate = (EditText) vStep2.findViewById(R.id.etUserCertificate);
         etUserCertificate.setKeyListener(null);
+        etUserCertificate.addTextChangedListener(textWatcherRegister2());
 
         bUserCertificate = (ImageButton) vStep2.findViewById(R.id.bUserCertificate);
         bUserCertificate.setOnClickListener(customOnClickListener(ImportFileType.USER_CERTIFICATE));
+        bUserCertificate.setEnabled(false);
         cbSelfSigned = (CheckBox) findViewById(R.id.cbSelfSigned);
 
         bBackRegister2 = (Button) vStep2.findViewById(R.id.bBackRegister2);
@@ -165,28 +174,193 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         //step3
         View vStep3 = LayoutInflater.from(this).inflate(R.layout.activity_register3, viewFlipper, true);
         etPasswordKeys = (EditText) vStep3.findViewById(R.id.etPasswordKeys);
+        etPasswordKeys.addTextChangedListener(textWatcherRegister3Password());
 
         tvPrivateRsaKeyValid = (TextView) vStep3.findViewById(R.id.tvPrivateRsaKeyValid);
         tvPrivateRsaKeyInvalid = (TextView) vStep3.findViewById(R.id.tvPrivateRsaKeyInvalid);
         etPrivateRsaKey = (EditText) vStep3.findViewById(R.id.etPrivateRsaKey);
         etPrivateRsaKey.setKeyListener(null);
+        etPrivateRsaKey.addTextChangedListener(textWatcherRegister3());
 
         bPrivateRsaKey = (ImageButton) vStep3.findViewById(R.id.bPrivateRsaKey);
         bPrivateRsaKey.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_RSA_KEY));
+        bPrivateRsaKey.setEnabled(false);
 
         tvPrivateEcKeyValid = (TextView) vStep3.findViewById(R.id.tvPrivateEcKeyValid);
         tvPrivateEcKeyInvalid = (TextView) vStep3.findViewById(R.id.tvPrivateEcKeyInvalid);
         etPrivateEcKey = (EditText) vStep3.findViewById(R.id.etPrivateEcKey);
         etPrivateEcKey.setKeyListener(null);
+        etPrivateEcKey.addTextChangedListener(textWatcherRegister3());
 
         bPrivateEcKey = (ImageButton) vStep3.findViewById(R.id.bPrivateEcKey);
         bPrivateEcKey.setOnClickListener(customOnClickListener(ImportFileType.PRIVATE_EC_KEY));
+        bPrivateEcKey.setEnabled(false);
 
 
         bBackRegister3 = (Button) vStep3.findViewById(R.id.bBackRegister3);
         bNextRegister3 = (Button) vStep3.findViewById(R.id.bNextRegister3);
 
     }
+
+    //custom listeners
+    private TextWatcher textWatcherRegister1() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                enableSubmitIfRegister1Ready();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private void enableSubmitIfRegister1Ready() {
+        if (
+                etPhoneNumberRegister.getText().toString().length() < 12 ||
+                etPasswordRegister.getText().toString().length() < 7) {
+            bNextRegister1.setEnabled(false);
+            fabRegister2.setOnClickListener(disableFab());
+            fabRegister3.setOnClickListener(disableFab());
+        }
+        else {
+            bNextRegister1.setEnabled(true);
+            fabRegister2.setOnClickListener(enableFab(fabRegister2));
+            fabRegister3.setOnClickListener(disableFab());
+        }
+    }
+
+
+    private TextWatcher textWatcherRegister2() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                enableSubmitIfRegister2Ready();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private void enableSubmitIfRegister2Ready() {
+        if (
+                tvUserCertificateValid.getVisibility() == View.INVISIBLE) {
+            bNextRegister2.setEnabled(false);
+            fabRegister3.setOnClickListener(disableFab());
+        } else {
+            bNextRegister2.setEnabled(true);
+            fabRegister3.setOnClickListener(enableFab(fabRegister3));
+        }
+    }
+
+
+    private TextWatcher textWatcherRegister3() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                enableSubmitIfRegister3Ready();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private void enableSubmitIfRegister3Ready() {
+        if (
+                tvPrivateEcKeyValid.getVisibility() == View.INVISIBLE || tvPrivateRsaKeyValid.getVisibility() == View.INVISIBLE) {
+            bNextRegister3.setEnabled(false);
+        }
+        else {
+            bNextRegister3.setEnabled(true);
+        }
+    }
+
+    private TextWatcher textWatcherRegister3Password() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                enableSubmitIfRegister3PasswordReady();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private void enableSubmitIfRegister3PasswordReady() {
+        if (etPasswordKeys.getText().toString().length()<7) {
+            bPrivateRsaKey.setEnabled(false);
+            bPrivateEcKey.setEnabled(false);
+        }
+        else {
+            bPrivateRsaKey.setEnabled(true);
+            bPrivateEcKey.setEnabled(true);
+        }
+    }
+
+    //fab
+    private View.OnClickListener disableFab() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //do nothing
+            }
+        };
+    }
+
+    private View.OnClickListener enableFab(final FloatingActionButton fab) {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (fab.getId()) {
+                    case R.id.fabRegister1: {
+                        showStep1(v);
+                        break;
+                    }
+                    case R.id.fabRegister2: {
+                        showStep2(v);
+                        break;
+                    }
+                    case R.id.fabRegister3: {
+                        showStep3(v);
+                        break;
+                    }
+
+                }
+            }
+        };
+    }
+
 
     //swap animation
     public boolean onTouchEvent(MotionEvent touchevent) {
@@ -352,7 +526,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
             service.execute();
 
             toast = Toast.makeText(getApplicationContext(), "Setup successful", Toast.LENGTH_SHORT);
-        }catch(FailedServiceException exception) {
+        } catch (FailedServiceException exception) {
             toast = Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT);
         }
         toast.show();
@@ -360,7 +534,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     }
 
 
-    //file explorer stuff
+//file explorer stuff
 
     @Override
     public void onFileSelected(FileDialog dialog, File file) {
@@ -372,12 +546,18 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
                 try {
                     ImportCACertificateService service = new ImportCACertificateService(file.getPath(), userPassword);
                     service.execute();
+                    //valid certificate
                     etCACertificate.setText(file.getPath());
                     tvCACertificateValid.setVisibility(View.VISIBLE);
                     tvCACertificateInvalid.setVisibility(View.INVISIBLE);
+                    bUserCertificate.setEnabled(true);
                 } catch (SecureSmsException exception) {
+                    //invalid certificate
                     tvCACertificateValid.setVisibility(View.INVISIBLE);
                     tvCACertificateInvalid.setVisibility(View.VISIBLE);
+                    bUserCertificate.setEnabled(false);
+                } finally {
+                    etCACertificate.setText(file.getPath());
                 }
                 break;
             }
@@ -400,8 +580,9 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
                 } catch (SecureSmsException exception) {
                     tvUserCertificateValid.setVisibility(View.INVISIBLE);
                     tvUserCertificateInvalid.setVisibility(View.VISIBLE);
+                } finally {
+                    etUserCertificate.setText(file.getPath());
                 }
-                etUserCertificate.setText(file.getPath());
                 break;
             }
             case PRIVATE_RSA_KEY: {
@@ -448,8 +629,31 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (v.isEnabled())
                 showFileDialog(".pem", type);
             }
         };
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        View view = getCurrentFocus();
+        boolean ret = super.dispatchTouchEvent(event);
+
+        if (view instanceof EditText) {
+            View w = getCurrentFocus();
+            int scrcoords[] = new int[2];
+            w.getLocationOnScreen(scrcoords);
+            float x = event.getRawX() + w.getLeft() - scrcoords[0];
+            float y = event.getRawY() + w.getTop() - scrcoords[1];
+
+            if (event.getAction() == MotionEvent.ACTION_UP
+                    && (x < w.getLeft() || x >= w.getRight()
+                    || y < w.getTop() || y > w.getBottom()) ) {
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(getWindow().getCurrentFocus().getWindowToken(), 0);
+            }
+        }
+        return ret;
     }
 }

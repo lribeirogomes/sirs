@@ -122,7 +122,8 @@ public class ShowInboxActivity extends AppCompatActivity {
                     SmsMessage sms =  _messages.get(position);
                     Intent showContactMessagesIntent = new Intent(getApplicationContext(), ShowContactMessagesActivity.class);
                     Bundle bundle = new Bundle();
-                    bundle.putString("contactToShowNumber", sms.getContact().getPhoneNumber());
+                    bundle.putString(ShowContactMessagesActivity.CONTACT_NUMBER_TO_SHOW, sms.getContact().getPhoneNumber());
+                    bundle.putBoolean(ShowContactMessagesActivity.SHOW_ACK_DIALOG, false);
                     showContactMessagesIntent.putExtras(bundle);
                     startActivity(showContactMessagesIntent);
                 }});

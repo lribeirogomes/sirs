@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sirs.securesms.presentation;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -47,7 +48,6 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_contact_messages);
-        setTitle(this.getResources().getString(R.string.title_activity_main));
         //set toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -56,7 +56,17 @@ public class ShowContactMessagesActivity extends AppCompatActivity {
         _contactPhoneNumber = bundle.getString(CONTACT_NUMBER_TO_SHOW);
         boolean showAckDialog = bundle.getBoolean(SHOW_ACK_DIALOG);
 
+
+        setTitle(_contactPhoneNumber);
+
         if (showAckDialog) {
+            //stop previous service
+            Intent intent = new Intent();
+            intent.setAction(NotifyIncomingMessageService.ACTION);
+            intent.putExtra(NotifyIncomingMessageService.STOP_SERVICE,
+                    NotifyIncomingMessageService.RQS_STOP_SERVICE);
+
+
             AlertDialog.Builder builder = new AlertDialog.Builder(ShowContactMessagesActivity.this);
 
             LayoutInflater factory = LayoutInflater.from(this);

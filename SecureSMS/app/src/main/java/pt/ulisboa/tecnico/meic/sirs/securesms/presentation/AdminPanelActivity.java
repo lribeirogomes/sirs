@@ -64,7 +64,7 @@ public class AdminPanelActivity extends AppCompatActivity {
     }
 
 
-    public void inspectTables(View view) {
+  /*  public void inspectTables(View view) {
         try {
             String fileList = "";
             File folder = new File("/data/data/pt.ulisboa.tecnico.meic.sirs.securesms/shared_prefs");
@@ -80,9 +80,9 @@ public class AdminPanelActivity extends AppCompatActivity {
 
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT);
         }
-    }
+    }*/
 
- /*   public void inspectTables(View view) {
+    public void inspectTables(View view) {
         tvUserList.setText("");
         String file;
         try(BufferedReader br = new BufferedReader(new FileReader("/data/data/pt.ulisboa.tecnico.meic.sirs.securesms/shared_prefs/User+351927519814Contact0000SESSION.xml"))) {
@@ -95,5 +95,5 @@ public class AdminPanelActivity extends AppCompatActivity {
 
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT);
         }
-    }*/
+    }
 }

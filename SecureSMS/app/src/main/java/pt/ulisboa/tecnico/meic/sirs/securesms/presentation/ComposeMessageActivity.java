@@ -63,7 +63,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent chooseContactIntent) {
 
         if (requestCode == CHOOSE_CONTACT_REQ) {
-            if(resultCode == RESULT_OK){
+            if (resultCode == RESULT_OK) {
                 //put returned contacts in the list
                 _contactsToSendNames = chooseContactIntent.getExtras().getStringArrayList("contactsToSendNames");
                 _contactsToSendNumbers = chooseContactIntent.getExtras().getStringArrayList("contactsToSendNumbers");
@@ -77,7 +77,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
 
     public void showContactsToSend() {
         final TableRow rowReceivers = (TableRow) findViewById(R.id.trReceivers);
-        for (String contactName: _contactsToSendNames) {
+        for (String contactName : _contactsToSendNames) {
             //create contact to display
             Button bReceiver = (Button) LayoutInflater.from(this).inflate(R.layout.button, null);
             bReceiver.setText(contactName);
@@ -97,22 +97,25 @@ public class ComposeMessageActivity extends AppCompatActivity {
     public void sendMessage(View view) {
         EditText etMessage = (EditText) findViewById(R.id.etMessage);
         String message = etMessage.getText().toString();
+        if (_contactsToSendNumbers.isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Please add contacts to send", Toast.LENGTH_SHORT).show();
+        } else {
+            for (String contact : _contactsToSendNumbers) {
+                try {
+                    if (!message.equals("")) {
+                        SendSmsMessageService service = new SendSmsMessageService(contact, message);
+                        service.execute();
+                        etMessage.setText("");
 
-        for (String contact : _contactsToSendNumbers) {
-            try {
-                if (!message.equals("")) {
-                    SendSmsMessageService service = new SendSmsMessageService(contact, message);
-                    service.execute();
-                    etMessage.setText("");
-
-                    getMessages.add(message);
-                    showMessages();
-                    //hide keyboard again
-                    InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    im.hideSoftInputFromWindow(etMessage.getWindowToken(), 0);
+                        getMessages.add(message);
+                        showMessages();
+                        //hide keyboard again
+                        InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        im.hideSoftInputFromWindow(etMessage.getWindowToken(), 0);
+                    }
+                } catch (Exception exception) {
+                    Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-            } catch (Exception exception) {
-                Toast.makeText(getApplicationContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }

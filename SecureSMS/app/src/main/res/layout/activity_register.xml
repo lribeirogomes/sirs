@@ -10,19 +10,22 @@
     android:background="@color/colorPrimary"
     tools:context=".presentation.RegisterActivity">
 
-
-    <ScrollView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
 
     <RelativeLayout
+        android:id="@+id/mainLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
         android:paddingBottom="@dimen/activity_vertical_margin"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".presentation.RegisterActivity">
 
         <!-- TITLE -->
@@ -99,11 +102,11 @@
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/fabRegister2"
+                    android:clickable="false"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_number_2"
-                    app:backgroundTint="@color/colorBackground"
-                    android:onClick="showStep2" />
+                    app:backgroundTint="@color/colorBackground" />
 
                 <Space
                     android:id="@+id/space26"
@@ -132,11 +135,11 @@
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/fabRegister3"
+                    android:clickable="false"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_number_3"
-                    app:backgroundTint="@color/colorBackground"
-                    android:onClick="showStep3" />
+                    app:backgroundTint="@color/colorBackground" />
 
                 <Space
                     android:id="@+id/space27"
@@ -175,7 +178,9 @@
             android:layout_height="match_parent"
             android:layout_below="@+id/space8"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true">
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true">
 
 
             <include layout="@layout/activity_register1"/>
@@ -187,5 +192,6 @@
 
     </RelativeLayout>
     </ScrollView>
+    </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>
