@@ -225,7 +225,7 @@ public class RegisterActivity extends AppCompatActivity implements FileDialog.On
     private void enableSubmitIfRegister1Ready() {
         if (
                 etPhoneNumberRegister.getText().toString().length() < 12 ||
-                etPasswordRegister.getText().toString().length() < 7) {
+                etPasswordRegister.getText().toString().length() < 5) {
             bNextRegister1.setEnabled(false);
             fabRegister2.setOnClickListener(disableFab());
             fabRegister3.setOnClickListener(disableFab());
