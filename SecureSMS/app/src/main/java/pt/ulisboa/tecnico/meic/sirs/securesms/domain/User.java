@@ -31,7 +31,7 @@ public class User {
 
         try {
             // Hash password
-            password = Cryptography.decodeFromStorage(encodedPassword);
+            password = Cryptography.encode(encodedPassword);
             passwordHash = Cryptography.hash(password);
 
             // If password is invalid

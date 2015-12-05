@@ -23,7 +23,7 @@ public class UserManager {
 
         try {
             // Hash password
-            encodedPassword = Cryptography.decodeFromStorage(password);
+            encodedPassword = Cryptography.encode(password);
             encodedPasswordHash = Cryptography.hash(encodedPassword);
             passwordHash = Cryptography.encodeForStorage(encodedPasswordHash);
 
